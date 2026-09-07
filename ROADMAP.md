@@ -1,9 +1,20 @@
 # Roadmap
 
-Every active ATT&CK 19.2 technique is complete, and the approved public repository
-and demo are published. Version `0.3.0.dev2` is independently rebuilt from official MITRE
-source; the missing v0.2.0 archive has not been restored. The historical sample
-and its verification record remain separate from this larger version.
+Every active ATT&CK 19.2 technique has a text prompt in the published dev2
+repository and demo. Development version `0.3.0.dev3` improves prompt quality
+using the same pinned MITRE source; the missing v0.2.0 archive has not been
+restored. The owner authorized publishing this update after verification;
+observed checks and hosted outcomes are recorded in
+[verification](docs/verification.md). Historical verification records remain
+evidence for their own versions.
+
+## Review prompt quality
+
+- Apply shared schema/feasibility gates, mode/target contracts and analytic selection.
+- Keep ICS validation offline and make Mobile collection constraints explicit.
+- Preserve source references, regenerate 918 readable prompts and verify parity.
+- Record semantic-sample limits and final outcomes in the
+  [prompt quality report](docs/prompt-quality-review.md).
 
 ## Complete the pinned library
 

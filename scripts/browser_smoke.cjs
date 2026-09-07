@@ -155,7 +155,7 @@ const core = require('../demo/core.js');
       assert.equal(await page.locator('#techniques button').count(), 50);
       assert.match(await page.locator('#prompt').inputValue(), /DRAFT/);
     });
-    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:'0.3.0-dev.2', catalogRecords:catalog.length, browser: browser.version(), node: process.version, basePath:parsed.pathname, checks: results, failures, externalRequests: external, limitations: ['No screen-reader audit or complete WCAG certification.', 'Clipboard denial tested; actual platform clipboard success is not asserted.', 'Hosted GitHub Pages and original application were not tested.'] }, null, 2) + '\n');
+    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:'0.3.0-dev.3', catalogRecords:catalog.length, browser: browser.version(), node: process.version, basePath:parsed.pathname, checks: results, failures, externalRequests: external, limitations: ['No screen-reader audit or complete WCAG certification.', 'Clipboard denial tested; actual platform clipboard success is not asserted.', 'Hosted GitHub Pages and original application were not tested.'] }, null, 2) + '\n');
     console.log(`${results.length} browser checks passed.`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

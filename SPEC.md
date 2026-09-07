@@ -9,8 +9,10 @@ was recovered. Include Enterprise (697), Mobile (124), ICS (97): 918 active
 techniques/subtechniques, including both parents and children. Exclude revoked
 or deprecated techniques from active prompts and list them in coverage evidence.
 The owner approved publication to the public `samran2/Prompt-as-Detection-Library`
-repository and a public demo. The full library is pushed and private vulnerability
-reporting is enabled. Hosted CI and Pages outcomes are recorded in
+repository and a public demo. The dev2 full library is pushed and private
+vulnerability reporting is enabled. The dev3 prompt-quality update is authorized
+for publication after verification. Observed checks, hosted CI and Pages outcomes
+are recorded in
 [verification](docs/verification.md#hosted-publication-status).
 Automatic model calls and query execution remain out of scope.
 
@@ -64,7 +66,7 @@ All output is an unvalidated draft, not executable/production-approved detection
   coverage counts, all-domain search, source/analytic detail, TXT/JSONL export.
 - `scripts/library_cli.cjs`: local list/prompt/export with validated selectors,
   bounded context, no network, exclusive new output writes; no arbitrary code.
-- Docs and package version describe dev.2, independently rebuilt provenance,
+- Docs and package version describe `0.3.0.dev3` (npm `0.3.0-dev.3`), independently rebuilt provenance,
   separate source rights, owner-approved MIT project-code license, and actual
   repository, CI and deployment status.
 

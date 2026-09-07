@@ -3,13 +3,18 @@
 ## Status and scope
 
 - This is the independently rebuilt complete active ATT&CK 19.2 prompt library,
-  being developed as `0.3.0.dev2` (npm `0.3.0-dev.2`). The original `0.2.0`
+  being developed as `0.3.0.dev3` (npm `0.3.0-dev.3`). The original `0.2.0`
   source archive remains unavailable: never claim original implementation or
   byte preservation. All active techniques are complete. The owner requested
   publication to the public `samran2/Prompt-as-Detection-Library` repository and
-  a public demo, and approved the MIT project-code license. The complete library
-  is pushed and private vulnerability reporting is enabled. Keep hosted CI and
-  Pages outcomes in docs/verification.md; see SPEC.md and tasks/plan.md.
+  a public demo, and approved the MIT project-code license. Version dev2 is
+  published and private vulnerability reporting is enabled. The owner also
+  authorized publishing the dev3 prompt-quality update after verification.
+  Record actual checks and hosted outcomes rather than inferring success.
+  The earlier immutable
+  security audit does not cover the changed composer or revised prompts.
+  Keep hosted CI and Pages outcomes in docs/verification.md; see SPEC.md and
+  tasks/plan.md.
 - Do not invent source files, test results, procedure relationships, contacts,
   repository URLs, licenses, or provenance to fill gaps.
 - Read the existing implementation and nearby tests before making changes.

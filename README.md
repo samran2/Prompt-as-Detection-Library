@@ -84,10 +84,15 @@ records are excluded from active prompts; source gaps and unlinked analytics
 remain explicit in the [coverage evidence](library/coverage.json).
 
 This is an **independent rebuild** from official pinned MITRE data, development
-version `0.3.0.dev2` (npm `0.3.0-dev.2`). The original v0.2.0 archive remains
+version `0.3.0.dev3` (npm `0.3.0-dev.3`). The original v0.2.0 archive remains
 unavailable; this project does not claim to restore its implementation or formats.
 Read the [source provenance](docs/source-provenance.md) for the exact commit,
 source hashes, attribution and inclusion policy.
+
+The dev3 [prompt-quality review](docs/prompt-quality-review.md) covers improved
+drafting instructions, not validated detections. Publication is owner-authorized
+after verification; see the [verification record](docs/verification.md) for the
+observed checks and deployed commit.
 
 ## Verify and build
 
@@ -114,6 +119,8 @@ See [verification](docs/verification.md) for actual checks and their limits.
 | [Architecture](docs/architecture.md) | Shared composition, data flow and the static file boundary. |
 | [Development](docs/development.md) | CLI contracts, generation, browser QA and repository checks. |
 | [Contributing](CONTRIBUTING.md) | Focused changes, source fidelity and review expectations. |
+| [Prompt quality review](docs/prompt-quality-review.md) | Semantic sample, shared-template improvements and validation limits. |
+| [External detection comparison](docs/external-detection-review.md) | Public-summary comparisons, corroboration and rule-reuse boundaries. |
 | [Security](SECURITY.md) | Private vulnerability reporting, trust boundaries and review scope. |
 | [Publishing and rollback](docs/publishing.md) | Deliberate deployment, CI gates and recovery. |
 | [Roadmap](ROADMAP.md) | Current delivery and separately scoped future work. |

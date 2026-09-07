@@ -1,6 +1,6 @@
 # Contributing
 
-This independent `0.3.0.dev2` rebuild prepares a complete active ATT&CK 19.2
+This independent `0.3.0.dev3` rebuild prepares a complete active ATT&CK 19.2
 prompt library. The original v0.2.0 source archive remains unavailable. Do not
 claim original implementation preservation or transfer older audit results to
 new code. Original project code and associated documentation use the owner-approved

@@ -2,7 +2,7 @@
 
 ## Scope and status
 
-The user wants an interface with the care, clarity, and polish associated with Apple's product releases. This document translates that direction into reviewable criteria for the independent full-library workbench at 0.3.0.dev2. Actual verification belongs in docs/verification.md; these criteria alone are not a claim that every check has passed. The original browser application remains unavailable.
+The user wants an interface with the care, clarity, and polish associated with Apple's product releases. This document translates that direction into reviewable criteria for the independent full-library workbench at 0.3.0.dev3. Actual verification belongs in docs/verification.md; these criteria alone are not a claim that every check has passed. The original browser application remains unavailable.
 
 The interface is a local research and prompt-composition tool. It should help a detection engineer find the right ATT&CK technique, understand the evidence, and obtain usable text with little friction. It must not upload catalog content, pasted context, model responses, or exports to a cloud service.
 

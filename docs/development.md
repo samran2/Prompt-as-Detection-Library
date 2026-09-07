@@ -2,7 +2,7 @@
 
 ## Local runtime and commands
 
-This `0.3.0.dev2` independent rebuild uses Node.js 22+ for the CLI, generation,
+This `0.3.0.dev3` independent rebuild uses Node.js 22+ for the CLI, generation,
 unit tests and static build. No npm installation is required for those commands
 or the browser runtime. Python 3.11+ supports preview and repository checks;
 the unavailable original Python application is not included.
@@ -17,8 +17,8 @@ npm test
 npm run build
 ```
 
-The root `package.json` and lockfile use SemVer `0.3.0-dev.2`; `VERSION` uses
-`0.3.0.dev2`. Keep these and QA metadata, CLI/UI version displays and release
+The root `package.json` and lockfile use SemVer `0.3.0-dev.3`; `VERSION` uses
+`0.3.0.dev3`. Keep these and QA metadata, CLI/UI version displays and release
 notes aligned. The root package is private and has no runtime dependencies.
 
 `npm run library:build` explicitly regenerates `demo/catalog.js`, all readable

@@ -2,7 +2,7 @@
 
 ## Independent rebuild
 
-Version `0.3.0.dev2` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
+Version `0.3.0.dev3` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
 The original v0.2.0 application remains unavailable. This architecture describes
 the new Node CLI, static browser workbench and readable prompt library; it does
 not claim Python CLI compatibility or restore the original response evaluator.

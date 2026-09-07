@@ -2,18 +2,21 @@
 
 ## Project status and reporting
 
-This `0.3.0.dev2` independent full-library rebuild is available in the approved
-public repository. Hosted checks and demo status are recorded in
-[verification](docs/verification.md#hosted-publication-status). No supported
+Version `0.3.0.dev3` is the current independent prompt-quality development version.
+The owner authorized publishing this update after verification. The preceding
+`0.3.0.dev2` library and demo were published at the approved public destination.
+Observed checks and deployment status are recorded in
+[verification](docs/verification.md). No supported
 public release is declared. Earlier foundation and 12-record sample reviews
 apply only to their historical artifacts, not to this version or the missing
 original application.
 
-A new offline Codex Security review of the full-library development snapshot
-completed without reportable findings. Runtime, data and the original four
-workflows remain unchanged. The publication copy added approved licensing and
-documentation, then a new CodeQL workflow and a test-fixture correction after
-that review. These later changes were not covered by the earlier immutable audit.
+A prior offline Codex Security review of the immutable dev2 full-library snapshot
+completed without reportable findings. Subsequent dev2 publication changes added
+approved licensing/documentation, a CodeQL workflow and a test-fixture correction;
+they were outside that review. The dev3 composer and regenerated prompt revisions
+are also outside the earlier audit. Pinned source data remains unchanged, but
+unchanged data does not transfer audit coverage to changed runtime instructions.
 See [verification](docs/verification.md)
 for exact scope and outcomes. This is not a guarantee that vulnerabilities are absent.
 

@@ -1,6 +1,42 @@
-# Verification records — 2026-09-07
+# Verification records
 
-## Current independent full library — 0.3.0.dev2
+## Current prompt-quality update — 0.3.0.dev3
+
+Observed locally on 2026-09-08 (Europe/Helsinki). The
+[semantic review](prompt-quality-review.md) examined 30 risk-stratified prompts
+and the shared composer; it was not manual semantic evaluation of all 918
+records. The [external comparison](external-detection-review.md) used public
+descriptions only, not registration-gated rule code. No external rules were
+imported. The original v0.2.0 archive remains unavailable.
+
+| Check | Actual result |
+| --- | --- |
+| Test-first regressions | The initial 12 new contract tests failed before implementation and passed afterward. The subsequent corroboration test also failed before its clarification and passed afterward: 13 new tests total. |
+| Full Node suite | 91 tests passed, zero failures or skips. Includes CLI/export boundaries and the exhaustive 22,032-composition matrix; those compositions are not additional test cases or model evaluations. |
+| Source and generated integrity | Read-only regeneration verification passed for all 918 TXT prompts and coverage evidence. Raw sources, source manifest, catalog and complete procedure JSONL remained byte-identical to the preceding committed version. The 697 Enterprise, 124 Mobile and 97 ICS records, 18,885 procedure relationships and 2,053 analytics are unchanged. |
+| Foundation tests and checks | All 14 Python tests passed; required-file/version and selected credential/artifact checks passed. |
+| Syntax and tooling | JavaScript syntax, Ruff lint/format and pre-commit configuration validation passed. Root/QA dependency versions were unchanged; locked optional QA installation reported zero known vulnerabilities. |
+| Static build | A fresh verified eight-file build succeeded. No backend, external model call or new runtime dependency was added. |
+| Real-browser integration | All 22 checks passed against the final built dev3 site using isolated Chrome: filtering, source context, modes, draft handling, inert input, copy denial, exact TXT/JSONL downloads, keyboard/dialog behavior, reload clearing and direct local-file launch. |
+| Visual and responsive review | Final desktop and mobile screenshots were visually inspected. Automated checks found no horizontal overflow at 320, 768, 1024 or 1440 pixels or 200% text scaling; reduced-motion checks passed. |
+| Browser network/errors | No unexpected external requests, console warnings/errors or page errors in the tested HTTP flows. |
+| Secret scan | Maintained Gitleaks 8.30.1 directory scan, default rules with full redaction and a 128 MB per-file ceiling, scanned approximately 135.45 MB with no leaks reported. This is a directory result, not proof about unknown secret formats or all Git history. |
+| Independent review | Domain and shared-contract reviews approved the bounded composer change and its tests. A final separate review approved the corroboration clarification, its regression and the external-source limitations. |
+
+Local tools: Node.js 24.13.0, Python 3.13.7, Ruff 0.16.4 and Playwright 1.62.1
+with an isolated installed Chrome. Task-local caches and test output are excluded
+from publication. The [browser report](browser-report.json) and repository
+screenshots record the final dev3 local build.
+These shared evidence paths now contain dev3; earlier reports and screenshots
+remain available in Git history and their original delivery archives.
+
+These checks establish the reported structural behavior, not detection
+effectiveness, model compliance, product compatibility, complete accessibility
+or absence of vulnerabilities. The prior immutable Codex Security audit below
+does **not** cover the changed dev3 composer and regenerated prompts. Hosted
+outcomes are recorded separately from local checks.
+
+## Historical independent full library — 0.3.0.dev2
 
 Current source and output scope is described in
 [provenance](source-provenance.md) and [coverage](../library/coverage.json).

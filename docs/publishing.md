@@ -3,12 +3,14 @@
 ## Current status
 
 The complete active ATT&CK 19.2 library is an independent development rebuild at
-`0.3.0.dev2` (npm `0.3.0-dev.2`). The original v0.2.0 archive is unavailable; no
+`0.3.0.dev3` (npm `0.3.0-dev.3`). The original v0.2.0 archive is unavailable; no
 recovery, original test preservation or format compatibility is claimed.
 The verified public repository is
 [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
-The complete library and public workbench are published. Keep the observed commit, hosted-check
-results and public-demo status in the
+The preceding dev2 library and public workbench are published. The owner has
+authorized publishing the dev3 prompt-quality update after verification.
+Keep the observed commit,
+hosted-check results and public-demo status in the
 [verification record](verification.md#hosted-publication-status).
 
 All 918 active techniques have been generated and checked. The owner approved
@@ -126,7 +128,7 @@ again only after review, passing CI and the same explicit manual deployment flow
 ## Versioning and later releases
 
 Keep `VERSION`, root and QA package metadata, CLI/UI displays and release notes
-aligned: `0.3.0.dev2` is represented as `0.3.0-dev.2` in npm metadata. A future
+aligned: `0.3.0.dev3` is represented as `0.3.0-dev.3` in npm metadata. A future
 stable tag is `vMAJOR.MINOR.PATCH`; development artifacts must not be marked stable.
 No npm or PyPI publication configuration is provided.
 

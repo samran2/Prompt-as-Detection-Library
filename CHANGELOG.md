@@ -3,6 +3,25 @@
 This file records changes actually made. Dates and results from earlier
 conversations are not independent verification of a release.
 
+## [0.3.0.dev3] - Development prompt-quality update
+
+- Documented a 30-prompt, three-domain semantic review and its limits in
+  [the prompt quality report](docs/prompt-quality-review.md).
+- Shared-template improvements cover schema/feasibility gating,
+  mode/target contracts, analytic selection, domain-aware validation safety and
+  source traceability. Regenerated all 918 text prompts and their coverage hashes;
+  pinned ATT&CK data, catalog and procedures remain unchanged.
+- Aligned version metadata, UI and QA reporting as `0.3.0.dev3` / `0.3.0-dev.3`
+  to distinguish these prompts from earlier published artifacts.
+- Added 13 prompt-quality regression tests, including corroboration of weak
+  indicators informed by an [external public-summary comparison](docs/external-detection-review.md).
+  No external rule code was imported or relicensed.
+- The owner authorized publishing this update and the demo after verification.
+  Actual full-suite, browser and hosted outcomes are recorded in
+  [verification](docs/verification.md).
+  These revisions are outside the earlier immutable security audit; no stable
+  release or detection-effectiveness claim is made.
+
 ## [0.3.0.dev2] - Unreleased independent full-library rebuild
 
 ### Added
