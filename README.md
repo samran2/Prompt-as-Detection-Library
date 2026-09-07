@@ -4,10 +4,18 @@ Turn MITRE ATT&CK evidence into reviewable detection, hunting and triage prompts
 Browse **918 active techniques and subtechniques**, inspect their source guidance,
 and export drafts from a browser workbench or local CLI.
 
+## Try it in your browser
+
+**[Open the live demo →](https://samran2.github.io/Prompt-as-Detection-Library/)**
+
+Search all 918 techniques, adapt a prompt and download it directly in your browser.
+No installation, account or API key needed. Prompts remain unvalidated drafts;
+the demo does not run a model or execute detection rules.
+
 [![Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml)
 
-**[Live demo →](https://samran2.github.io/Prompt-as-Detection-Library/)** · [Quick start](#run-it-locally) · [Source provenance](docs/source-provenance.md) · [Verification](docs/verification.md#hosted-publication-status)
+[Quick start](#run-it-locally) · [Source provenance](docs/source-provenance.md) · [Verification](docs/verification.md#hosted-publication-status)
 
 [![Full-library workbench showing source guidance and an editable detection prompt](docs/screenshots/desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
 
