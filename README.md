@@ -7,7 +7,8 @@ Development version **0.3.0.dev2** (npm `0.3.0-dev.2`). This is an independent
 rebuild from official source data. The original v0.2.0 archive remains unavailable;
 its implementation, tests and byte-level content have not been recovered.
 The complete library has passed the recorded local publication checks.
-GitHub publication awaits confirmation of public repository visibility.
+The owner approved a public repository and public demo. The repository exists;
+the full-library push, GitHub CI and Pages deployment remain pending.
 
 ## Coverage
 
@@ -105,11 +106,12 @@ preview and repository checks; this rebuild does not provide the original
 
 ## Publication and licensing
 
-No remote, GitHub release, package or hosted site has been created by this work.
-The owner requested publication to account `samran2`, repository
-`Prompt-as-Detection-Library`. Public visibility still requires confirmation;
-this is not a verified live repository URL.
-The Pages workflow requires an explicit manual publication decision.
+The verified public repository is
+[samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
+It currently contains its initialization license; the complete library has not
+been pushed. Private vulnerability reporting is enabled; see [SECURITY](SECURITY.md).
+The owner approved the public demo, but GitHub CI and the deliberate Pages
+deployment have not run. No live demo URL, package publication or release is claimed.
 
 Original project code and associated documentation use the [MIT License](LICENSE),
 Copyright (c) 2026 samran2, as approved by the owner. MITRE source data and reproduced

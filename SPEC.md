@@ -8,7 +8,10 @@ Rebuild independently from official MITRE attack-stix-data v19.2, commit
 was recovered. Include Enterprise (697), Mobile (124), ICS (97): 918 active
 techniques/subtechniques, including both parents and children. Exclude revoked
 or deprecated techniques from active prompts and list them in coverage evidence.
-No GitHub changes, automatic model calls, query execution, or deployment.
+The owner approved publication to the public `samran2/Prompt-as-Detection-Library`
+repository and a public demo. The repository exists with private vulnerability
+reporting enabled; the full-library push, GitHub CI and Pages deployment remain
+pending. Automatic model calls and query execution remain out of scope.
 
 ## Stack and commands
 
@@ -61,7 +64,8 @@ All output is an unvalidated draft, not executable/production-approved detection
 - `scripts/library_cli.cjs`: local list/prompt/export with validated selectors,
   bounded context, no network, exclusive new output writes; no arbitrary code.
 - Docs and package version describe dev.2, independently rebuilt provenance,
-  separate source rights and owner-approved MIT project-code license, and publication hold.
+  separate source rights, owner-approved MIT project-code license, and actual
+  repository, CI and deployment status.
 
 ## Style and trust boundaries
 
@@ -88,5 +92,6 @@ No claim that these checks validate model quality or detection effectiveness.
 
 Always preserve reviewed prior demo artifacts unchanged; work in this new repo.
 The owner-approved MIT project-code license is recorded in LICENSE_TODO.md.
-Ask before future license changes, external AI integration or actual publication.
+The named public repository and demo are approved. Ask before future license
+changes, external AI integration or publication beyond that approved scope.
 Never invent provenance, original tests passing, or operational validation.

@@ -92,8 +92,10 @@ permission allowed the successful isolated run.
 
 Workflows have not run on GitHub. No model or detection-platform validation,
 screen-reader audit, complete WCAG audit or absence-of-vulnerabilities guarantee
-is claimed. Private reporting and hosted deployment remain unconfigured; public
-repository creation awaits explicit visibility confirmation. Earlier sample
+is claimed. The public repository and demo are explicitly approved, the
+[repository](https://github.com/samran2/Prompt-as-Detection-Library) exists with
+its initialization license, and private vulnerability reporting was enabled and
+verified. The full-library push and hosted Pages deployment remain pending. Earlier sample
 audits remain historical and were not used as approval for this implementation.
 
 ## Historical static demo 0.3.0-dev.1

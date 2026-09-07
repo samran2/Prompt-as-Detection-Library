@@ -1,8 +1,10 @@
 # Plan: complete active ATT&CK 19.2 library
 
 Original direction: every technique first; no publication. Techniques are now
-complete; the owner requested GitHub publication and approved MIT licensing.
-Public visibility confirmation remains pending. Specification: ../SPEC.md.
+complete; the owner approved MIT licensing, the public repository and public demo.
+The public repository exists and private vulnerability reporting is enabled.
+The full-library push, hosted CI and Pages deployment remain pending.
+Specification: ../SPEC.md.
 Task checklist: todo.md. Existing demo and its audit remain immutable in outputs.
 
 ## Ordered slices and parallel ownership
@@ -29,7 +31,8 @@ Task checklist: todo.md. Existing demo and its audit remain immutable in outputs
 - Integration: all tests/builds pass; browser and CLI use identical core output.
 - Handoff: new ZIP verified bytewise; no original-restoration or security-audit
   claims inherited from earlier 12-record snapshot. A fresh full-library security
-  review is complete; public visibility and hosted configuration remain pending.
+  review is complete; public visibility and private reporting are confirmed.
+  The full-library push, hosted CI and Pages deployment remain pending.
 
 ## Risks
 

@@ -34,6 +34,8 @@ conversations are not independent verification of a release.
 - Completed a new full-library Codex Security source review and separate
   maintained secret scan, dependency advisory and upstream workflow-pin checks;
   their scope and limitations are recorded in docs/verification.md.
+- Recorded the approved public repository and demo, enabled private vulnerability
+  reporting, and a manual rollback procedure that preserves Git history.
 
 ### Limits
 
@@ -43,8 +45,10 @@ conversations are not independent verification of a release.
   records without qualifying procedures, and 13 active unlinked analytics.
 - All prompts remain unvalidated drafts. Current check outcomes are recorded in
   docs/verification.md; older audits do not transfer to this version.
-- MIT project-code licensing is approved. Public repository visibility still
-  requires confirmation. No remote, hosted site, package or release was created.
+- MIT project-code licensing, the public repository and demo are approved.
+  The repository exists with its initialization license and private reporting
+  enabled. Full-library push, hosted CI and Pages deployment remain pending;
+  no package publication or release is claimed.
 
 ## [0.3.0.dev1] - Historical unreleased sample
 

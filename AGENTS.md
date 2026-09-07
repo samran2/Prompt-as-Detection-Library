@@ -6,8 +6,10 @@
   being developed as `0.3.0.dev2` (npm `0.3.0-dev.2`). The original `0.2.0`
   source archive remains unavailable: never claim original implementation or
   byte preservation. All active techniques are complete. The owner requested
-  GitHub publication and approved the MIT project-code license; public visibility
-  still requires confirmation. See SPEC.md and tasks/plan.md for the current scope.
+  publication to the public `samran2/Prompt-as-Detection-Library` repository and
+  a public demo, and approved the MIT project-code license. The repository exists
+  and private vulnerability reporting is enabled. The full-library push, hosted
+  CI and Pages deployment remain pending. See SPEC.md and tasks/plan.md.
 - Do not invent source files, test results, procedure relationships, contacts,
   repository URLs, licenses, or provenance to fill gaps.
 - Read the existing implementation and nearby tests before making changes.
@@ -61,5 +63,7 @@
 - Preserve the owner-approved MIT project-code `LICENSE` and the resolved
   decision in `LICENSE_TODO.md`, alongside separate MITRE source notices.
   Never change a license or grant additional rights on the owner's behalf.
-- Prepare changes locally. Creating a remote, pushing, publishing a site or
-  package, and creating a public release require explicit owner authorization.
+- The owner has authorized the reviewed library and public demo at the named
+  repository. Preserve its review and CI gates before deliberate Pages deployment.
+  Additional destinations, package publication or a public release artifact
+  require their own explicit owner authorization.

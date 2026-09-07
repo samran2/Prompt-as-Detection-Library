@@ -12,11 +12,12 @@
 - [x] Review full-library snapshot with Codex Security and maintained secret scanning;
   subsequent changes are limited to approved licensing and publication documentation.
 - [x] Record the owner-approved MIT project-code license and preserve MITRE notices.
-- [ ] Configure monitored private vulnerability reporting.
-- [ ] Publish only in a later explicitly approved phase after readiness gates.
-  Owner requested GitHub publication; public visibility confirmation is still required.
+- [x] Obtain approval for the public repository and public demo.
+- [x] Create the public repository and verify GitHub private vulnerability reporting is enabled.
+- [ ] Push the complete reviewed library and pass GitHub Repository CI.
+- [ ] Deliberately deploy the approved Pages demo and verify the observed live URL.
 
 Actual local results: 77 Node tests, 14 Python tests and 22 browser checks passed.
 Source/output coverage verification and eight-file static build passed. See
 ../docs/verification.md for scope and limits. No hosted CI, operational detection
-validation, original application recovery or publication is claimed.
+validation, original application recovery or completed library/demo publication is claimed.

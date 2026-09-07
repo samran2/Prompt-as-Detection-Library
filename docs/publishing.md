@@ -5,14 +5,16 @@
 The complete active ATT&CK 19.2 library is an independent development rebuild at
 `0.3.0.dev2` (npm `0.3.0-dev.2`). The original v0.2.0 archive is unavailable; no
 recovery, original test preservation or format compatibility is claimed.
-Nothing has been published by this work. The proposed destination is account
-`samran2`, repository `Prompt-as-Detection-Library`; no live URL is asserted.
+The verified public repository is
+[samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
+It currently contains its initialization license. The full-library push,
+GitHub CI and Pages deployment remain pending; no live demo URL is asserted.
 
 All 918 active techniques have been generated and checked. The owner approved
-the MIT project-code license and requested GitHub publication. Public repository
-visibility still requires confirmation; the creation attempt was blocked before
-a repository was created. Private reporting must be configured on the actual
-repository before uploading code. Preserve MITRE terms independently.
+the MIT project-code license, the public repository and the public demo.
+GitHub private vulnerability reporting is enabled and was verified on the actual
+repository. See [SECURITY](../SECURITY.md) for the reporting route. Preserve MITRE
+terms independently.
 
 ## Prepare a reviewable candidate
 
@@ -30,9 +32,9 @@ repository before uploading code. Preserve MITRE terms independently.
 4. Record actual verification results and limits in
    [verification](verification.md), build the candidate archive, compare its
    files against the reviewed tree and retain its SHA-256 checksum.
-5. Preserve the approved [license decision](../LICENSE_TODO.md) and configure a
-   monitored private vulnerability-reporting route. Confirm the proposed
-   destination, visibility and explicit publication authorization.
+5. Preserve the approved [license decision](../LICENSE_TODO.md), the enabled
+   private vulnerability-reporting route, and the approved destination and
+   public visibility. Additional publication destinations need separate approval.
 
 Local implementation and passing checks do not authorize publication. A missing
 original archive does not prevent review of this independent rebuild's rights,
@@ -56,13 +58,13 @@ Artifact access follows the repository's GitHub settings.
 
 ## Publish the static workbench
 
-After explicit owner approval:
+For the owner-approved public repository and demo:
 
-1. Create or use the verified destination and push only the reviewed tree using
+1. Use the verified destination and push only the reviewed tree using
    a real configured Git identity. No author or remote URL should be invented.
 2. Configure GitHub Pages to use **GitHub Actions** and the `github-pages`
    environment with required approval where available. Require appropriate CI
-   checks and review on `main`, and configure private vulnerability reporting.
+   checks and review on `main`, and preserve enabled private vulnerability reporting.
 3. Wait for Repository CI on the reviewed commit. Manually run **Publish library
    workbench to GitHub Pages** on `main`, explicitly checking its confirmation
    input. It reruns full-library checks and uploads only the verified `dist/`.
@@ -82,6 +84,39 @@ browser permissions; manual copy and TXT download remain available. The page's
 restrictive meta CSP cannot provide every HTTP-header policy, including
 `frame-ancestors`. Hosting request logs are outside the app's control. The
 loopback Python server is a local preview, not a production application service.
+
+## Roll back a faulty deployment
+
+Rollback is a deliberate maintainer action; this project does not perform it
+automatically. Use it if the deployed workbench fails verification or the
+published files differ from the reviewed static payload.
+
+1. Record the faulty deployment's workflow run and commit, the observed problem,
+   and the last successful reviewed deployment, if one exists. Retain its
+   archive and checksum as evidence.
+2. From current `main`, prepare a focused revert of the faulty change on a review
+   branch. Review the resulting diff against the intended working version.
+   For multiple commits or merges, identify the exact changes and merge parent
+   before reverting. Preserve history: do not reset shared `main`, force-push,
+   or move existing release tags.
+3. Run the relevant local checks, inspect a fresh eight-file static build, and
+   review the revert before merging it. Wait for Repository CI to pass on the
+   resulting `main` commit. Retain the same source pins and license notices
+   unless the reviewed fix specifically requires a change.
+4. Deliberately dispatch **Publish library workbench to GitHub Pages** on `main`
+   with its confirmation input enabled. Verify that the dispatched run uses
+   the exact reviewed revert commit whose CI passed. If `main` has advanced,
+   review and verify that revision before deploying it. The workflow reruns
+   checks and uploads only its fresh `dist/`.
+5. Verify the deployed commit and observed site URL, then repeat all-domain
+   search, pagination, source detail, downloads and responsive-layout checks.
+   Record the outcome; a successful workflow alone does not prove the UI works.
+
+If the first deployment has no known-good predecessor, there is no earlier site
+to restore. Keep Pages unpublished while preparing a reviewed fix. If that first
+site already became live and then failed verification, deliberately unpublish
+or disable the Pages site in repository settings while correcting it. Deploy
+again only after review, passing CI and the same explicit manual deployment flow.
 
 ## Versioning and later releases
 

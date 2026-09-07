@@ -2,8 +2,10 @@
 
 ## Project status and reporting
 
-This is the unpublished `0.3.0.dev2` independent full-library rebuild. No supported
-public release is declared. Earlier foundation and 12-record sample reviews
+This `0.3.0.dev2` independent full-library rebuild is prepared for the approved
+public repository and demo. The repository exists, but the full-library push,
+GitHub CI and Pages deployment remain pending. No supported public release is
+declared. Earlier foundation and 12-record sample reviews
 apply only to their historical artifacts, not to this version or the missing
 original application.
 
@@ -13,16 +15,16 @@ approved license notices, licensing metadata and documentation only; runtime, te
 workflows were unchanged. See [verification](docs/verification.md) for exact
 scope and exclusions. This is not a guarantee that vulnerabilities are absent.
 
-Private vulnerability reporting is not configured yet. Before publication, the
-owner must enable repository private reporting or supply a monitored private
-contact and verified instructions. No contact address or live repository URL is
-invented here. Until then, retain sensitive details privately and request a
-private reporting route through an existing owner contact if available.
+GitHub private vulnerability reporting is enabled and was verified for
+[samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
+Use **Report a vulnerability** from the repository's
+[Security tab](https://github.com/samran2/Prompt-as-Detection-Library/security)
+to submit a private report to its maintainers.
 
 Never put undisclosed vulnerability details, credentials, customer logs or
 sensitive exploits in public issues. A useful private report identifies the
 version or commit, impact, prerequisites and a minimal synthetic reproduction.
-Response and disclosure commitments will be set when the channel is operational.
+No guaranteed response, remediation or disclosure timeline is stated.
 
 ## Trust boundaries
 
