@@ -1,70 +1,85 @@
 # Prompt-as-Detection Library
 
-Readable detection prompts for every active MITRE ATT&CK 19.2 technique and
-subtechnique, with a local browser workbench and command-line export.
+Turn MITRE ATT&CK evidence into reviewable detection, hunting and triage prompts.
+Browse **918 active techniques and subtechniques**, inspect their source guidance,
+and export drafts from a browser workbench or local CLI.
 
-Development version **0.3.0.dev2** (npm `0.3.0-dev.2`). This is an independent
-rebuild from official source data. The original v0.2.0 archive remains unavailable;
-its implementation, tests and byte-level content have not been recovered.
-The complete library has passed the recorded local publication checks.
-The owner approved a public repository and public demo. The repository exists;
-the full-library push, GitHub CI and Pages deployment remain pending.
+[![Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml)
 
-## Coverage
+**[Live demo →](https://samran2.github.io/Prompt-as-Detection-Library/)** · [Quick start](#run-it-locally) · [Source provenance](docs/source-provenance.md) · [Verification](docs/verification.md#hosted-publication-status)
 
-The pinned scope is **918 active techniques and subtechniques**: 697 Enterprise,
-124 Mobile and 97 ICS, comprising 378 parents and 540 subtechniques. The source
-contains 18,885 qualifying procedure relationships and 2,053 linked analytics.
-Revoked or deprecated techniques are excluded from active prompts and listed in
-the coverage evidence. The 13 unlinked active analytics remain in the raw source;
-the rebuild does not invent technique links for them.
+[![Full-library workbench showing source guidance and an editable detection prompt](docs/screenshots/desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
 
-Read [source provenance and coverage](docs/source-provenance.md), inspect
-[coverage evidence](library/coverage.json), and run `npm run library:verify` to
-compare the generated catalog and text files with the pinned inputs. Completeness
-is checked by identifier sets, not totals alone. Every active record has a
-readable text prompt under `library/prompts/`.
+*Actual workbench screenshot from local browser verification.*
 
-Prompts are **unvalidated drafts**. Catalog coverage and structural checks do not
-demonstrate model quality, successful detection, or production suitability.
+## What you can do
 
-## Open the workbench
+- **Find the right technique.** Search all three domains and filter by tactic
+  or platform, with bounded pages of 50 records.
+- **Inspect the evidence.** Read complete source descriptions, linked analytics,
+  telemetry references, tuning variables and documented procedure examples.
+- **Choose the task and format.** Use Detect, Hunt, Triage or Validate with
+  Platform-neutral, Panther Python, Sentinel KQL, Defender XDR, Splunk SPL or Sigma output.
+- **Keep drafts reviewable.** Edit browser text, copy or download TXT, and export
+  filtered templates as JSONL. The CLI adds prompt and export checksums.
 
-![Full-library workbench, actual local browser render](docs/screenshots/desktop.png)
+No account, API key, model service or runtime package installation is required.
+Browser context and edits stay in memory and clear on reload; downloads create
+local files. Copy and TXT preserve editor text; filtered JSONL exports fresh
+templates without editor changes.
 
-Extract the repository and open `demo/index.html` in a modern browser. For local
-HTTP preview and the best clipboard support, use Python 3.11 or later:
+Prompts are **unvalidated drafts**. Output targets describe the requested format;
+they are not verified integrations. No model calls or detection queries execute.
+Source coverage and passing checks do not establish detection effectiveness.
+
+## Run it locally
+
+Download or clone the repository, then open `demo/index.html` in a modern browser.
+For local HTTP preview and the best clipboard support, use Python 3.11 or later:
 
 ```sh
 python3 -m http.server 8766 --bind 127.0.0.1 --directory demo
 ```
 
-Open `http://127.0.0.1:8766/`. Search by ID, name or behavior; filter by domain,
-tactic and platform; inspect source descriptions, linked analytics and procedure
-examples; then choose a mode and target. Browse results in pages of 50.
+Open [localhost:8766](http://127.0.0.1:8766/). The preview serves only the browser
+assets; keep the repository root and private working files outside the site.
 
-The browser needs no account, API key, model service or runtime dependencies.
-Context and edited drafts stay in browser memory and disappear on reload.
-Source links leave the page only when clicked. Use synthetic context for reviews
-and screenshots. Copy and TXT download preserve the editor text; filtered JSONL
-exports fresh templates, excluding editor changes.
+### Local CLI
 
-## Use the local CLI
-
-Node.js 22 or later is required. No package installation is needed for runtime,
-generation or unit checks. Run commands from the extracted repository:
+Use Node.js 22 or later from the repository directory. No `npm install` is needed:
 
 ```sh
 npm run library:help
 node scripts/library_cli.cjs list
 node scripts/library_cli.cjs prompt T1059.001
-node scripts/library_cli.cjs export --output /absolute/new-file.jsonl
+node scripts/library_cli.cjs export --output ./detection-prompts.jsonl
 ```
 
-Use CLI help for selectors, modes, targets and context-file options. Exports
-refuse existing files, include a SHA-256 for each prompt, and report a SHA-256
-for the complete JSONL file. These are the independent rebuild's documented
-formats, not a compatibility claim for the unavailable original application.
+The export example creates `detection-prompts.jsonl` in the current directory;
+it must not already exist. CLI help covers selectors, modes, targets and
+literal context files. See the [development guide](docs/development.md) for details.
+
+## Pinned coverage
+
+| ATT&CK 19.2 domain | Active techniques and subtechniques |
+| --- | ---: |
+| Enterprise | 697 |
+| Mobile | 124 |
+| ICS | 97 |
+| **Total** | **918** |
+
+The library includes **378 parent techniques**, **540 subtechniques**,
+**18,885 procedure relationships** and **2,053 linked analytics**. Each active
+record has a readable [text prompt](library/prompts/). Revoked and deprecated
+records are excluded from active prompts; source gaps and unlinked analytics
+remain explicit in the [coverage evidence](library/coverage.json).
+
+This is an **independent rebuild** from official pinned MITRE data, development
+version `0.3.0.dev2` (npm `0.3.0-dev.2`). The original v0.2.0 archive remains
+unavailable; this project does not claim to restore its implementation or formats.
+Read the [source provenance](docs/source-provenance.md) for the exact commit,
+source hashes, attribution and inclusion policy.
 
 ## Verify and build
 
@@ -75,50 +90,32 @@ npm test
 npm run build
 ```
 
-`library:verify` checks generated bytes without writing. `library:build`
-deliberately regenerates the catalog, readable prompts and coverage artifacts
-from the pinned local source. The static build verifies the library before
-copying exactly eight allowlisted files to a new `dist/`. It rejects an existing
-output directory; preserve or move a previous build before rebuilding.
+`library:verify` compares exact source/output identifiers and generated bytes
+without rewriting them. `library:build` intentionally regenerates the pinned
+library. The static build verifies it before copying exactly eight allowed
+files to a new `dist/`; preserve an existing build before rebuilding.
 
-The raw source bundles, all procedure records, tests and local work never enter
-`dist/`. The full catalog has a 16 MiB limit; each other public asset has a 2 MiB
-limit. See [development](docs/development.md) for browser and foundation checks,
-and the [verification record](docs/verification.md) for actual results and limits.
+The browser, CLI and text generator share `demo/core.js`. Raw source bundles,
+complete procedure records, tests and private work stay outside the static build.
+See [verification](docs/verification.md) for actual checks and their limits.
 
-## Repository map
+## Explore the project
 
-| Path | Purpose |
+| Guide | What it covers |
 | --- | --- |
-| `sources/attack-19.2/` | Pinned raw source bundles, hashes and MITRE notice. |
-| `library/prompts/` | One readable detection prompt per active record. |
-| `library/procedures.jsonl` | All qualifying source procedure relationships. |
-| `library/coverage.json` | Reproducible coverage and source identity evidence. |
-| `demo/` | Complete static workbench; sole public-site source. |
-| `scripts/` | Shared-library generator, CLI, static builder and checks. |
-| `tests/`, `qa/` | Local behavior tests and isolated optional browser tooling. |
-| `docs/`, `tasks/` | Architecture, provenance, verification and implementation plan. |
-| `.github/` | CI, manual archive preview and manual Pages deployment. |
+| [Architecture](docs/architecture.md) | Shared composition, data flow and the static file boundary. |
+| [Development](docs/development.md) | CLI contracts, generation, browser QA and repository checks. |
+| [Contributing](CONTRIBUTING.md) | Focused changes, source fidelity and review expectations. |
+| [Security](SECURITY.md) | Private vulnerability reporting, trust boundaries and review scope. |
+| [Publishing and rollback](docs/publishing.md) | Deliberate deployment, CI gates and recovery. |
+| [Roadmap](ROADMAP.md) | Current delivery and separately scoped future work. |
 
-The browser, CLI and text generator share `demo/core.js`. Python is used for
-preview and repository checks; this rebuild does not provide the original
-`python -m huntprompt serve` command or its response evaluator.
+## License and attribution
 
-## Publication and licensing
-
-The verified public repository is
-[samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
-It currently contains its initialization license; the complete library has not
-been pushed. Private vulnerability reporting is enabled; see [SECURITY](SECURITY.md).
-The owner approved the public demo, but GitHub CI and the deliberate Pages
-deployment have not run. No live demo URL, package publication or release is claimed.
-
-Original project code and associated documentation use the [MIT License](LICENSE),
-Copyright (c) 2026 samran2, as approved by the owner. MITRE source data and reproduced
-ATT&CK text retain their separate [MITRE terms](sources/attack-19.2/raw/LICENSE.txt).
-The [static distribution notice](demo/THIRD_PARTY_LICENSE.txt) contains the full
-MITRE terms and project MIT license. The
-[resolved licensing record](LICENSE_TODO.md) documents this distinction; this
-repository does not grant new rights to the missing original application.
-The package remains private. See [publishing](docs/publishing.md),
-[CONTRIBUTING](CONTRIBUTING.md) and [SECURITY](SECURITY.md) before distribution.
+Original code and associated documentation use the [MIT License](LICENSE),
+Copyright (c) 2026 samran2. Reproduced ATT&CK content retains separate
+[MITRE terms](sources/attack-19.2/raw/LICENSE.txt); the
+[static notice](demo/THIRD_PARTY_LICENSE.txt) includes both complete licenses.
+See the [licensing record](LICENSE_TODO.md) for scope. This independent project
+is not endorsed by MITRE. The npm package remains private; no package or stable
+release is claimed.

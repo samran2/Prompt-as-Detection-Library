@@ -2,18 +2,20 @@
 
 ## Project status and reporting
 
-This `0.3.0.dev2` independent full-library rebuild is prepared for the approved
-public repository and demo. The repository exists, but the full-library push,
-GitHub CI and Pages deployment remain pending. No supported public release is
-declared. Earlier foundation and 12-record sample reviews
+This `0.3.0.dev2` independent full-library rebuild is available in the approved
+public repository. Hosted checks and demo status are recorded in
+[verification](docs/verification.md#hosted-publication-status). No supported
+public release is declared. Earlier foundation and 12-record sample reviews
 apply only to their historical artifacts, not to this version or the missing
 original application.
 
 A new offline Codex Security review of the full-library development snapshot
-completed without reportable findings. The publication copy subsequently added
-approved license notices, licensing metadata and documentation only; runtime, tests, data and
-workflows were unchanged. See [verification](docs/verification.md) for exact
-scope and exclusions. This is not a guarantee that vulnerabilities are absent.
+completed without reportable findings. Runtime, data and the original four
+workflows remain unchanged. The publication copy added approved licensing and
+documentation, then a new CodeQL workflow and a test-fixture correction after
+that review. These later changes were not covered by the earlier immutable audit.
+See [verification](docs/verification.md)
+for exact scope and outcomes. This is not a guarantee that vulnerabilities are absent.
 
 GitHub private vulnerability reporting is enabled and was verified for
 [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).

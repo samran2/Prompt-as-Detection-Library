@@ -1,7 +1,7 @@
 # Roadmap
 
-Every active ATT&CK 19.2 technique is complete; the current objective is the
-approved public repository and demo publication. Version `0.3.0.dev2` is independently rebuilt from official MITRE
+Every active ATT&CK 19.2 technique is complete, and the approved public repository
+and demo are published. Version `0.3.0.dev2` is independently rebuilt from official MITRE
 source; the missing v0.2.0 archive has not been restored. The historical sample
 and its verification record remain separate from this larger version.
 
@@ -46,8 +46,8 @@ These checks do not validate detection effectiveness.
   credentials; preserve the enabled GitHub private vulnerability-reporting route.
 - Use the approved public
   [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library)
-  repository. It currently contains its initialization license; the full-library
-  push, hosted CI and Pages deployment remain pending.
+  repository. The complete library is pushed; track hosted CI and Pages outcomes
+  in the [verification record](docs/verification.md#hosted-publication-status).
 - Run the configured CI on the approved commit and deploy only the reviewed static
   output after explicit authorization. Keep development builds marked prerelease.
 

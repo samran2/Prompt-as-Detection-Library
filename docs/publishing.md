@@ -7,8 +7,9 @@ The complete active ATT&CK 19.2 library is an independent development rebuild at
 recovery, original test preservation or format compatibility is claimed.
 The verified public repository is
 [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
-It currently contains its initialization license. The full-library push,
-GitHub CI and Pages deployment remain pending; no live demo URL is asserted.
+The complete library and public workbench are published. Keep the observed commit, hosted-check
+results and public-demo status in the
+[verification record](verification.md#hosted-publication-status).
 
 All 918 active techniques have been generated and checked. The owner approved
 the MIT project-code license, the public repository and the public demo.
@@ -46,7 +47,9 @@ Repository CI runs foundation checks and the reusable full-library checks. The
 latter verify generated source outputs, JavaScript syntax, Node behavior, static
 build boundaries and real-browser flows. Python matrix jobs cover foundation
 tooling only; they are not compatibility tests for an original Python app.
-Workflows are prepared locally and have not run on GitHub yet.
+A separate pinned CodeQL workflow analyzes GitHub Actions, JavaScript and Python.
+It was added after the earlier immutable audit and is not covered by that audit.
+Actual hosted run outcomes are recorded in [verification](verification.md#hosted-publication-status).
 
 The manual **Library archive preview** first requires the reusable library checks
 and runs foundation checks before archiving committed `HEAD`. It uploads only
@@ -62,9 +65,11 @@ For the owner-approved public repository and demo:
 
 1. Use the verified destination and push only the reviewed tree using
    a real configured Git identity. No author or remote URL should be invented.
-2. Configure GitHub Pages to use **GitHub Actions** and the `github-pages`
-   environment with required approval where available. Require appropriate CI
-   checks and review on `main`, and preserve enabled private vulnerability reporting.
+2. Preserve GitHub Pages' **GitHub Actions** source, HTTPS enforcement and the
+   `github-pages` environment's `main`-only deployment rule. No environment
+   reviewer is configured; the confirmation input is the deliberate operator
+   approval. Preserve enabled private vulnerability reporting and review CI
+   on the exact commit to be deployed.
 3. Wait for Repository CI on the reviewed commit. Manually run **Publish library
    workbench to GitHub Pages** on `main`, explicitly checking its confirmation
    input. It reruns full-library checks and uploads only the verified `dist/`.

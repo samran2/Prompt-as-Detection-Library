@@ -13,7 +13,8 @@ Describe the observed and expected behavior.
 ## Reproduction
 
 Provide the shortest reproducible steps and synthetic inputs. Include the
-application version, Python version, OS, and browser if relevant.
+application version, Node.js version, OS, and browser if relevant. Include the
+Python version when reporting a local preview or repository-tooling problem.
 
 ## Impact
 

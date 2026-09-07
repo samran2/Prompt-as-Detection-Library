@@ -9,9 +9,10 @@ was recovered. Include Enterprise (697), Mobile (124), ICS (97): 918 active
 techniques/subtechniques, including both parents and children. Exclude revoked
 or deprecated techniques from active prompts and list them in coverage evidence.
 The owner approved publication to the public `samran2/Prompt-as-Detection-Library`
-repository and a public demo. The repository exists with private vulnerability
-reporting enabled; the full-library push, GitHub CI and Pages deployment remain
-pending. Automatic model calls and query execution remain out of scope.
+repository and a public demo. The full library is pushed and private vulnerability
+reporting is enabled. Hosted CI and Pages outcomes are recorded in
+[verification](docs/verification.md#hosted-publication-status).
+Automatic model calls and query execution remain out of scope.
 
 ## Stack and commands
 

@@ -7,9 +7,9 @@
   source archive remains unavailable: never claim original implementation or
   byte preservation. All active techniques are complete. The owner requested
   publication to the public `samran2/Prompt-as-Detection-Library` repository and
-  a public demo, and approved the MIT project-code license. The repository exists
-  and private vulnerability reporting is enabled. The full-library push, hosted
-  CI and Pages deployment remain pending. See SPEC.md and tasks/plan.md.
+  a public demo, and approved the MIT project-code license. The complete library
+  is pushed and private vulnerability reporting is enabled. Keep hosted CI and
+  Pages outcomes in docs/verification.md; see SPEC.md and tasks/plan.md.
 - Do not invent source files, test results, procedure relationships, contacts,
   repository URLs, licenses, or provenance to fill gaps.
 - Read the existing implementation and nearby tests before making changes.

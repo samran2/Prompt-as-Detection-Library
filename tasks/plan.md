@@ -2,8 +2,9 @@
 
 Original direction: every technique first; no publication. Techniques are now
 complete; the owner approved MIT licensing, the public repository and public demo.
-The public repository exists and private vulnerability reporting is enabled.
-The full-library push, hosted CI and Pages deployment remain pending.
+The full library is pushed to the public repository and private vulnerability
+reporting is enabled. Hosted CI and Pages outcomes belong in
+[verification](../docs/verification.md#hosted-publication-status).
 Specification: ../SPEC.md.
 Task checklist: todo.md. Existing demo and its audit remain immutable in outputs.
 
@@ -32,7 +33,8 @@ Task checklist: todo.md. Existing demo and its audit remain immutable in outputs
 - Handoff: new ZIP verified bytewise; no original-restoration or security-audit
   claims inherited from earlier 12-record snapshot. A fresh full-library security
   review is complete; public visibility and private reporting are confirmed.
-  The full-library push, hosted CI and Pages deployment remain pending.
+  The full-library push is complete. Record actual hosted CI and Pages outcomes
+  in [verification](../docs/verification.md#hosted-publication-status).
 
 ## Risks
 

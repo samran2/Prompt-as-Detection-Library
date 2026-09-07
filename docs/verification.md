@@ -81,22 +81,47 @@ permission allowed the successful isolated run.
   digest matched the official release checksum and asset metadata. No pre-existing
   Git history existed in the publication copy. Unknown secret formats remain
   outside any scanner's guarantee.
-- The separate publication copy adds the approved MIT project-code license and
-  licensing metadata and documentation. Full MITRE and project MIT notices are included in the existing
-  public notice file. Runtime, tests, workflows and generated library/source
-  bytes are unchanged from the audited snapshot.
+- The publication copy added the approved MIT project-code license, licensing
+  metadata and documentation. Full MITRE and project MIT notices are included in
+  the existing public notice file. Runtime, generated library/source bytes
+  and the original four workflows remain unchanged from the audited snapshot.
+  The later `.github/workflows/codeql.yml` addition and test-fixture correction
+  are outside that immutable audit; their verification is recorded separately below.
 - Publication-copy recheck: all 77 Node tests and 14 Python foundation tests
   passed again, as did generated-library verification, JavaScript syntax,
   foundation checks and Ruff lint/format. A fresh eight-file static build matched
   its demo sources, including both complete license notices.
 
-Workflows have not run on GitHub. No model or detection-platform validation,
-screen-reader audit, complete WCAG audit or absence-of-vulnerabilities guarantee
-is claimed. The public repository and demo are explicitly approved, the
-[repository](https://github.com/samran2/Prompt-as-Detection-Library) exists with
-its initialization license, and private vulnerability reporting was enabled and
-verified. The full-library push and hosted Pages deployment remain pending. Earlier sample
-audits remain historical and were not used as approval for this implementation.
+No model or detection-platform validation, screen-reader audit, complete WCAG
+audit or absence-of-vulnerabilities guarantee is claimed. Earlier sample audits
+remain historical and were not used as approval for this implementation.
+
+### Hosted publication status
+
+Observed on 2026-09-08 (Europe/Helsinki). The owner approved the public repository
+and public demo. Repository setup and hosted execution are separate from the
+earlier offline audit.
+
+| Item | Observed result |
+| --- | --- |
+| Full-library push | Succeeded to public [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library), `main` commit [`225812b9367931e75736908187b8eb854e047374`](https://github.com/samran2/Prompt-as-Detection-Library/commit/225812b9367931e75736908187b8eb854e047374). |
+| Initial Repository CI | [Run 34164977469](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34164977469) succeeded in all five jobs, including Python 3.11–3.14 and browser checks. |
+| Initial CodeQL | [Run 34164976981](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34164976981) succeeded in all three language jobs but reported alert 1, `js/double-escaping`, in `tests/ui_state.test.cjs`. Successful analysis does not mean no alerts. |
+| Test-fixture correction | Static triage located repeated HTML-entity decoding in a test-only fake DOM parser; it is absent from the runtime, CLI and eight-file demo. Decoded values remain fake text. A focused regression failed before the correction; all nine focused tests and the full 78-test Node suite passed afterward. Independent review approved the bounded change, published as [`441053ebc19f3fae136f84543137f64fb2b23141`](https://github.com/samran2/Prompt-as-Detection-Library/commit/441053ebc19f3fae136f84543137f64fb2b23141). |
+| Correction Repository CI | [Run 34165241762](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34165241762) succeeded on the correction commit. |
+| Correction CodeQL | [Run 34165241593](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34165241593) succeeded in all three jobs. The open-alert API returned an empty list; alert 1 changed to `fixed` automatically at `2026-09-07T22:03:01Z`, with no dismissal or suppression. |
+| Private vulnerability reporting | Enabled and verified on the public repository. |
+| Security policy history | The GitHub initialization template history was retained while preserving the reviewed substantive root policy; no new exclusions or accepted risks were introduced. |
+| Pages configuration | Workflow source, HTTPS enforced, and the `github-pages` environment restricted to `main`. No environment reviewer is configured. |
+| Pages deployment | [Run 34165337041](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34165337041) succeeded through checks, build and deployment on `441053ebc19f3fae136f84543137f64fb2b23141`, dispatched with `publish_demo: true`. The [public workbench](https://samran2.github.io/Prompt-as-Detection-Library/) loaded successfully in a real browser. |
+| Live browser verification | Confirmed 918 records; exact PowerShell search `T1059.001`; Hunt/Sigma composition and source panel; Mobile 124 and ICS 97; last page 19 of 19 with 18 records. Desktop was visually reviewed; the 390-pixel mobile view had no horizontal overflow. No console warnings or errors were observed. |
+| Hosted exports | The app reported a TXT request and a one-record JSONL export. The native browser automation download-event hook timed out, so hosted downloaded-file bytes were not validated. The existing 22 loopback browser checks, including download validation, passed in CI. |
+| Hosted asset integrity | All seven content assets returned HTTPS 200 with expected MIME types and SHA-256 values matching the reviewed source. `.nojekyll` returned 404; it is a publishing marker rather than an interactive asset. |
+
+The Pages workflow emitted a nonblocking Node.js 20 deprecation warning from
+the upstream upload-pages-artifact action's nested upload-artifact action; the
+runner automatically used Node.js 24. Action pins were retained. This workflow
+warning is separate from the live browser's clean console result.
 
 ## Historical static demo 0.3.0-dev.1
 

@@ -36,6 +36,16 @@ conversations are not independent verification of a release.
   their scope and limitations are recorded in docs/verification.md.
 - Recorded the approved public repository and demo, enabled private vulnerability
   reporting, and a manual rollback procedure that preserves Git history.
+- Published the complete library to the public repository and added a pinned
+  CodeQL workflow for GitHub Actions, JavaScript and Python. This new workflow
+  is outside the earlier immutable audit; hosted outcomes are recorded in
+  [verification](docs/verification.md#hosted-publication-status).
+- Corrected nested HTML-entity decoding in a test-only fake DOM parser and added
+  a regression that failed before the correction. Product runtime is unchanged;
+  final test and CodeQL outcomes are recorded in the verification record.
+- Deployed the public workbench and verified its hosted UI and static asset
+  integrity. Added the live-demo link, native workflow badges and an actual UI
+  screenshot to the README; detailed results and limits are in the verification record.
 
 ### Limits
 
@@ -46,9 +56,9 @@ conversations are not independent verification of a release.
 - All prompts remain unvalidated drafts. Current check outcomes are recorded in
   docs/verification.md; older audits do not transfer to this version.
 - MIT project-code licensing, the public repository and demo are approved.
-  The repository exists with its initialization license and private reporting
-  enabled. Full-library push, hosted CI and Pages deployment remain pending;
-  no package publication or release is claimed.
+  The complete library is pushed and private reporting is enabled. See the
+  [verification record](docs/verification.md#hosted-publication-status) for hosted
+  CI and demo outcomes; no package publication or release is claimed.
 
 ## [0.3.0.dev1] - Historical unreleased sample
 
