@@ -1,0 +1,47 @@
+name: Library archive preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/demo-checks.yml
+  preview:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - run: |
+          python -m pip install --only-binary=:all: -r requirements-dev.txt
+      - run: python -m pre_commit validate-config
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+      - run: python scripts/check_foundation.py --tracked
+      - run: python -m unittest discover -s tests -v
+      - name: Archive reviewed repository files
+        run: |
+          archive_dir=$(mktemp -d "$RUNNER_TEMP/prompt-library.XXXXXX")
+          git archive --format=zip --prefix=Prompt-as-Detection-Library/ --output="$archive_dir/prompt-as-detection-library.zip" HEAD
+          cd "$archive_dir"
+          sha256sum prompt-as-detection-library.zip > SHA256SUMS
+          echo "LIBRARY_ARCHIVE_DIR=$archive_dir" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: prompt-as-detection-library-preview
+          path: |
+            ${{ env.LIBRARY_ARCHIVE_DIR }}/prompt-as-detection-library.zip
+            ${{ env.LIBRARY_ARCHIVE_DIR }}/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 7
+      - name: State preview limitations
+        run: |
+          echo 'Independent full-library development preview, not a stable release or recovery of the original application. No GitHub Release or package publication was performed.' >> "$GITHUB_STEP_SUMMARY"
