@@ -36,3 +36,10 @@ the older immutable snapshot.
 4. Run complete verification and independent diff/content review.
 5. Save the reviewed change, pass hosted CI and CodeQL on the reviewed commit,
    deliberately update the existing demo and verify the observed live result.
+
+## Completion
+
+The reviewed implementation was published as `bf113bd9c62c94103470bd0277b4044ab8cba1b1`.
+Repository CI and CodeQL passed, then Pages run `34167896352` deployed that exact
+commit. Real-browser and independent hosted-asset verification passed within the
+limits recorded in [verification](../docs/verification.md#dev3-hosted-publication).

@@ -3,8 +3,8 @@
 ## Project status and reporting
 
 Version `0.3.0.dev3` is the current independent prompt-quality development version.
-The owner authorized publishing this update after verification. The preceding
-`0.3.0.dev2` library and demo were published at the approved public destination.
+The owner-approved dev3 library and demo are published at the approved public
+destination following the recorded verification.
 Observed checks and deployment status are recorded in
 [verification](docs/verification.md). No supported
 public release is declared. Earlier foundation and 12-record sample reviews

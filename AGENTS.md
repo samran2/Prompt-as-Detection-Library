@@ -7,9 +7,9 @@
   source archive remains unavailable: never claim original implementation or
   byte preservation. All active techniques are complete. The owner requested
   publication to the public `samran2/Prompt-as-Detection-Library` repository and
-  a public demo, and approved the MIT project-code license. Version dev2 is
-  published and private vulnerability reporting is enabled. The owner also
-  authorized publishing the dev3 prompt-quality update after verification.
+  a public demo, and approved the MIT project-code license. The reviewed dev3
+  prompt-quality update and workbench are published, and private vulnerability
+  reporting is enabled.
   Record actual checks and hosted outcomes rather than inferring success.
   The earlier immutable
   security audit does not cover the changed composer or revised prompts.

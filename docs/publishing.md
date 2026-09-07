@@ -7,11 +7,10 @@ The complete active ATT&CK 19.2 library is an independent development rebuild at
 recovery, original test preservation or format compatibility is claimed.
 The verified public repository is
 [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
-The preceding dev2 library and public workbench are published. The owner has
-authorized publishing the dev3 prompt-quality update after verification.
+The owner-approved dev3 prompt-quality update and public workbench are published.
 Keep the observed commit,
 hosted-check results and public-demo status in the
-[verification record](verification.md#hosted-publication-status).
+[verification record](verification.md#dev3-hosted-publication).
 
 All 918 active techniques have been generated and checked. The owner approved
 the MIT project-code license, the public repository and the public demo.
@@ -51,7 +50,7 @@ build boundaries and real-browser flows. Python matrix jobs cover foundation
 tooling only; they are not compatibility tests for an original Python app.
 A separate pinned CodeQL workflow analyzes GitHub Actions, JavaScript and Python.
 It was added after the earlier immutable audit and is not covered by that audit.
-Actual hosted run outcomes are recorded in [verification](verification.md#hosted-publication-status).
+Actual hosted run outcomes are recorded in [verification](verification.md#dev3-hosted-publication).
 
 The manual **Library archive preview** first requires the reusable library checks
 and runs foundation checks before archiving committed `HEAD`. It uploads only

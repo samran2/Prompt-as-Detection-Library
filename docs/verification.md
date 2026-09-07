@@ -36,6 +36,28 @@ or absence of vulnerabilities. The prior immutable Codex Security audit below
 does **not** cover the changed dev3 composer and regenerated prompts. Hosted
 outcomes are recorded separately from local checks.
 
+## Dev3 hosted publication
+
+Observed on 2026-09-08 (Europe/Helsinki), at the owner-approved repository and
+demo destination. These hosted checks are separate from the older offline audit.
+
+| Item | Observed result |
+| --- | --- |
+| Reviewed update | Published to `main` as [`bf113bd9c62c94103470bd0277b4044ab8cba1b1`](https://github.com/samran2/Prompt-as-Detection-Library/commit/bf113bd9c62c94103470bd0277b4044ab8cba1b1). |
+| Repository CI | [Run 34167768740](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34167768740) succeeded in all five jobs, including the built-site browser checks and Python 3.11–3.14 foundation checks. |
+| CodeQL | [Run 34167768534](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34167768534) succeeded. The open code-scanning alert API returned an empty list after this run; no alerts were dismissed or suppressed. |
+| Repository discovery | A real browser confirmed the prominent **Try it in your browser / Open the live demo** link, dev3 version and both review-guide links on the public repository homepage. |
+| Pages deployment | [Run 34167896352](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34167896352) succeeded through checks, build and deployment on the same reviewed `bf113bd9c62c94103470bd0277b4044ab8cba1b1` commit, deliberately dispatched with `publish_demo: true` after CI and CodeQL passed. |
+| Live browser | The [public workbench](https://samran2.github.io/Prompt-as-Detection-Library/) showed dev3 and 918 records. Confirmed PowerShell search, Hunt/Sigma formatting, readiness/corroboration clauses, analytic references, source panel, ICS offline validation, Mobile collection prerequisites, and page 19 with 18 records. No console warnings/errors or horizontal overflow at the observed 837-pixel viewport. |
+| Live exports | TXT and filtered JSONL actions were exercised; the app reported a one-record JSONL export. Hosted downloaded-file bytes were not independently inspected. Exact downloaded bytes were checked by the local and hosted-loopback browser suites. |
+| Hosted asset integrity | Independent verification found all seven content assets returned HTTPS 200 with expected MIME types and exact bytes/SHA-256 matching the reviewed commit and local sources. Both license notices remained intact. `.nojekyll` returned 404 and was treated separately as a publishing marker. |
+
+Pages emitted nonblocking Node.js 20 deprecation warnings for the pinned
+deployment action and the upload action's nested artifact action; GitHub ran
+them under Node.js 24 and all jobs succeeded. These workflow warnings are not
+browser console errors. The subsequent publication-evidence documentation commit
+does not change the seven deployed content assets and requires no new deployment.
+
 ## Historical independent full library — 0.3.0.dev2
 
 Current source and output scope is described in

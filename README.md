@@ -15,7 +15,7 @@ the demo does not run a model or execute detection rules.
 [![Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml)
 
-[Quick start](#run-it-locally) · [Source provenance](docs/source-provenance.md) · [Verification](docs/verification.md#hosted-publication-status)
+[Quick start](#run-it-locally) · [Source provenance](docs/source-provenance.md) · [Verification](docs/verification.md#dev3-hosted-publication)
 
 [![Full-library workbench showing source guidance and an editable detection prompt](docs/screenshots/desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
 
@@ -90,8 +90,8 @@ Read the [source provenance](docs/source-provenance.md) for the exact commit,
 source hashes, attribution and inclusion policy.
 
 The dev3 [prompt-quality review](docs/prompt-quality-review.md) covers improved
-drafting instructions, not validated detections. Publication is owner-authorized
-after verification; see the [verification record](docs/verification.md) for the
+drafting instructions, not validated detections. The update and public workbench
+are published; see the [verification record](docs/verification.md) for the
 observed checks and deployed commit.
 
 ## Verify and build
