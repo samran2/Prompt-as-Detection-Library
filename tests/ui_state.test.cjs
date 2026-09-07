@@ -96,7 +96,8 @@ function parseDocument(html) {
       if (tag === 'body') document.body = node;
       if (!voidTags.has(tag) && !token.endsWith('/>')) stack.push(node);
     } else {
-      stack.at(-1).append(token.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"'));
+      // Decode ampersand last so nested entities remain literal after one pass.
+      stack.at(-1).append(token.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&'));
     }
   }
   document.getElementById = id => document.ids.get(id) || null;
@@ -151,6 +152,12 @@ function launch(catalog = records()) {
     input(id, value, event = 'input') { const node = get(id); node.value = value; node.dispatch(event); },
   };
 }
+
+test('test DOM parser decodes text entities exactly once without creating markup', () => {
+  const document = parseDocument('<body><p id="sample">&amp;lt;script&amp;gt; &amp;quot; &quot; &amp;amp; &lt; &gt; &unknown;</p></body>');
+  assert.equal(document.getElementById('sample').textContent, '&lt;script&gt; &quot; " &amp; < > &unknown;');
+  assert.equal(document.querySelectorAll('script').length, 0);
+});
 
 test('workbench starts with all domains and reports full-library counts', () => {
   const ui = launch();
