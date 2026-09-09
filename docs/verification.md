@@ -1,5 +1,46 @@
 # Verification records
 
+## Research tools — local verification 2026-09-09
+
+This development update adds six scoped offline capabilities. It preserves all
+ATT&CK/ATLAS prompts, the shared composer and pinned ATT&CK/ATLAS/D3FEND source
+bytes relative to `6460746dbd30010eb5de402e805b8a1b116735ad`. It retains version
+`0.4.0.dev0`; software checks do not change review or validation evidence.
+
+- Final Node regression run: **308 tests passed**, zero failures. API tests used
+  explicit loopback permission; unprivileged agent attempts with EPERM are not
+  counted as successful runs.
+- Python foundation: **16 tests passed**; foundation artifact/credential-pattern
+  check and existing/new JavaScript syntax checks passed.
+- **52 Chrome 152.0.7977.83 checks passed**, including exact Navigator domain
+  exports, CAR hypotheses and unmapped ICS, Flow reorder/remove and STIX export,
+  literal manual assessment text, plan/template hashes, incomplete/foreign lab
+  envelope rejection, successful unverified import, input invalidation, local-file
+  loading, themes and 320/768/1024/1440 px layouts. No unexpected external request
+  or main-page console error/warning was observed. Screenshots were inspected.
+- Seven controller regressions cover stale asynchronous imports/exports, invalid
+  CAR startup, enabled focus after reordering and local file bounds. Restoring
+  previous unsafe patterns in memory caused the expected failures.
+- Independent feature reviews verified Navigator/Flow, CAR/lab and STIX-diff
+  boundaries. Required asynchronous-state, identifier-coercion, prototype-key and
+  multiplicative-traversal issues were fixed and regression-tested. No concrete
+  blockers remained in those reviewed scopes.
+- CAR's 102 raw YAMLs match the official pinned commit; independent safe-decoder
+  parity and join recomputation confirmed 117 active Enterprise IDs and five
+  excluded obsolete IDs, without inherited mappings. Full notices are retained.
+- An additional independent local full JSON Schema validation checked all six
+  objects of a two-step Attack Flow export against official schema/core references.
+  Ordinary Node tests verify format structure and source pins; they are not a full
+  schema engine. No upstream Navigator/Flow interactive import is claimed.
+- Root and isolated QA dependency audits reported zero known vulnerabilities.
+  Build verification passed for ATT&CK, ATLAS, D3FEND, CAR, review registry and
+  static evals, with the narrow public allowlist unchanged in principle.
+
+This is scoped software verification, not a repository-wide Codex Security scan,
+independent WCAG certification, real Caldera run, native-rule lab validation,
+human review of prompts or production effectiveness proof. Hosted CI/Pages results
+must be recorded after publication; this entry alone asserts no deployment.
+
 ## D3FEND development demo — hosted verification 2026-09-09
 
 The application/content revision is

@@ -16,6 +16,18 @@ request to that destination.
 
 ## Data handling rules
 
+The Research tools page also keeps flow titles, manual assessment fields and lab
+references in memory only. A chosen lab-envelope file is parsed locally, never
+uploaded. The UI accepts at most 256 KiB and retains only allowlisted identifiers,
+hash references and outcomes; native operation reports and unknown fields are
+rejected. Changing the plan invalidates imported results. Reloading clears the
+session but does not delete user-downloaded files. Inspect exports before sharing.
+
+The version-comparison CLI reads an explicitly selected local STIX bundle and
+prints a report to stdout. It does not fetch URLs, persist a candidate, update
+sources or connect to Caldera. Terminal redirection is an operator-controlled
+storage decision; treat candidate sources and reports as untrusted data.
+
 - Never put credentials, personal data, confidential logs, malware samples, or
   private incident details into the workbench context field.
 - Render source, prompt, and analyst text literally. Do not turn it into HTML or

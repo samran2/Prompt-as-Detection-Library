@@ -494,6 +494,7 @@ function contrastRatio(first, second) {
       assert.equal(await page.locator('#technique-id').textContent(), 'AML.T0051.001');
       assert.match(await page.locator('#prompt').inputValue(), /MITRE ATLAS 2026\.08/);
     });
+    await require('./research_browser_checks.cjs')({ page, base, check, output });
     await check('no browser console errors or external requests', async () => { assert.deepEqual(failures, []); assert.deepEqual(external, []); });
     fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:project.version, catalogRecords:combinedCatalog.length, attackRecords:catalog.length, atlasRecords:atlasCatalog.length, browser: browser.version(), node: process.version, basePath:parsed.pathname, checks: results, failures, externalRequests: external, limitations: ['No screen-reader audit or complete WCAG certification.', 'Clipboard denial tested; actual platform clipboard success is not asserted.', 'Hosted GitHub Pages and original application were not tested.'] }, null, 2) + '\n');
     console.log(`${results.length} browser checks passed.`);

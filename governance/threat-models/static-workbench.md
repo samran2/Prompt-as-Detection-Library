@@ -7,7 +7,7 @@ backend, model calls, or analyst-data upload. Its most credible risks are publis
 catalog or JavaScript tampering, untrusted ATT&CK text reaching an unsafe DOM or
 link sink, accidental inclusion of private files in the Pages artifact, and users
 mistaking generated prompts for validated detections. Existing literal rendering,
-URL validation, restrictive CSP, deterministic generation, and an eight-file build
+URL validation, restrictive CSP, deterministic generation, and an explicit build
 allowlist reduce those risks, but release identity and independent content review
 remain essential.
 
@@ -40,7 +40,7 @@ protected deployment workflow.
   inputs after review (`sources/attack-19.2/manifest.json`).
 - The deterministic generator derives catalog and prompt files
   (`scripts/build_library.cjs`).
-- The packaging step validates and copies eight allowlisted files into `dist/`
+- The packaging step validates and copies only allowlisted files into `dist/`
   (`scripts/build_demo.cjs`, `PUBLIC_FILES`).
 - GitHub Actions checks and deliberately deploys the artifact
   (`.github/workflows/pages.yml`).
@@ -57,7 +57,7 @@ protected deployment workflow.
 - Repository → CI runner: source, scripts, Actions definitions, and dependencies
   cross into ephemeral build compute; checkout is read-only and actions are SHA
   pinned, while workflow permissions bound GitHub-token authority.
-- CI artifact → GitHub Pages → browser: eight public UTF-8 files cross the hosting
+- CI artifact → GitHub Pages → browser: allowlisted public UTF-8 files cross the hosting
   boundary over HTTPS; the allowlist, size limits, credential patterns, and CSP
   constrain content, while platform TLS protects transport.
 - Catalog and URL state → DOM: untrusted source and URL parameter values cross into
@@ -165,6 +165,27 @@ flowchart LR
 Risk rankings assume protected HTTPS hosting and no application backend. Adding
 remote calls, storage, service workers, or third-party scripts raises TM-001 and
 TM-002 and requires this model to be revised.
+
+## Research exchange extension (2026-09-09)
+
+`demo/research.js` adds manual text, a 256 KiB browser-local file import and
+downloads, not a server upload. `demo/lab-exchange.js` accepts only a versioned
+field allowlist, checks duplicate JSON keys and depth, binds plan/prompt hashes,
+and keeps all evidence unverified. Raw Caldera reports, commands, host fields and
+credentials are rejected. Hash shape and identity do not authenticate a lab run.
+Revision guards prevent stale asynchronous imports from replacing newer results.
+These controls address TM-002, TM-004 and TM-005, with controller and browser tests.
+
+`scripts/attack_diff.cjs` reads untrusted candidate bundles locally using bounded,
+no-follow file reads and bounded structure/dependency traversal. It emits proposals
+to stdout only. Candidates can misrepresent a release or omit records, so reports
+explicitly distinguish supplied claims, removal and approved upgrades (TM-004/006).
+
+CAR raw sources are pinned before projection; displayed pseudocode is text, not
+execution. Navigator exports current generated coverage only, and Attack Flow
+exports mark a user hypothesis. Manual robustness input cannot alter the review
+registry. No automated external upload, Caldera connection or attack execution
+is introduced. The existing source/hosting supply-chain residual risk remains.
 
 ## Criticality calibration
 
