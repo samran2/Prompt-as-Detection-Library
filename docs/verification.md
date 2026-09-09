@@ -1,5 +1,35 @@
 # Verification records
 
+## ATLAS development demo — 2026-09-09 verification
+
+The application and content revision is
+[`c2b1c7167a180aed3a7ae6f929575e6da2d0bd41`](https://github.com/samran2/Prompt-as-Detection-Library/commit/c2b1c7167a180aed3a7ae6f929575e6da2d0bd41),
+merged through [PR #10](https://github.com/samran2/Prompt-as-Detection-Library/pull/10).
+The version remains `0.4.0.dev0` / `0.4.0-dev.0`. This record supersedes earlier
+deployment status, not the scope of historical tests or security reviews.
+
+| Check | Observed result |
+| --- | --- |
+| Local Node suite | 215 tests passed with zero failures. Localhost binding was permitted for API and ATLAS server contracts. |
+| Local foundation checks | 16 Python tests and 17 subtests passed; JavaScript syntax, the four pinned-skill tests and tracked-file foundation checks passed. The current follow-up environment did not have the pre-commit Python module; no new pre-commit result is claimed. |
+| Content and build | Read-only build verification passed for 918 ATT&CK prompts, 18,885 ATT&CK procedure relationships and 197 ATLAS prompts with 1,318 source relationships. The fresh static payload contains ten allowlisted files, including both framework notices and the `.nojekyll` publishing marker. |
+| Hosted CI | [Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34394820210), [CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34394819939), [supply-chain security](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34394819919), [container security](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34394819988), [fuzz smoke](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34394819955) and [Scorecard](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34394819986) completed successfully for this commit. Workflow success is not proof of complete coverage or perfect repository settings. |
+| Pages and browser suite | [Pages run 34394863019](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34394863019) passed checks, build and deployment. Its logs record 215 passing Node tests and 34 passing Chromium browser checks, including AI filtering, source attribution, literal context, exact TXT/JSONL/research downloads, mixed-framework comparison and 320/1440 px AI layouts. These browser tests ran against the built payload on loopback in GitHub Actions. |
+| Hosted asset integrity | All nine public content assets returned HTTPS success and matched the local reviewed source bytes and SHA-256 values. The tenth file, `.nojekyll`, is a publishing marker and was excluded from HTTP asset comparison. |
+| Live browser smoke check | The public workbench displayed 1,115 records and the correct pinned versions. OT filtering returned 97 ICS records; ATLAS filtering returned 197 AI records; exact search for `AML.T0051.001` opened its parent-linked subtechnique. This is a bounded hosted smoke check, separate from the 34 automated checks. |
+
+The committed [browser report](browser-report.json) remains the earlier
+26-check, 918-record pre-ATLAS 0.4 run; it is not the current ATLAS browser
+report. Current hosted evidence is linked above. The screenshots are illustrative
+records of their respective runs, not independent accessibility certification.
+
+This is an owner-authorized development demo. Stable v1.0 still requires the
+real independent prompt reviews, native-product laboratory evidence,
+framework-aware ATLAS review contracts, independent accessibility assessment,
+field performance evidence and verified signed release/rollback evidence in the
+[release process](release-process.md). No generated prompt is promoted to
+reviewed, lab-validated or field-confirmed by these software checks.
+
 ## Project engineering skills — GitHub integration follow-up
 
 The first [PR #9](https://github.com/samran2/Prompt-as-Detection-Library/pull/9)
@@ -37,7 +67,7 @@ browser interaction, hosted CI, deployment or skill-picker refresh is claimed
 for this integration. See [the guide](agent-skills.md) for project-root discovery
 and host-specific tool prerequisites. The earlier application evidence follows.
 
-## Current 0.4.0.dev0 candidate — local verification
+## Historical pre-ATLAS 0.4.0.dev0 candidate — local verification
 
 Observed locally on 2026-09-09 (Europe/Helsinki). This is development-candidate
 evidence, not a stable release, human detection review, independent WCAG
@@ -78,10 +108,9 @@ imported. The original v0.2.0 archive remains unavailable.
 
 Local tools: Node.js 24.13.0, Python 3.13.7, Ruff 0.16.4 and Playwright 1.62.1
 with an isolated installed Chrome. Task-local caches and test output are excluded
-from publication. The [browser report](browser-report.json) and repository
-screenshots record the final dev3 local build.
-These shared evidence paths now contain dev3; earlier reports and screenshots
-remain available in Git history and their original delivery archives.
+from publication. The dev3 browser report and screenshots remain available in
+Git history and their original delivery archives. Shared evidence paths have
+since advanced; see the current verification record above for their scope.
 
 These checks establish the reported structural behavior, not detection
 effectiveness, model compliance, product compatibility, complete accessibility
@@ -158,8 +187,8 @@ Ruff 0.16.4, Playwright 1.62.1 and an isolated Chrome 152.0.7977.82:
 | Final workflow YAML | All four workflows parsed after aligning CI with the built-site repository prefix. Hosted execution is not claimed. |
 | Focused independent code review | Reviewed generator, core and static builder trust boundaries. Found and fixed Windows drive/UNC root duplication; three path regressions added. No Windows OS run or filesystem-race simulation was performed. |
 
-The current [browser report](browser-report.json) and desktop/mobile screenshots
-now describe this full-library build, not the earlier sample. The ZIP is paired
+The browser report and desktop/mobile screenshots at that historical revision
+describe this full-library build, not the earlier sample. The ZIP is paired
 with a SHA-256 file and a delivery verification manifest recording exact archive
 membership, file hashes, byte comparisons and integrity checks. Local QA tools,
 caches, Git history, private work and dist are not part of that repository ZIP.
