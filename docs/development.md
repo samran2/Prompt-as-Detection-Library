@@ -140,6 +140,12 @@ Synthetic parser success is structural evidence and must not be labeled
 
 ## Browser preview and QA
 
+The workbench links to `demo/research.html`. Its six local research capabilities
+are documented in [research tools](research-tools.md). Run `npm run car:verify`
+for pinned CAR parity and `npm run research:check` for the added modules. The
+existing browser smoke harness includes real research exports and lab imports.
+`npm run build` verifies these inputs before copying the public allowlist.
+
 Serve only the browser assets, never the repository root:
 
 ```sh

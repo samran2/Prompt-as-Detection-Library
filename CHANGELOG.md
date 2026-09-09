@@ -9,6 +9,14 @@ conversations are not independent release evidence.
 
 ### Added
 
+- Added a local Research tools page: ATT&CK Navigator 4.5 layer exports and
+  tactic coverage, pinned MITRE CAR analytics, linear Attack Flow hypotheses,
+  manual Summiting the Pyramid observable assessments and offline Caldera lab
+  plan/result exchange. No attack execution, uploads or validation promotion.
+- Added read-only proposed ATT&CK STIX version comparison with exact source
+  hashes, lifecycle changes and impacted prompt IDs; pinned sources stay unchanged.
+- Preserved CAR raw sources and Apache notices and the official Attack Flow
+  extension/schema/license, with focused boundary and source-fidelity tests.
 - Added pinned MITRE D3FEND 1.6.0 defensive context for 369 exact library IDs
   (311 Enterprise, 58 ICS/OT), with 154 related countermeasures, source-row
   provenance, separate artifact paths, offline source verification and notices.

@@ -66,6 +66,13 @@
   Never inherit parent mappings or invent missing Mobile/ATLAS links. Run
   `d3fend:verify`; the supplement must not alter default detection prompt bytes
   or imply effectiveness, available telemetry or validated controls.
+- Keep the research page's supplemental boundaries: Navigator shows generated
+  coverage; CAR uses pinned exact mappings and full Apache notices; Attack Flow
+  exports hypotheses using the official extension. Manual robustness assessments
+  and local lab envelopes remain unverified and never promote review status.
+  No Caldera execution or connection exists. ATT&CK diff is a read-only proposal,
+  not a source upgrade. Run `car:verify`, `research:check` and research browser
+  regressions when changing these modules. See SPEC-research-tools.md.
 - Preserve the machine-readable review truth: new prompt records begin as
   `generated`; two real independent reviewers are required for `reviewed`;
   fixture-bound target-environment evidence is required for `lab-validated`;

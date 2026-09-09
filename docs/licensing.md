@@ -62,3 +62,18 @@ terms rather than relabeling third-party content as project code. The
 MITRE ATT&CK is a trademark of The MITRE Corporation. This project is independent
 and is not endorsed by MITRE. The recorded license decision does not claim
 publication, security approval or validation of generated detections.
+
+## Supplemental research formats
+
+The pinned [CAR sources](../sources/car-1b922fe/manifest.json) retain their original
+[Apache-2.0 license](../sources/car-1b922fe/raw/LICENSE.txt) and
+[NOTICE](../sources/car-1b922fe/raw/NOTICE.txt). The generated CAR projection marks
+itself as a modified representation and embeds both full notices; the research
+page exposes them alongside lookups. No external analytic code is executed.
+
+The official [Attack Flow extension and schema](../sources/attack-flow-2.0.0/manifest.json)
+retain their [Apache-2.0 license](../sources/attack-flow-2.0.0/LICENSE). The copied
+extension, source attribution and full license are included in every Flow bundle.
+Navigator format use and independently summarized robustness guidance link their
+official sources without claiming endorsement. Caldera is not bundled software;
+the local lab envelope is original project code under MIT.

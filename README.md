@@ -14,6 +14,10 @@ contract, governance and supply-chain gates while preserving the pinned ATT&CK
 
 **[Open the live demo →](https://samran2.github.io/Prompt-as-Detection-Library/)**
 
+[Open research tools →](https://samran2.github.io/Prompt-as-Detection-Library/research.html)
+Navigator coverage, CAR analytics, Attack Flow authoring, manual observable
+assessments and offline lab evidence exchange. [Guide](docs/research-tools.md).
+
 Search the pinned library, adapt a prompt and download it directly in your browser.
 No installation, account or API key needed. Prompts remain unvalidated drafts;
 the demo does not run a model or execute detection rules.
@@ -49,6 +53,12 @@ the demo does not run a model or execute detection rules.
   1.6.0 supplement maps 311 Enterprise and 58 ICS/OT records; missing Mobile,
   ATLAS and other exact mappings are explicit, not guessed. Relationships are
   inferred context, not validated protections. [Scope and examples](docs/d3fend.md).
+- **Connect research workflows.** Export domain-specific Navigator layers, inspect
+  102 pinned CAR analytics (exact mappings to 117 active Enterprise IDs), author
+  linear Attack Flow hypotheses and document manual robustness assessments.
+  Prepare offline lab plans and import bounded result envelopes without executing
+  Caldera or changing validation status. Compare proposed ATT&CK bundles locally
+  before any source upgrade. [Research tools](docs/research-tools.md).
 
 No account, API key, model service or runtime package installation is required.
 Browser context and edits stay in memory and clear on reload; downloads create

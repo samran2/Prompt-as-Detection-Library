@@ -25,13 +25,22 @@ not claim Python CLI compatibility or restore the original response evaluator.
 | `library/coverage.json` | Source, catalog and text identifier sets, exclusions, linkage counts and hashes. |
 | `scripts/library_cli.cjs` | Local list, prompt, export and defenses commands with validated options and exclusive file writes. |
 | `demo/app.js`, `index.html`, `style.css` | Search/filter/pagination, source detail, in-memory drafts, explicit context application, copy and downloads. |
-| `scripts/build_demo.cjs` | Fourteen-file static public allowlist and bounded, validated byte copying. |
+| `scripts/build_demo.cjs` | Explicit static public allowlist and bounded, validated byte copying. |
+| `demo/research.html`, `demo/research.js` | Separate local research entry point; Navigator coverage, exact CAR lookup, linear Flow authoring, manual assessments and offline lab exchange. |
+| `sources/car-1b922fe/`, `scripts/build_car_catalog.cjs` | Immutable CAR raw sources and deterministic notice-bearing projection; no native code execution. |
+| `scripts/attack_diff.cjs` | Bounded read-only full-domain STIX comparison proposals, exact hashes and affected prompt IDs; no source mutation. |
 | `packages/schemas/` | Versioned JSON Schema 2020-12 contracts and boundary validation. |
 | `content/`, `validation/` | Prompt/review registries, native-support truth and machine-readable evidence. |
 | `apps/research-api/`, `packages/core/`, `packages/clients/` | Read-only local reference API, immutable catalog core and explicit client. |
 | `integrations/rosti/`, `scripts/rosti_sync.cjs` | Opt-in external research enrichment with credentials kept outside repository state. |
 
 ## Source and generation contract
+
+Research exchange remains separate from the review registry; see
+[ADR-0007](../governance/decisions/0007-offline-research-exchange.md) and the
+[research tools guide](research-tools.md). Manual assessments and imported lab
+hash references cannot promote prompts. The public entry point has no network,
+storage or command execution, and local STIX comparison is a separate CLI.
 
 Active scope includes every non-revoked, non-deprecated attack-pattern in all
 three domains. Parent techniques and subtechniques are both prompt records.

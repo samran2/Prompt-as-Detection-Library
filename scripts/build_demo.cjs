@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { TextDecoder } = require('node:util');
 
-const PUBLIC_FILES = Object.freeze(['index.html', 'style.css', 'catalog.js', 'atlas-catalog.js', 'd3fend-catalog.js', 'core.js', 'defenses.js', 'defenses-ui.js', 'app.js', 'favicon.svg', 'THIRD_PARTY_LICENSE.txt', 'ATLAS_LICENSE.txt', 'D3FEND_LICENSE.txt', '.nojekyll']);
+const PUBLIC_FILES = Object.freeze(['index.html', 'style.css', 'catalog.js', 'atlas-catalog.js', 'd3fend-catalog.js', 'core.js', 'defenses.js', 'defenses-ui.js', 'app.js', 'research.html', 'research.css', 'research.js', 'navigator.js', 'car-catalog.js', 'car.js', 'attack-flow.js', 'robustness.js', 'lab-exchange.js', 'favicon.svg', 'THIRD_PARTY_LICENSE.txt', 'ATLAS_LICENSE.txt', 'D3FEND_LICENSE.txt', '.nojekyll']);
 const DEFAULT_FILE_LIMIT = 2 * 1024 * 1024;
 const CATALOG_FILE_LIMIT = 16 * 1024 * 1024;
 const signatures = [
