@@ -74,6 +74,11 @@ CI. It checks the file inventory, hashes, executable bits (on POSIX), skill fron
 resolution. Hashes detect drift relative to the reviewed lock; they are not an
 upstream signature or proof that the upstream instructions are trustworthy.
 
+Ruff formatting excludes the imported skill and reference directories so that
+Python examples in upstream Markdown retain their locked bytes. Project-owned
+Python and documentation remain in scope; the integrity and credential checks
+still cover the imported package.
+
 Updates are deliberate pull requests, never a build-time fetch of `main`:
 
 1. Select a new full upstream commit. Inspect its skill, supporting script,

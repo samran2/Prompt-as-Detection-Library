@@ -1,5 +1,21 @@
 # Verification records
 
+## Project engineering skills — GitHub integration follow-up
+
+The first [PR #9](https://github.com/samran2/Prompt-as-Detection-Library/pull/9)
+CI run at `f391a8c2bfabb250d415878fa010e33dca8df144` passed library/browser,
+CodeQL, dependency, secret, fuzz and container checks. All four Python jobs
+failed at Ruff formatting because Ruff 0.16.4 also formats Python examples in
+Markdown and proposed changes to the upstream `code-simplification` skill.
+
+The failure reproduced locally with `python3 -m ruff format --check --no-cache .`.
+The follow-up excludes only the imported skill/reference directories from Ruff
+formatting; lint, source hashes and credential checks remain enabled. The
+upstream snapshot is unchanged. Local Ruff lint/format, four skill-integrity
+tests, seven documentation tests, foundation and whitespace checks passed after
+the correction. Hosted results for the corrected commit must be
+read from the PR checks; this record does not imply they have completed.
+
 ## Project engineering skills — 2026-09-09 local verification
 
 The development-only agent-skills integration pins Addy Osmani's upstream
