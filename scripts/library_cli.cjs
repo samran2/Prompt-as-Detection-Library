@@ -13,6 +13,7 @@ const COMMAND_FLAGS = {
   list: [...FILTER_FLAGS, 'json'],
   prompt: PROMPT_FLAGS,
   export: [...FILTER_FLAGS, ...PROMPT_FLAGS],
+  defenses: ['json', 'output'],
 };
 const MAX_CONTEXT_BYTES = 16000;
 const HELP = `Independently rebuilt ATT&CK 19.2 and MITRE ATLAS prompt library (Node.js 22+)
@@ -21,6 +22,7 @@ Usage:
   node scripts/library_cli.cjs list [filters] [--json]
   node scripts/library_cli.cjs prompt ID [prompt options] [--output NEW_FILE]
   node scripts/library_cli.cjs export [filters] [prompt options] --output NEW_FILE
+  node scripts/library_cli.cjs defenses ID [--json] [--output NEW_FILE]
 
 Filters: --query TEXT --domain NAME --tactic NAME --platform NAME --framework NAME
   Domain: Enterprise, Mobile, ICS, ATLAS. OT is a supported alias for ICS.
@@ -28,6 +30,8 @@ Filters: --query TEXT --domain NAME --tactic NAME --platform NAME --framework NA
   --domain ATLAS selects the AI catalog unless --framework is supplied.
   Default list/export contains only the 918 ATT&CK records.
   prompt AML.T#### or AML.T####.### selects an ATLAS technique directly.
+  defenses returns separate pinned D3FEND context, never a validated rule.
+  Unmapped IDs have an explicit empty result; parent mappings are not inherited.
   Tactics and platforms use catalog spelling.
   Use --platform __unspecified__ when the source lists no platform or None.
   Filters combine; list --json prints a metadata array, including an empty array.
@@ -92,7 +96,7 @@ function parseArguments(argv) {
     if (value.includes('\0') || value.length > 4096) throw new CLIError('Invalid option value.');
     options[name] = value;
   }
-  if (command === 'prompt') {
+  if (command === 'prompt' || command === 'defenses') {
     if (positional.length !== 1 || !/^(?:T\d{4}|AML\.T\d{4})(?:\.\d{3})?$/.test(positional[0])) {
       throw new CLIError('Supply one valid technique ID, such as T1059.001 or AML.T0051.');
     }
@@ -220,24 +224,29 @@ function main(argv = process.argv.slice(2)) {
     if (options.json) return JSON.stringify(metadata, null, 2) + '\n';
     return metadata.map(record => `${record.id}\t${record.name}\t${record.domain}`).join('\n') + (metadata.length ? '\n' : '');
   }
-  const record = command === 'prompt'
+  const record = command === 'prompt' || command === 'defenses'
     ? catalogFor({ framework: id.startsWith('AML.') ? 'ATLAS' : 'ATT&CK' }).find(item => item.id === id) : undefined;
-  if (command === 'prompt' && !record) throw new CLIError('Unknown technique ID in this catalog.');
-  const promptOptions = { mode: options.mode, target: options.target, context: readContext(options['context-file']) };
+  if (command !== 'export' && !record) throw new CLIError('Unknown technique ID in this catalog.');
   let content;
-  if (command === 'prompt') content = core.composePrompt(record, promptOptions);
-  else {
-    // Composition and provenance belong to the shared core. Node adds only hash
-    // metadata, so browser and command-line prompts remain byte-identical.
-    const jsonl = core.exportJSONL(selected, promptOptions);
-    content = jsonl ? jsonl.trimEnd().split('\n').map(line => {
-      const row = JSON.parse(line);
-      return JSON.stringify({ ...row, prompt_sha256: sha256(row.prompt) });
-    }).join('\n') + '\n' : '';
+  if (command === 'defenses') {
+    const defenses = require('../demo/defenses.js').createLibrary(require('../demo/d3fend-catalog.js'));
+    content = options.json ? defenses.exportJSON(record) : defenses.composeBrief(record);
+  } else {
+    const promptOptions = { mode: options.mode, target: options.target, context: readContext(options['context-file']) };
+    if (command === 'prompt') content = core.composePrompt(record, promptOptions);
+    else {
+      // Composition and provenance belong to the shared core. Node adds only hash
+      // metadata, so browser and command-line prompts remain byte-identical.
+      const jsonl = core.exportJSONL(selected, promptOptions);
+      content = jsonl ? jsonl.trimEnd().split('\n').map(line => {
+        const row = JSON.parse(line);
+        return JSON.stringify({ ...row, prompt_sha256: sha256(row.prompt) });
+      }).join('\n') + '\n' : '';
+    }
   }
   if (options.output === undefined) return content;
   writeNewFile(options.output, content);
-  return JSON.stringify({ records: command === 'prompt' ? 1 : selected.length, sha256: sha256(content) }) + '\n';
+  return JSON.stringify({ records: command === 'export' ? selected.length : 1, sha256: sha256(content) }) + '\n';
 }
 
 if (require.main === module) {

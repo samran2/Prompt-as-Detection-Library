@@ -45,6 +45,11 @@
   const breakdown = records => `${parentCount(records)} techniques · ${records.length - parentCount(records)} sub-techniques`;
   const isAtlas = record => record.framework === 'ATLAS';
   const frameworkLabel = record => isAtlas(record) ? `MITRE ATLAS ${record.atlasVersion}` : `MITRE ATT&CK ${record.attackVersion || '19.2'}`;
+  let defensesView = null;
+  try {
+    const library = globalThis.PAD_D3FEND_CATALOG && globalThis.PAD_DEFENSES?.createLibrary(globalThis.PAD_D3FEND_CATALOG);
+    defensesView = globalThis.PAD_DEFENSES_UI?.create({ document, library, download });
+  } catch { /* The supplemental panel retains its explicit unavailable state. */ }
   function syncUrl() {
     if (!window.location || !window.history?.replaceState) return;
     const search = core.serializeUiState({
@@ -233,6 +238,7 @@
     state.selected = record;
     $('selected-detail').hidden = !record;
     $('no-selection').hidden = Boolean(record);
+    defensesView?.render(record);
     if (!record) { state.key = ''; $('prompt').value = ''; updateEditorStatus(); renderComparison(); syncUrl(); return; }
     $('technique-title').textContent = record.name;
     $('technique-id').textContent = record.id;

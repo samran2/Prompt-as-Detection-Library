@@ -79,3 +79,15 @@ test('an oversized full catalog fails before creating an output directory', t =>
   assert.throws(() => build(root), /Public file exceeds size limit: catalog\.js/);
   assert.equal(fs.existsSync(path.join(root, 'dist')), false);
 });
+test('D3FEND ships only its explicit runtime assets with a bounded catalog', t => {
+  for (const name of ['d3fend-catalog.js', 'defenses.js', 'defenses-ui.js', 'D3FEND_LICENSE.txt']) assert.ok(PUBLIC_FILES.includes(name));
+  const root = fixture(t);
+  const bytes = Buffer.alloc(2 * 1024 * 1024 + 1, 32);
+  fs.writeFileSync(path.join(root, 'demo', 'd3fend-catalog.js'), bytes);
+  build(root);
+  assert.deepEqual(fs.readFileSync(path.join(root, 'dist', 'd3fend-catalog.js')), bytes);
+  const oversized = fixture(t);
+  fs.writeFileSync(path.join(oversized, 'demo', 'd3fend-catalog.js'), Buffer.alloc(16 * 1024 * 1024 + 1, 32));
+  assert.throws(() => build(oversized), /Public file exceeds size limit: d3fend-catalog\.js/);
+  assert.equal(fs.existsSync(path.join(oversized, 'dist')), false);
+});

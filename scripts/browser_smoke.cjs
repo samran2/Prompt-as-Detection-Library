@@ -8,6 +8,7 @@ const catalog = require('../demo/catalog.js');
 const atlasCatalog = require('../demo/atlas-catalog.js');
 const combinedCatalog = [...catalog, ...atlasCatalog];
 const core = require('../demo/core.js');
+const defenses = require('../demo/defenses.js').createLibrary(require('../demo/d3fend-catalog.js'));
 const project = require('../package.json');
 
 function contrastRatio(first, second) {
@@ -284,9 +285,127 @@ function contrastRatio(first, second) {
       await page.screenshot({ path: path.join(output, `atlas-comparison-${width}.png`), fullPage: true });
       await page.locator('#tab-prompt').click();
     });
+    await check('D3FEND renders pinned countermeasures, source paths and explicit inferred scope', async () => {
+      await page.goto(base);
+      await page.locator('#search').fill('T0800');
+      const record = catalog.find(item => item.id === 'T0800');
+      const expected = defenses.lookup(record.id);
+      assert.equal(expected.status, 'mapped');
+      const originalPrompt = await page.locator('#prompt').inputValue();
+      await page.locator('#tab-defenses').click();
+      assert.equal(await page.locator('#panel-defenses').isVisible(), true);
+      assert.equal(await page.locator('.defense-card').count(), expected.techniques.length);
+      assert.match(await page.locator('#defenses-caveat').textContent(), /inferred.*not evidence of effectiveness/s);
+      assert.match(await page.locator('#defenses-version').textContent(), /D3FEND 1\.6\.0/);
+      const first = expected.techniques[0];
+      const card = page.locator('.defense-card').first();
+      assert.ok((await card.textContent()).includes(first.definition));
+      await card.locator('summary').click();
+      const text = await card.textContent();
+      for (const value of [first.paths[0].defenseArtifact, first.paths[0].offenseArtifact,
+        first.paths[0].defenseRelation, first.paths[0].offenseRelation, first.paths[0].queryLabel, first.paths[0].topLabel]) assert.ok(text.includes(value));
+      assert.equal(await card.locator('a').getAttribute('href'), first.url);
+      assert.equal(await page.locator('#prompt').inputValue(), originalPrompt);
+      assert.match(await page.locator('#library-count').textContent(), /1115/);
+    });
+    await check('D3FEND TXT and JSON downloads match shared UTF-8 output without analyst context', async () => {
+      const record = catalog.find(item => item.id === 'T0800');
+      await page.locator('#tab-prompt').click();
+      await page.locator('.context-box > summary').click();
+      await page.locator('#context').fill('PRIVATE_D3FEND_TEST_CONTEXT ${HOME}');
+      await page.locator('#apply-context').click();
+      await page.locator('#prompt').fill('PRIVATE_D3FEND_TEST_EDITOR');
+      await page.locator('#tab-defenses').click();
+      for (const [selector, filename, expected] of [
+        ['#download-defense-brief', 'T0800-d3fend-brief-draft.txt', defenses.composeBrief(record)],
+        ['#export-defenses', 'T0800-d3fend-context.json', defenses.exportJSON(record)],
+      ]) {
+        const pending = page.waitForEvent('download');
+        await page.locator(selector).click();
+        const download = await pending;
+        const bytes = fs.readFileSync(await download.path());
+        assert.equal(download.suggestedFilename(), filename);
+        assert.deepEqual(bytes, Buffer.from(expected, 'utf8'));
+        assert.equal(bytes.toString('utf8').includes('PRIVATE_D3FEND_TEST'), false);
+      }
+      assert.match(await page.locator('#defenses-action-status').textContent(), /context.*not included/i);
+    });
+    for (const width of [320, 1440]) await check(`D3FEND cards and exact source paths fit ${width}px`, async () => {
+      await page.setViewportSize({ width, height: 1000 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      const tree = await page.locator('#panel-defenses').ariaSnapshot();
+      assert.match(tree, /heading "Explore related countermeasures\." \[level=3\]/);
+      assert.match(tree, /button "Download defense brief \(\.txt\)"/);
+      for (const button of await page.locator('.defense-actions button').all()) {
+        const box = await button.boundingBox();
+        assert.ok(box && box.width >= 44 && box.height >= 44, 'D3FEND touch targets must be at least 44px square');
+      }
+      await page.locator('h1').scrollIntoViewIfNeeded();
+      await page.screenshot({ path: path.join(output, `d3fend-${width}.png`), fullPage: true });
+      await page.locator('#panel-defenses h3').scrollIntoViewIfNeeded();
+      await page.screenshot({ path: path.join(output, `d3fend-detail-${width}.png`) });
+    });
+    await check('D3FEND exposes unmapped Mobile and ATLAS records without inheriting other relationships', async () => {
+      for (const id of ['T1404', 'AML.T0051']) {
+        await page.locator('#search').fill(id);
+        assert.equal(await page.locator('#technique-id').textContent(), id);
+        assert.equal(await page.locator('.defense-card').count(), 0);
+        assert.match(await page.locator('#defenses-summary').textContent(), /No exact mapping/);
+        assert.match(await page.locator('#defenses-results').textContent(), /does not mean.*no defense/s);
+        assert.equal(await page.locator('#export-defenses').isDisabled(), false);
+      }
+    });
+    await check('invalid supplemental data is unavailable while core browsing remains usable', async () => {
+      const isolated = await context.newPage();
+      try {
+        await isolated.route('**/d3fend-catalog.js', route => route.fulfill({
+          contentType: 'text/javascript', body: 'globalThis.PAD_D3FEND_CATALOG = {schemaVersion:"invalid"};',
+        }));
+        await isolated.goto(base);
+        await isolated.locator('#tab-defenses').click();
+        assert.match(await isolated.locator('#defenses-summary').textContent(), /unavailable/i);
+        assert.equal(await isolated.locator('#download-defense-brief').isDisabled(), true);
+        assert.equal(await isolated.locator('#export-defenses').isDisabled(), true);
+        assert.match(await isolated.locator('#prompt').inputValue(), /DRAFT/);
+        assert.match(await isolated.locator('#library-count').textContent(), /1115/);
+      } finally { await isolated.close(); }
+    });
+    await check('D3FEND source rendering rejects unsafe URLs and keeps HTML source text inert', async () => {
+      const isolated = await context.newPage();
+      try {
+        // Test-only supplemental renderer input: the source helper has its own strict validation tests.
+        const injection = `const realCreate = PAD_DEFENSES.createLibrary;
+          PAD_DEFENSES.createLibrary = function(catalog) {
+            const library = realCreate(catalog), lookup = library.lookup;
+            library.lookup = function(id) {
+              const result = lookup(id);
+              result.sourceUrl = 'https://d3fend.mitre.org.evil.example/';
+              result.licenseUrl = 'javascript:alert(1)';
+              result.techniques.forEach((item, index) => {
+                item.definition = '<img src=x onerror="window.d3fendInjected=true"> literal';
+                item.url = index % 2 ? 'https://user@d3fend.mitre.org/' : 'javascript:alert(1)';
+              });
+              return result;
+            };
+            return library;
+          };`;
+        await isolated.route('**/app.js', route => route.fulfill({
+          contentType: 'text/javascript', body: injection + '\n' + fs.readFileSync(path.resolve(__dirname, '../demo/app.js'), 'utf8'),
+        }));
+        await isolated.goto(base);
+        await isolated.locator('#search').fill('T0800');
+        await isolated.locator('#tab-defenses').click();
+        assert.equal(await isolated.locator('#panel-defenses a').count(), 0);
+        assert.ok((await isolated.locator('.defense-card').first().textContent()).includes('<img src=x'));
+        assert.equal(await isolated.locator('img[src="x"]').count(), 0);
+        assert.equal(await isolated.evaluate(() => Boolean(window.d3fendInjected)), false);
+      } finally { await isolated.close(); }
+    });
     await check('detail tabs support arrow-key navigation', async () => {
       await page.locator('#tab-prompt').focus(); await page.keyboard.press('ArrowRight');
       assert.equal(await page.locator('#panel-source').isVisible(), true);
+      await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+      assert.equal(await page.locator('#panel-defenses').isVisible(), true);
       await page.keyboard.press('End'); assert.equal(await page.locator('#panel-review').isVisible(), true);
       await page.keyboard.press('Home'); assert.equal(await page.locator('#panel-prompt').isVisible(), true);
     });
@@ -351,7 +470,7 @@ function contrastRatio(first, second) {
     });
     await check('compact layouts keep key touch targets at least 44px square', async () => {
       await page.setViewportSize({ width: 320, height: 1000 });
-      for (const selector of ['#theme', '.domains button', '.page-controls button', '#compare-add', '.actions button']) {
+      for (const selector of ['#theme', '.domains button', '.page-controls button', '#compare-add', '.actions button:visible']) {
         for (const box of await page.locator(selector).evaluateAll(nodes => nodes.filter(node => !node.disabled).map(node => {
           const rect = node.getBoundingClientRect(); return { width: rect.width, height: rect.height };
         }))) {

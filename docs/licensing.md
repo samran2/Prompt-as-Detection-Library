@@ -49,6 +49,16 @@ The MIT project-code license does not replace third-party terms or grant rights
 to the unavailable original v0.2.0 application. If original files are later
 recovered, inventory their rights and notices separately before including them.
 
+MITRE D3FEND 1.6.0 data retain the explicit
+[D3FEND terms](https://d3fend.mitre.org/tou/) and
+[bundled notices](../sources/d3fend-1.6.0/NOTICE.txt), including ATT&CK, ATLAS and
+SPARTA attribution in the unmodified source snapshot. The generated supplement
+includes only exact active ATT&CK relationships from our library. Its
+[public notice](../demo/D3FEND_LICENSE.txt) accompanies every static build.
+Although the ontology license field says MIT, we retain the explicit upstream
+terms rather than relabeling third-party content as project code. The
+[D3FEND guide](d3fend.md) documents transformations and limits.
+
 MITRE ATT&CK is a trademark of The MITRE Corporation. This project is independent
 and is not endorsed by MITRE. The recorded license decision does not claim
 publication, security approval or validation of generated detections.
