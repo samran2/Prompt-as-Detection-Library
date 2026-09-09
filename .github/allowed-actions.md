@@ -6,7 +6,7 @@ commit below and retain a human-readable release comment. The repository-owned
 SHA drift, duplicate entries and missing comments.
 
 The SHAs for newly introduced actions were resolved from release tags in their
-official upstream repositories on 2026-09-08. A dependency update must review the
+official upstream repositories on 2026-09-09. A dependency update must review the
 upstream diff and change this table and the workflow in the same pull request.
 
 | Action | Allowed commit SHA | Reviewed release | Purpose |
@@ -20,7 +20,7 @@ upstream diff and change this table and the workflow in the same pull request.
 | `actions/upload-artifact` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | v7.0.1 | Retain bounded QA and evidence artifacts. |
 | `actions/upload-pages-artifact` | `7b1f4a764d45c48632c6b24a0339c27f5614fb0b` | v4 | Package only the reviewed static Pages boundary. |
 | `anchore/sbom-action` | `aa0e114b2e19480f157109b9922bda359bd98b90` | v0.20.8 | Produce the candidate SPDX JSON SBOM. |
-| `aquasecurity/trivy-action` | `b6643a29fecd7f34b3597bc6acb0a98b03d33ff8` | v0.33.1 | Block high or critical vulnerabilities in the locally built research API image. |
+| `aquasecurity/trivy-action` | `ed142fd0673e97e23eac54620cfb913e5ce36c25` | v0.36.0 | Block high or critical vulnerabilities in the locally built research API image using the action release that pins Trivy v0.70.0. |
 | `github/codeql-action` | `cdf488f595d80d6e07e03d4674febd5ab45fa938` | v4 | Analyze code and upload reviewed SARIF output. |
 | `gitleaks/gitleaks-action` | `ff98106e4c7b2bc287b24eaf42907196329070c7` | v2 | Scan Git history and pull-request changes for secrets. |
 | `ossf/scorecard-action` | `4eaacf0543bb3f2c246792bd56e8cdeffafb205a` | v2.4.3 | Generate OpenSSF Scorecard evidence. |

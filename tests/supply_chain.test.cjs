@@ -183,10 +183,10 @@ test('the only OCI build boundary is digest-pinned and has a blocking image scan
 
   const workflow = read('.github/workflows/container-scan.yml');
   assert.match(workflow, /docker build --file apps\/research-api\/Dockerfile --tag prompt-as-detection-research-api:ci \./);
-  assert.match(workflow, /aquasecurity\/trivy-action@[0-9a-f]{40}/);
+  assert.match(workflow, /aquasecurity\/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25/);
   assert.match(workflow, /severity: ['"]?HIGH,CRITICAL/);
   assert.match(workflow, /exit-code: ['"]1['"]/);
-  assert.match(workflow, /version: v0\.65\.0/);
+  assert.match(workflow, /version: v0\.70\.0/);
   assert.doesNotMatch(workflow, /docker\s+(?:push|login)|push-to-registry/);
 
   const ruleset = JSON.parse(read('.github/rulesets/main.json'));

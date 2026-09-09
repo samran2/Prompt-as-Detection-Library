@@ -145,9 +145,7 @@ def check_tracked(root):
             continue
         name = os.fsdecode(entry)
         parts = Path(name).parts
-        if name in LOCAL_CREDENTIAL_FILES or (
-            parts and parts[0] in LOCAL_CREDENTIAL_DIRECTORIES
-        ):
+        if name in LOCAL_CREDENTIAL_FILES or (parts and parts[0] in LOCAL_CREDENTIAL_DIRECTORIES):
             findings.append(f"{name}: tracked local credential path")
         if any(part in EXCLUDED for part in Path(name).parts[:-1]):
             findings.append(f"{name}: tracked excluded directory")
