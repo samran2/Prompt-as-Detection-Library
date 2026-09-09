@@ -1,5 +1,37 @@
 # Verification records
 
+## D3FEND development demo — hosted verification 2026-09-09
+
+The application/content revision is
+[`d7c53b6c18bdcec900cf0f04577ba052c884c7d9`](https://github.com/samran2/Prompt-as-Detection-Library/commit/d7c53b6c18bdcec900cf0f04577ba052c884c7d9),
+merged through [PR #12](https://github.com/samran2/Prompt-as-Detection-Library/pull/12).
+The remote tree matched the independently reviewed local tree exactly. All five
+PR workflows completed successfully, including 240 Node tests, 41 Chrome checks
+and Python 3.11–3.14 foundation checks (including pre-commit configuration).
+
+The merged commit also passed
+[Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34399354756),
+[CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34399354452),
+[supply-chain security](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34399354388),
+[container security](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34399354455),
+[fuzz smoke](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34399354319)
+and [Scorecard](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34399354309).
+
+[Pages run 34399403251](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34399403251)
+was deliberately dispatched on that commit after PR checks and completed
+successfully. All 13 public content assets returned HTTPS success and matched
+the reviewed local bytes and SHA-256 values. The fourteenth file, `.nojekyll`,
+is a publishing marker, not part of HTTP asset verification.
+
+The live browser displayed the unchanged 1,115-record catalog and the new
+D3FEND 1.6.0 tab. `T0800` showed six countermeasures; expanding Remote Firmware
+Update Monitoring exposed both artifact relations and source rows 867, 3055
+and 14205. The TXT download action reported success, with no browser warnings
+or errors observed. Hosted downloaded-file bytes were not separately inspected;
+exact TXT/JSON bytes and license retention passed in the local and PR-loopback
+browser suites. This bounded live smoke is not independent WCAG certification
+or detection-effectiveness evidence. The source/validation limits below remain.
+
 ## D3FEND 1.6.0 supplement — local verification 2026-09-09
 
 The D3FEND addition retains application version `0.4.0.dev0` and all 918 ATT&CK
