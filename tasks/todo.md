@@ -9,4 +9,4 @@
 - [x] Offline Caldera lab exchange
 - [x] Workbench integration
 - [x] Regression and independent review
-- [ ] Reviewed publication and hosted verification
+- [x] Reviewed publication and hosted verification
