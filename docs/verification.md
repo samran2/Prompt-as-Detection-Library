@@ -1,5 +1,42 @@
 # Verification records
 
+## Project engineering skills — GitHub integration follow-up
+
+The first [PR #9](https://github.com/samran2/Prompt-as-Detection-Library/pull/9)
+CI run at `f391a8c2bfabb250d415878fa010e33dca8df144` passed library/browser,
+CodeQL, dependency, secret, fuzz and container checks. All four Python jobs
+failed at Ruff formatting because Ruff 0.16.4 also formats Python examples in
+Markdown and proposed changes to the upstream `code-simplification` skill.
+
+The failure reproduced locally with `python3 -m ruff format --check --no-cache .`.
+The follow-up excludes only the imported skill/reference directories from Ruff
+formatting; lint, source hashes and credential checks remain enabled. The
+upstream snapshot is unchanged. Local Ruff lint/format, four skill-integrity
+tests, seven documentation tests, foundation and whitespace checks passed after
+the correction. Hosted results for the corrected commit must be
+read from the PR checks; this record does not imply they have completed.
+
+## Project engineering skills — 2026-09-09 local verification
+
+The development-only agent-skills integration pins Addy Osmani's upstream
+commit `6ca0cd7db39b41b1c37e26d335c507ee92382c6d`. All 38 imported Git blobs and
+file modes matched that upstream tree before commit, including 25 skills,
+seven shared references, supporting skill files and the original MIT notice.
+
+- `npm test`: 185 tests passed, including four new skill-package checks.
+  Local API tests ran with loopback binding permitted.
+- `python3 -m pytest -q`: 16 tests and 17 subtests passed.
+- `npm run check`, foundation checks including tracked paths, and staged
+  whitespace checks passed. No credential-pattern exclusions were added.
+- Integrity checks verify the complete imported inventory, SHA-256 values,
+  executable bits on POSIX, skill frontmatter and shared reference resolution.
+  The static and OCI build boundaries continue to exclude development skills.
+
+Application, CLI, browser assets and ATT&CK content were unchanged. No new
+browser interaction, hosted CI, deployment or skill-picker refresh is claimed
+for this integration. See [the guide](agent-skills.md) for project-root discovery
+and host-specific tool prerequisites. The earlier application evidence follows.
+
 ## Current 0.4.0.dev0 candidate — local verification
 
 Observed locally on 2026-09-09 (Europe/Helsinki). This is development-candidate

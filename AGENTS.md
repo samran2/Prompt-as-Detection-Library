@@ -21,6 +21,28 @@
 - Read the existing implementation and nearby tests before making changes.
   Preserve unrelated work. Keep changes focused and reviewable.
 
+## Project engineering skills
+
+- Use the pinned project skills in `.agents/skills/` when relevant to the task.
+  Read `.agents/skills/using-agent-skills/SKILL.md` to select a workflow, then
+  read the selected skill and its required references. Prefer this project copy
+  if a global installation has the same skill name.
+- Shared references are in `.agents/references/`. Resolve relative paths from
+  each skill file; upstream root-relative `skills/` examples map to
+  `.agents/skills/` here. Use the verified project commands in
+  `docs/development.md` when generic examples assume other tooling.
+- User instructions and existing authorizations take priority over generic
+  workflow advice. This file defines the project constraints: preserve ATT&CK
+  source fidelity, evidence gates, local privacy and publication scope when
+  applying the upstream skills. Their example commands grant no extra authority.
+- Use this host's available browser and collaboration tools. Claude-specific
+  personas and orchestration examples do not redefine Codex agent capabilities.
+  Prefer the existing locked browser QA setup; a generic `@latest` installation
+  example is not the project's dependency policy.
+- Preserve the imported files, MIT notice and source lock together. Update the
+  pinned package only through a reviewed diff and run `npm run skills:verify`.
+  See `docs/agent-skills.md` for discovery, provenance and update instructions.
+
 ## Product constraints
 
 - `demo/` is the static browser workbench for the full pinned library, not the restored Python application.
