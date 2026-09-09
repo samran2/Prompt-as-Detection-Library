@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:prompt-as-detection:schema:v1:validation-evidence",
+  "title": "Validation evidence v1",
+  "description": "Reproducible lab or field validation evidence. Evidence is scoped to immutable subject, environment, and fixture bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "id", "subject", "validationLevel", "environment", "validatedBy",
+    "validatedAt", "fixtureResults", "limitations", "provenance"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "id": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"},
+    "subject": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/subject"},
+    "validationLevel": {"enum": ["lab-validated", "field-confirmed"]},
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environmentId", "kind", "description", "product", "productVersion", "operatingSystems", "dataClassification"],
+      "properties": {
+        "environmentId": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"},
+        "kind": {"enum": ["lab", "field"]},
+        "description": {"type": "string", "minLength": 10, "maxLength": 10000},
+        "product": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "productVersion": {"type": "string", "minLength": 1, "maxLength": 256},
+        "operatingSystems": {
+          "type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 256}
+        },
+        "dataClassification": {"enum": ["synthetic", "sanitized", "production"]}
+      }
+    },
+    "validatedBy": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/person"},
+    "validatedAt": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/timestamp"},
+    "fixtureResults": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/fixtureResult"},
+      "allOf": [
+        {"contains": {"properties": {"type": {"const": "positive"}}, "required": ["type"]}, "minContains": 1},
+        {"contains": {"properties": {"type": {"const": "benign-lookalike"}}, "required": ["type"]}, "minContains": 1},
+        {"contains": {"properties": {"type": {"const": "missing-telemetry"}}, "required": ["type"]}, "minContains": 1},
+        {"contains": {"properties": {"type": {"const": "boundary"}}, "required": ["type"]}, "minContains": 1}
+      ]
+    },
+    "limitations": {
+      "type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+    },
+    "provenance": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/provenance"}
+  },
+  "$defs": {
+    "fixtureResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "fixtureSha256", "expected", "actual", "passed"],
+      "properties": {
+        "id": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"},
+        "type": {"enum": ["positive", "benign-lookalike", "missing-telemetry", "boundary"]},
+        "fixtureSha256": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/sha256"},
+        "expected": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/outcome"},
+        "actual": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/outcome"},
+        "passed": {"type": "boolean"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"validationLevel": {"const": "lab-validated"}}, "required": ["validationLevel"]},
+      "then": {"properties": {"environment": {"properties": {"kind": {"const": "lab"}}}}}
+    },
+    {
+      "if": {"properties": {"validationLevel": {"const": "field-confirmed"}}, "required": ["validationLevel"]},
+      "then": {"properties": {"environment": {"properties": {"kind": {"const": "field"}}}}}
+    }
+  ]
+}

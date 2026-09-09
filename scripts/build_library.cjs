@@ -365,7 +365,7 @@ function expectedOutputs(root = PROJECT_ROOT) {
   };
   const coverage = {
     schemaVersion: 1, attackVersion: '19.2', sourceCommit: COMMIT,
-    status: 'independently rebuilt; unvalidated drafts; publication deferred',
+    status: 'independently rebuilt; unvalidated drafts; development snapshot',
     scope: 'All active technique and subtechnique objects in the three pinned ATT&CK 19.2 domain bundles. Coverage is catalog completeness, not detection effectiveness.',
     methods: {
       active: 'revoked !== true && x_mitre_deprecated !== true',

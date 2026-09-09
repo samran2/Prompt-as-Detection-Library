@@ -1,7 +1,68 @@
 # Changelog
 
-This file records changes actually made. Dates and results from earlier
-conversations are not independent verification of a release.
+This file records changes actually made. Planned work belongs in
+[ROADMAP](ROADMAP.md), and test outcomes belong in
+[verification](docs/verification.md). Dates and results from earlier
+conversations are not independent release evidence.
+
+## [0.4.0.dev0] - Unreleased trust foundation
+
+### Added
+
+- Defined phased, evidence-based gates for independent review of all 918 prompts,
+  native rule labs, premium workbench quality, a signed release candidate and a
+  later read-only research API beta.
+- Added separate release-process, versioning and repository-settings guides so
+  policy-as-code is not confused with applied remote protection or a published
+  release.
+- Added a native-rule issue template and strengthened prompt-review and pull
+  request evidence fields, including DCO, validation status and rollback impact.
+- Added regression checks for required publication documentation and evidence
+  language.
+- Added an experimental loopback-first, read-only `/v1` research API contract,
+  zero-dependency client, cursor pagination, ETags, content hashes, and strict
+  versioned JSON Schema contracts.
+- Added one automated static quality scorecard for every one of the 918 prompts,
+  plus an evidence-graph validator that prevents review or validation maturity
+  from resolving to unrelated records.
+- Added an optional, local-only Rösti evidence importer that maps only
+  provider-explicit active ATT&CK IDs and treats IOCs as unvalidated external
+  corroboration.
+- Added SHA-pinned Actions policy, Dependabot, dependency review, Gitleaks,
+  CodeQL, OpenSSF Scorecard, container scanning, fuzz smoke tests, and manual
+  release-evidence generation.
+
+### Changed
+
+- Split public demo deployment from stable release creation. A green local or
+  hosted check is evidence, not publication authorization or proof of detection
+  effectiveness.
+- Made the v1.0 barrier explicit: two independent expert reviews for each prompt,
+  resolved domain support matrices, independent accessibility review and signed
+  supply-chain evidence.
+- Refined the workbench with semantic light, dark, and high-contrast themes,
+  visible focus, 44 px touch targets, explicit filter relationships, shareable
+  state, comparison and evidence views, and 320 px / 200% text reflow.
+- Replaced the resolved license TODO with a durable licensing record.
+
+### Security
+
+- Bounded Research API responses while streaming instead of after buffering.
+- Rejected terminal control characters in CLI context before stdout rendering.
+- Closed alternate GitHub Actions `uses` syntax and local-wrapper policy bypasses.
+- Isolated repository test/build code from release-evidence OIDC signing authority.
+- Narrowed the OCI context to exact runtime inputs and kept Rösti-derived output
+  outside the repository.
+- Removed credential assignments from Rösti command examples and required
+  secret-manager injection.
+
+### Limits
+
+- No stable v1.0 release, package publication, human-review completion, native
+  rule lab validation, WCAG certification, Sigstore signature or SLSA provenance
+  is claimed by this development entry.
+- ATT&CK 19.2 remains pinned. The original v0.2.0 archive and its implementation
+  remain unavailable.
 
 ## [0.3.0.dev3] - Development prompt-quality update
 

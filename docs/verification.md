@@ -1,5 +1,21 @@
 # Verification records
 
+## Current 0.4.0.dev0 candidate — local verification
+
+Observed locally on 2026-09-09 (Europe/Helsinki). This is development-candidate
+evidence, not a stable release, human detection review, independent WCAG
+certification, or proof of hosted GitHub settings.
+
+| Check | Actual result |
+| --- | --- |
+| Full Node suite | 181 tests passed with zero failures or skips. This includes the exhaustive 22,032 prompt-composition matrix, schema/evidence graph, CLI, API, Rösti, supply-chain, workbench, maturity-gate and generated-content checks. |
+| Python foundation suite | 16 tests passed. The tracked-file foundation and selected credential/artifact checks also passed. |
+| Prompt and source integrity | Read-only verification passed for 918 prompts, 18,885 procedure relationships, 918 review-registry records, 3,672 explicitly unassessed native-rule cells and 918 automated static scorecards. No human review or lab maturity was inferred. |
+| Static build | A fresh eight-file workbench build succeeded after removing the prior ignored build directory. |
+| Real-browser workbench | 26 Chromium checks passed in the delegated isolated run: clean console/network, accessibility tree, skip/focus behavior, light/dark/high-contrast action contrast, 44 px touch targets, reduced motion, empty/download flows, 320/768/1024/1440 layouts and 200% text. Desktop and mobile screenshots were visually inspected. |
+| Security | Codex Security scan `4745032c-8b30-4540-8337-831913f7976c` found three Medium and three Low issues in immutable revision `343103d4a3f615969f29122678317a634d5983cf`; no Critical or High issue was reported. All six received code and regression fixes. Complete zero-finding diff reviews then covered the 0.4 changes in contiguous ranges: `c3d5048b-f033-4114-879b-04a8d5b92e2f`, `624e59e8-c7c8-45ba-9ea6-4b4db7aebf1d`, `38aba521-dfb3-405d-899e-3938f15fe2a8`, `80114560-87d6-40e4-b965-bedfbff6462e` and final scan `b9655d59-de04-4118-8806-3a866c11250a`. The last scan reviewed all 12 authoritative changed paths despite a two-row generated inventory. These local reviews do not replace the blocking hosted container scan or guarantee absence of vulnerabilities. |
+| Remaining browser evidence | Firefox, WebKit, manual VoiceOver/NVDA, an independent WCAG 2.2 AA audit and field Core Web Vitals remain release gates rather than completed claims. |
+
 ## Current prompt-quality update — 0.3.0.dev3
 
 Observed locally on 2026-09-08 (Europe/Helsinki). The

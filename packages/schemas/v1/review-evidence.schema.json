@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:prompt-as-detection:schema:v1:review-evidence",
+  "title": "Independent review evidence v1",
+  "description": "A completed human review bound to immutable prompt or native-rule bytes and a versioned rubric.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "id", "subject", "slot", "reviewer", "independentAttestation",
+    "rubricVersion", "reviewedAt", "scores", "criticalFindings", "recommendation", "summary", "provenance"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "id": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"},
+    "subject": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/subject"},
+    "slot": {"enum": [1, 2]},
+    "reviewer": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/person"},
+    "independentAttestation": {"const": true},
+    "rubricVersion": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/contentVersion"},
+    "reviewedAt": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/timestamp"},
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factualAccuracy", "attackAlignment", "telemetryFeasibility", "benignCases", "safety", "sourceQuality", "platformAssumptions"],
+      "properties": {
+        "factualAccuracy": {"type": "integer", "minimum": 1, "maximum": 5},
+        "attackAlignment": {"type": "integer", "minimum": 1, "maximum": 5},
+        "telemetryFeasibility": {"type": "integer", "minimum": 1, "maximum": 5},
+        "benignCases": {"type": "integer", "minimum": 1, "maximum": 5},
+        "safety": {"type": "integer", "minimum": 1, "maximum": 5},
+        "sourceQuality": {"type": "integer", "minimum": 1, "maximum": 5},
+        "platformAssumptions": {"type": "integer", "minimum": 1, "maximum": 5}
+      }
+    },
+    "criticalFindings": {
+      "type": "array", "maxItems": 32, "uniqueItems": true,
+      "items": {"enum": ["source-fabrication", "dangerous-guidance", "unsupported-validation-claim", "incorrect-attack-mapping", "unusable-telemetry"]}
+    },
+    "recommendation": {"enum": ["approve", "changes-required", "reject"]},
+    "summary": {"type": "string", "minLength": 10, "maxLength": 10000},
+    "provenance": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/provenance"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"criticalFindings": {"minItems": 1}}, "required": ["criticalFindings"]},
+      "then": {"properties": {"recommendation": {"enum": ["changes-required", "reject"]}}}
+    }
+  ]
+}

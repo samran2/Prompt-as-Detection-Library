@@ -3,13 +3,14 @@
 ## Status and scope
 
 - This is the independently rebuilt complete active ATT&CK 19.2 prompt library,
-  being developed as `0.3.0.dev3` (npm `0.3.0-dev.3`). The original `0.2.0`
+  being developed as `0.4.0.dev0` (npm `0.4.0-dev.0`). The original `0.2.0`
   source archive remains unavailable: never claim original implementation or
   byte preservation. All active techniques are complete. The owner requested
   publication to the public `samran2/Prompt-as-Detection-Library` repository and
   a public demo, and approved the MIT project-code license. The reviewed dev3
   prompt-quality update and workbench are published, and private vulnerability
-  reporting is enabled.
+  reporting is enabled. The new 0.4 foundation is not a stable release and must
+  pass fresh review before it replaces the published build.
   Record actual checks and hosted outcomes rather than inferring success.
   The earlier immutable
   security audit does not cover the changed composer or revised prompts.
@@ -32,6 +33,14 @@
   checks after relevant changes. Inspect desktop/mobile screenshots.
 - Preserve the pinned ATT&CK 19.2 content and source notices. Dataset upgrades
   require a separately reviewed change.
+- Preserve the machine-readable review truth: new prompt records begin as
+  `generated`; two real independent reviewers are required for `reviewed`;
+  fixture-bound target-environment evidence is required for `lab-validated`;
+  and field evidence is required for `field-confirmed`. Never synthesize names,
+  dates, scores, lab results, signatures or `not-applicable` rationales.
+- Keep the stable boundaries in `apps/`, `packages/`, `content/`, `validation/`
+  and `governance/`. Compatibility entry points in `demo/`, `library/` and
+  `scripts/library_cli.cjs` remain supported until a documented migration.
 - Maintain readable text detection prompts for every in-scope technique and
   sub-technique. Define scope explicitly and test coverage against the official,
   pinned dataset, including a documented policy for revoked/deprecated records.
@@ -51,6 +60,14 @@
   accidental overwrites. Bind the local server to loopback by default.
 - Do not introduce automatic external uploads, model calls, telemetry, or
   deployment. Keep credentials and private data out of code and artifacts.
+- Network integrations must be explicit opt-ins, use fixed allowlisted HTTPS
+  origins, bounded reads and pagination, no redirects, no-clobber private output,
+  and environment-only credentials. Never log or echo an API key. Rösti evidence
+  may link only provider-explicit active technique IDs and remains external
+  corroboration—not validation.
+- The research API stays read-only, loopback-first and resource bounded. Do not
+  add accounts, uploads, log ingestion, model runs or sample handling without a
+  new threat model and explicit scope decision.
 - Label generated detections as drafts. Structural checks must not be presented
   as proof of successful detection or production suitability.
 
@@ -66,9 +83,13 @@
   files, and unrelated changes. Update documentation and the changelog when
   behavior changes.
 - Preserve the owner-approved MIT project-code `LICENSE` and the resolved
-  decision in `LICENSE_TODO.md`, alongside separate MITRE source notices.
+  decision in `docs/licensing.md`, alongside separate MITRE source notices.
   Never change a license or grant additional rights on the owner's behalf.
 - The owner has authorized the reviewed library and public demo at the named
   repository. Preserve its review and CI gates before deliberate Pages deployment.
   Additional destinations, package publication or a public release artifact
   require their own explicit owner authorization.
+- Use DCO sign-off for contributions. Content, rule, security and release changes
+  target two independent approvals, but do not claim that GitHub enforces this
+  while only one qualified maintainer is recorded. Follow `GOVERNANCE.md`,
+  `MAINTAINERS.md` and `docs/release-process.md`.

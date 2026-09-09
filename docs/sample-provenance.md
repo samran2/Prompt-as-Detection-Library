@@ -33,5 +33,5 @@ MITRE ATT&CK is a trademark of The MITRE Corporation. This independent project
 is not endorsed by MITRE. The source-data notice is preserved in
 [THIRD_PARTY_LICENSE.txt](../demo/THIRD_PARTY_LICENSE.txt), including in the static
 build. Original code in the current independent rebuild uses the owner-approved
-[MIT License](../LICENSE); see the [licensing record](../LICENSE_TODO.md).
+[MIT License](../LICENSE); see the [licensing record](licensing.md).
 That decision does not replace the MITRE notice or change frozen sample artifacts.

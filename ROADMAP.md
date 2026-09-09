@@ -1,75 +1,167 @@
 # Roadmap
 
-Every active ATT&CK 19.2 technique has a text prompt in the published dev2
-repository and demo. Development version `0.3.0.dev3` improves prompt quality
-using the same pinned MITRE source; the missing v0.2.0 archive has not been
-restored. The owner authorized publishing this update after verification;
-observed checks and hosted outcomes are recorded in
-[verification](docs/verification.md). Historical verification records remain
-evidence for their own versions.
+Prompt-as-Detection Library is moving from the published `0.3.0.dev3`
+independent rebuild toward a trustworthy local-first research product. The next
+development line is `0.4.0.dev0` (npm `0.4.0-dev.0`). It is a foundation, not a
+stable release and not evidence that generated prompts detect malicious activity.
 
-## Review prompt quality
+The pinned content baseline remains ATT&CK 19.2: 918 active techniques and
+subtechniques (697 Enterprise, 124 Mobile and 97 ICS). A source update is a
+separate reviewed migration. “Apple/VirusTotal quality” is an aspiration for
+clarity, privacy, accessibility, evidence and operational discipline; it is not
+an affiliation or data-scale claim.
 
-- Apply shared schema/feasibility gates, mode/target contracts and analytic selection.
-- Keep ICS validation offline and make Mobile collection constraints explicit.
-- Preserve source references, regenerate 918 readable prompts and verify parity.
-- Record semantic-sample limits and final outcomes in the
-  [prompt quality report](docs/prompt-quality-review.md).
+## Preserved development baseline
 
-## Complete the pinned library
+The existing generator maintains exact identifier parity across 378 parent
+techniques and 540 subtechniques, records 248 revoked/deprecated exclusions,
+18,885 qualifying procedure relationships and 2,053 linked analytics. It keeps
+13 unlinked active analytics, 24 ICS records without source platforms and 108
+active records without qualifying procedures explicit rather than filling gaps.
 
-- Preserve the official Enterprise, Mobile and ICS source bundles with commit
-  identity, SHA-256 values and MITRE notice.
-- Require exact identifier-set equality between active source techniques,
-  generated catalog records and 918 readable prompt files: 697 Enterprise,
-  124 Mobile and 97 ICS, including 378 parents and 540 subtechniques.
-- Record all 248 revoked/deprecated exclusions, 18,885 qualifying procedure
-  relationships and 2,053 linked analytics. Preserve the 13 unlinked active
-  analytics in raw source without inventing relationships.
-- Keep the 24 ICS records without source platforms and 108 records without
-  qualifying procedures explicit. Absence must not prevent a technique prompt.
+The shared composer covers 918 records × four modes × six targets (22,032
+combinations). The CLI retains bounded literal context, safe new-file export and
+content hashes. The browser retains full-catalog search, pagination, source
+details, local editing and export. The Pages build remains limited to its
+explicit eight-file allowlist; raw source bundles, QA tools and analyst context
+do not enter the static payload.
 
-Exit evidence: deterministic generation, exact source and output inventories,
-complete readable texts, and reviewable [coverage](library/coverage.json).
+These are structural and workflow properties. They do not establish human review,
+native-product validation or field-confirmed detection effectiveness.
 
-## Integrate and verify local workflows
+## Non-negotiable release gates
 
-- Use one composition implementation for generated text, browser and Node CLI.
-- Verify all 22,032 record/mode/target combinations, source-specific content,
-  literal input, bounded context, output checksums and overwrite safeguards.
-- Verify all-domain search, pages of 50, first and last selections, source
-  details, keyboard operation, context application, copy and both export formats.
-- Check the browser at 320, 768, 1024 and 1440 CSS pixels and under a repository
-  URL prefix. Record console/network results, screenshots and accessibility limits.
-- Keep the public build limited to eight files and verify generated inputs
-  before building. Raw bundles, repository tools and analyst context stay out.
+- Preserve exact source, catalog and readable-prompt identifier parity for all
+  918 active records, source hashes, licensing and explicit exclusions.
+- Give every prompt two independent expert reviews. Record reviewer identity,
+  review date and rubric version without manufacturing or backfilling reviews.
+- Require 100% structural conformance, a mean expert score of at least 4/5 and
+  zero critical source fabrication, dangerous instruction or unsupported
+  validation claim before stable v1.0.
+- Publish native rules only where a real product telemetry path and reproducible
+  lab evidence exist. Use an audited `not-applicable` decision instead of an
+  invented field mapping or rule.
+- Keep local use first-class. Never upload prompts, logs or context by default,
+  and never store credentials in evaluation or release evidence.
+- Keep the existing CLI and static workbench compatible while contracts evolve.
 
-Exit evidence: current Node and foundation checks, real-browser results, source
-coverage review and inspected build contents in [verification](docs/verification.md).
-These checks do not validate detection effectiveness.
+## Phase 1 — `0.4.0.dev0` trust and contract foundation
 
-## Prepare publication after review
+Deliver versioned prompt, rule, review, validation and evaluation schemas;
+governance and ownership records; contribution-evidence guidance; reproducible
+catalog checks; a validation ledger; and hardened dependency and supply-chain
+workflows. Existing prompt rows start as `generated` unless real review or lab
+evidence proves a higher status.
 
-- Build and compare the new archive against its source files; retain its checksum.
-- Preserve the owner-approved [MIT project-code license](LICENSE) and separate
-  MITRE terms; the decision is recorded in [LICENSE_TODO](LICENSE_TODO.md).
-- Review the exact distribution and any future Git history for private data and
-  credentials; preserve the enabled GitHub private vulnerability-reporting route.
-- Use the approved public
-  [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library)
-  repository. The complete library is pushed; track hosted CI and Pages outcomes
-  in the [verification record](docs/verification.md#hosted-publication-status).
-- Run the configured CI on the approved commit and deploy only the reviewed static
-  output after explicit authorization. Keep development builds marked prerelease.
+Exit evidence:
 
-See [publishing](docs/publishing.md). No release, push or deployment is authorized
-by completing local implementation or by a passing test run.
+- schemas reject missing provenance, impossible status transitions and malformed
+  hashes while accepting documented fixtures;
+- all 918 records have stable metadata and an explicit review state;
+- repository policy, CODEOWNERS, DCO, support and security routes are reviewable;
+- required Actions are allowlisted and SHA-pinned in the repository and in the
+  remote settings; and
+- current Node, Python, static-build and browser regression suites pass on the
+  exact candidate commit.
 
-## Later work
+Remote settings are not changed merely by adding repository files. Track their
+desired state and observed verification separately in
+[repository settings](docs/repository-settings.md).
 
-Evaluate source upgrades, deeper procedure browsing, saved local selections,
-additional output formats and measured accessibility/performance improvements
-as separate changes. A model service or executable detection evaluator requires
-a separate product and data-flow decision. If the original archive becomes
-available, preserve it and compare its provenance and contracts before promising
-compatibility or merging its code.
+## Phase 2 — independent prompt review
+
+Review all 918 prompts twice using the same versioned rubric. Reviewers work
+independently before disagreements are reconciled. Published scorecards include
+coverage and aggregate results, not private reviewer notes or sensitive test data.
+
+The rubric covers factual accuracy, ATT&CK alignment, telemetry feasibility,
+benign behavior, safety, source traceability and platform assumptions. A model
+evaluation can prioritize human work but cannot count as either expert review.
+Every evaluation run records the exact model identifier, provider, settings,
+date, prompt hash and response hash; secrets and private environment content are
+never retained.
+
+Exit evidence: 1,836 valid review attestations, two distinct reviewers per prompt,
+resolved critical findings, rubric-score thresholds and a machine-checkable
+scorecard tied to immutable prompt hashes.
+
+## Phase 3 — native reference-rule packs
+
+- **Enterprise:** select 100 cases with demonstrated telemetry paths for Panther,
+  Microsoft Sentinel, Microsoft Defender XDR and Splunk, then implement and test
+  the four native rules for each case: 400 lab-validated rules in total.
+- **Mobile:** assess 100 cases against the same four targets and publish an
+  executable rule only for supported telemetry paths; every other matrix cell
+  receives a reviewed `not-applicable` rationale.
+- **ICS:** assess all 97 active records using the same evidence policy and target
+  matrix. Preserve source records that lack a platform or procedure instead of
+  guessing missing context.
+
+Each supported rule needs positive, benign-lookalike, missing telemetry and
+boundary fixtures. Results record engine/runtime versions, fixture hashes,
+expected and observed outcomes, known limitations and reviewer approval.
+Parser or lint success is structural evidence, not lab validation.
+
+Exit evidence: complete support matrices, reproducible fixture replay for every
+supported cell, SPDX and origin data for every external fragment, and no
+unassessed cell presented as supported or not applicable.
+
+## Phase 4 — premium research workbench
+
+Evolve the static workbench with a coherent design system, dark and high-contrast
+modes, persistent URL state, comparison, technique–telemetry–rule relationships,
+validation-level and provenance history, and research-data export. Preserve the
+zero-runtime-dependency static distribution unless a reviewed architecture
+decision changes that boundary.
+
+Acceptance evidence includes:
+
+- WCAG 2.2 AA automated checks plus documented manual VoiceOver and NVDA reviews;
+- Chromium, Firefox and WebKit at widths from 320 to 1440 CSS pixels;
+- p75 Core Web Vitals of LCP at most 2.5 seconds, INP at most 200 milliseconds
+  and CLS at most 0.1 under the documented measurement profile; and
+- no prompt, context or log content sent to analytics or another service.
+
+Automated accessibility tests do not replace the independent manual audit.
+
+## Phase 5 — v1.0 release candidate
+
+Create a clean, reproducible candidate with an SBOM, license report, artifact
+SHA-256 values, Sigstore signature and at least SLSA Build L2 provenance. Exercise
+artifact installation/use, static-site rollback and release rollback. Preserve
+tags and published evidence as immutable records; corrections use a new version.
+
+Exit evidence: all prior gates, a clean rebuild from the tagged commit, reviewed
+release notes, verified signatures/provenance and an independent release audit.
+See [release process](docs/release-process.md) and
+[versioning](docs/versioning.md).
+
+## Phase 6 — read-only research API beta
+
+After the local product is mature, add an opt-in portable TypeScript service,
+PostgreSQL storage and OCI image. A versioned `/v1` API exposes techniques,
+prompts, native rules, validation results, versions, relationships and search
+using cursor pagination, ETags, content hashes, OpenAPI 3.1 and JSON Schema.
+Provide STIX 2.1 export and a read-only TAXII collection.
+
+The first API beta has no user accounts, model execution, log uploads or malware
+samples. It needs rate limiting, a WAF, OpenTelemetry, a public status surface,
+a 99.9% monthly availability objective and a catalog-search target of p95 below
+250 ms at 100 requests per second under a declared load profile.
+
+## Phase 7 — stable v1.0
+
+Stable v1.0 is blocked until all 918 prompts have two independent reviews, every
+domain support matrix is resolved, security and supply-chain gates pass, the
+independent WCAG review is complete, and signed release evidence is available.
+There is no date commitment before qualified reviewers and licensed product labs
+are available. The read-only API beta may follow the local v1.0 and is not a
+reason to weaken local-product gates.
+
+## Later candidates
+
+Potential follow-on work includes reviewed ATT&CK update proposals, additional
+native targets, localized UI strings and a stable research API. Each requires its
+own source, licensing, privacy, migration and regression review. The original
+v0.2.0 archive remains unavailable; if recovered, preserve and compare it rather
+than silently merging or claiming compatibility.

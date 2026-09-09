@@ -15,6 +15,7 @@
     Sigma: 'For a Sigma YAML draft, specify logsource, selections, condition and supplied field mappings. Separate base rules from correlation requirements and identify the conversion backend/pipeline and unsupported features; do not invent a deployment-ready conversion.',
   });
   const TARGETS = Object.freeze(Object.keys(TARGET_GUIDANCE));
+  const THEMES = Object.freeze(['system', 'light', 'dark', 'contrast']);
   const DELIVERABLES = Object.freeze({
     detect: 'Rule specification: define required versus optional signals, entity grouping, conditions and any correlation ordering, time windows and thresholds. Explain why they distinguish the scoped behavior. Include a target-format draft only when the readiness gate is satisfied.',
     hunt: 'Hunt plan: state the hypothesis, supporting and falsifying evidence, ordered pivots, scope/time bounds and stop conditions. Request only observable evidence; do not turn an unsupported hypothesis into a finding.',
@@ -101,6 +102,8 @@
       `${record.id} — ${record.name} | ${record.domain} | ATT&CK 19.2 reference`,
       `Source: ${record.sourceUrl}`,
       ...(full ? [`Source tactics: ${record.tactics.join(', ')}`, `Technique platforms: ${record.platforms.join(', ') || 'Not specified in source'}`] : []),
+      ...(full && record.kind === 'subtechnique' && record.parentId && record.parentName
+        ? [`Parent technique: ${record.parentId} — ${record.parentName}`] : []),
       '',
       `Task: ${MODES[mode]}`,
       `Output target: ${target}. This is an output instruction, not a verified integration.`,
@@ -132,7 +135,117 @@
       prompt: composePrompt(record, options),
     })).join('\n') + (records.length ? '\n' : '');
   }
-  const api = Object.freeze({ MODES, TARGETS, filterTechniques, composePrompt, exportJSONL });
+
+  function boundedParam(params, name, limit) {
+    const value = (params.get(name) || '').replace(/[\u0000-\u001f\u007f]/g, '').trim();
+    return value.slice(0, limit);
+  }
+
+  function parseUiState(search = '') {
+    let params;
+    try { params = new URL(`https://workbench.invalid/${String(search).startsWith('?') ? String(search) : `?${String(search)}`}`).searchParams; }
+    catch { params = new URL('https://workbench.invalid/').searchParams; }
+    const domainValue = boundedParam(params, 'domain', 16);
+    const modeValue = boundedParam(params, 'mode', 16);
+    const targetValue = boundedParam(params, 'target', 40);
+    const themeValue = boundedParam(params, 'theme', 16);
+    const techniqueValue = boundedParam(params, 'technique', 10).toUpperCase();
+    const techniquePattern = /^T\d{4}(?:\.\d{3})?$/;
+    const compare = [];
+    for (const candidate of boundedParam(params, 'compare', 64).toUpperCase().split(',')) {
+      if (techniquePattern.test(candidate) && !compare.includes(candidate)) compare.push(candidate);
+      if (compare.length === 2) break;
+    }
+    return {
+      query: boundedParam(params, 'q', 200),
+      domain: ['Enterprise', 'Mobile', 'ICS'].includes(domainValue) ? domainValue : '',
+      tactic: boundedParam(params, 'tactic', 100),
+      platform: boundedParam(params, 'platform', 100),
+      mode: Object.hasOwn(MODES, modeValue) ? modeValue : 'detect',
+      target: TARGETS.includes(targetValue) ? targetValue : 'Panther Python',
+      technique: techniquePattern.test(techniqueValue) ? techniqueValue : '',
+      compare,
+      theme: THEMES.includes(themeValue) ? themeValue : 'system',
+    };
+  }
+
+  function serializeUiState(value = {}) {
+    const params = new URL('https://workbench.invalid/').searchParams;
+    const fields = [
+      ['q', value.query], ['domain', value.domain], ['tactic', value.tactic],
+      ['platform', value.platform], ['mode', value.mode === 'detect' ? '' : value.mode],
+      ['target', value.target === 'Panther Python' ? '' : value.target],
+      ['technique', value.technique], ['compare', Array.isArray(value.compare) ? value.compare.slice(0, 2).join(',') : ''],
+      ['theme', value.theme === 'system' ? '' : value.theme],
+    ];
+    for (const [name, raw] of fields) if (raw) params.set(name, String(raw));
+    const query = params.toString();
+    return query ? `?${query}` : '';
+  }
+
+  function validationState(record) {
+    const supplied = record.validation && typeof record.validation === 'object' ? record.validation : {};
+    const reviews = Number.isSafeInteger(supplied.humanReviews) && supplied.humanReviews > 0 ? supplied.humanReviews : 0;
+    const reviewerIds = Array.isArray(supplied.reviewers)
+      ? supplied.reviewers.filter(value => typeof value === 'string').map(value => value.trim()).filter(Boolean)
+      : [];
+    const requested = ['generated', 'reviewed', 'lab-validated', 'field-confirmed'].includes(supplied.level) ? supplied.level : 'generated';
+    const reviewGatePassed = reviews >= 2 && new Set(reviewerIds).size >= 2;
+    let level = 'generated';
+    if (reviewGatePassed && ['reviewed', 'lab-validated', 'field-confirmed'].includes(requested)) level = 'reviewed';
+    if (reviewGatePassed && supplied.labValidated === true && ['lab-validated', 'field-confirmed'].includes(requested)) level = 'lab-validated';
+    if (level === 'lab-validated' && supplied.fieldConfirmed === true && requested === 'field-confirmed') level = 'field-confirmed';
+    const labValidated = ['lab-validated', 'field-confirmed'].includes(level);
+    const fieldConfirmed = level === 'field-confirmed';
+    const validatedBackends = labValidated && Array.isArray(supplied.validatedBackends)
+      ? supplied.validatedBackends.filter(value => typeof value === 'string' && TARGETS.includes(value)) : [];
+    return {
+      level, human_reviews: reviews, lab_validated: labValidated,
+      field_confirmed: fieldConfirmed, validated_backends: validatedBackends,
+    };
+  }
+
+  function researchRecord(record, options = {}) {
+    const strategies = (record.strategies || []).map(strategy => ({
+      id: strategy.id,
+      analytics: (strategy.analytics || []).map(analytic => analytic.id),
+    }));
+    const validation = validationState(record);
+    return {
+      technique: {
+        id: record.id, name: record.name, domain: record.domain, kind: record.kind || 'technique',
+        parent_id: record.parentId || null, tactics: record.tactics || [], platforms: record.platforms || [],
+      },
+      provenance: {
+        source_url: record.sourceUrl, attack_version: record.attackVersion || '19.2',
+        library_content_hash: null,
+        note: 'The static browser catalog does not expose a per-record content hash.',
+      },
+      validation,
+      relationships: {
+        telemetry: record.telemetry || [], detection_strategies: strategies,
+        procedure_relationship_count: record.procedureCount || 0,
+      },
+      native_rule_readiness: validation.lab_validated
+        ? 'See validated_backends; confirm the recorded fixture and environment evidence before reuse.'
+        : 'A lab-validated native rule is not published for this record. Confirm local telemetry and schema before drafting backend logic.',
+      prompt: composePrompt(record, options),
+    };
+  }
+
+  function exportResearchJSON(records, options = {}) {
+    return JSON.stringify({
+      schema_version: 'pad-research-export-1',
+      reference: { source: 'MITRE ATT&CK', attack_version: '19.2' },
+      scope: { record_count: records.length, generated_drafts: true },
+      records: records.map(record => researchRecord(record, options)),
+    }, null, 2) + '\n';
+  }
+
+  const api = Object.freeze({
+    MODES, TARGETS, THEMES, filterTechniques, composePrompt, exportJSONL,
+    parseUiState, serializeUiState, validationState, researchRecord, exportResearchJSON,
+  });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.PAD = api;
 })(globalThis);

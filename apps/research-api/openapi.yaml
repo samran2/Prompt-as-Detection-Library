@@ -1,0 +1,579 @@
+openapi: 3.1.0
+info:
+  title: Prompt-as-Detection Research API
+  version: 0.4.0-dev.0
+  summary: Read-only, content-addressed access to the pinned research catalog.
+  description: |
+    Experimental `/v1` contract for public research data. The dependency-free
+    reference service binds to loopback by default and provides no accounts,
+    uploads, model execution, log ingestion or malware samples. Empty rule or
+    validation collections mean that no qualifying evidence is published; they
+    must never be interpreted as product support. Every documented GET path
+    also supports HEAD with the same status and validators but no response body.
+  license:
+    name: MIT for project code; source data has separate terms
+    identifier: MIT
+servers:
+  - url: http://127.0.0.1:8781
+    description: Local reference service
+security: []
+tags:
+  - name: Catalog
+  - name: Discovery
+paths:
+  /v1/techniques:
+    get:
+      tags: [Catalog]
+      operationId: listTechniques
+      summary: List ATT&CK techniques and subtechniques.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Domain'
+        - name: tactic
+          in: query
+          schema: {type: string, minLength: 1, maxLength: 128}
+        - name: platform
+          in: query
+          schema: {type: string, minLength: 1, maxLength: 128}
+        - name: kind
+          in: query
+          schema: {type: string, enum: [technique, subtechnique]}
+      responses:
+        '200': {$ref: '#/components/responses/TechniquePage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/techniques/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getTechnique
+      summary: Get one ATT&CK technique or subtechnique.
+      parameters:
+        - $ref: '#/components/parameters/TechniqueId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/TechniqueItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/prompts:
+    get:
+      tags: [Catalog]
+      operationId: listPrompts
+      summary: List detection prompts and their evidence status.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Domain'
+        - $ref: '#/components/parameters/Status'
+        - $ref: '#/components/parameters/TechniqueIdQuery'
+      responses:
+        '200': {$ref: '#/components/responses/PromptPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/prompts/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getPrompt
+      summary: Get one prompt with its exact text and hashes.
+      parameters:
+        - $ref: '#/components/parameters/TechniqueId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/PromptItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/rules:
+    get:
+      tags: [Catalog]
+      operationId: listRules
+      summary: List native rules backed by published provenance.
+      description: An empty collection does not imply that a backend is unsupported.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Domain'
+        - $ref: '#/components/parameters/Status'
+        - $ref: '#/components/parameters/TechniqueIdQuery'
+        - name: backend
+          in: query
+          schema: {type: string, enum: [panther, sentinel, defender-xdr, splunk]}
+      responses:
+        '200': {$ref: '#/components/responses/RulePage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/rules/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getRule
+      summary: Get one native rule.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/RuleItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/validations:
+    get:
+      tags: [Catalog]
+      operationId: listValidations
+      summary: List reproducible validation evidence.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Status'
+        - name: ruleId
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceId'}
+        - name: promptId
+          in: query
+          schema: {$ref: '#/components/schemas/TechniqueId'}
+      responses:
+        '200': {$ref: '#/components/responses/ValidationPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/validations/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getValidation
+      summary: Get one validation evidence record.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/ValidationItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/versions:
+    get:
+      tags: [Catalog]
+      operationId: listVersions
+      summary: List immutable source and content versions.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Status'
+      responses:
+        '200': {$ref: '#/components/responses/VersionPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/versions/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getVersion
+      summary: Get one immutable source and content version.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/VersionItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/relationships:
+    get:
+      tags: [Catalog]
+      operationId: listRelationships
+      summary: List typed relationships between published objects.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - name: type
+          in: query
+          schema: {type: string, minLength: 1, maxLength: 128}
+        - name: sourceType
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceType'}
+        - name: sourceId
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceId'}
+        - name: targetType
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceType'}
+        - name: targetId
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceId'}
+      responses:
+        '200': {$ref: '#/components/responses/RelationshipPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/relationships/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getRelationship
+      summary: Get one typed relationship.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/RelationshipItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/search:
+    get:
+      tags: [Discovery]
+      operationId: searchCatalog
+      summary: Search published techniques, prompts, rules and validations.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - name: q
+          in: query
+          required: true
+          schema: {type: string, minLength: 1, maxLength: 256}
+        - name: resourceType
+          in: query
+          schema: {$ref: '#/components/schemas/SearchResourceType'}
+        - $ref: '#/components/parameters/Domain'
+      responses:
+        '200': {$ref: '#/components/responses/SearchPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+components:
+  parameters:
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      description: Return 304 when the selected representation still has this ETag.
+      schema: {type: string, maxLength: 256}
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: Maximum number of objects to return. Defaults to 20.
+      schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor bound to resource, filters and snapshot hash.
+      schema: {type: string, minLength: 1, maxLength: 512}
+    Domain:
+      name: domain
+      in: query
+      required: false
+      schema: {type: string, enum: [Enterprise, Mobile, ICS]}
+    Status:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [generated, reviewed, lab-validated, field-confirmed, unassessed, not-applicable, passed, failed, pinned]
+    TechniqueIdQuery:
+      name: techniqueId
+      in: query
+      required: false
+      schema: {$ref: '#/components/schemas/TechniqueId'}
+    TechniqueId:
+      name: id
+      in: path
+      required: true
+      schema: {$ref: '#/components/schemas/TechniqueId'}
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema: {$ref: '#/components/schemas/ResourceId'}
+  headers:
+    ETag:
+      description: Strong validator for the exact JSON representation.
+      schema: {type: string, pattern: '^"[a-f0-9]{64}"$'}
+    ContentDigest:
+      description: SHA-256 digest of the exact JSON response bytes.
+      schema: {type: string}
+  responses:
+    TechniquePage:
+      description: A page of techniques.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/TechniquePage'}}}
+    TechniqueItem:
+      description: One technique.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/TechniqueItem'}}}
+    PromptPage:
+      description: A page of prompts.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/PromptPage'}}}
+    PromptItem:
+      description: One prompt.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/PromptItem'}}}
+    RulePage:
+      description: A page of native rules.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/RulePage'}}}
+    RuleItem:
+      description: One native rule.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/RuleItem'}}}
+    ValidationPage:
+      description: A page of validation evidence.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/ValidationPage'}}}
+    ValidationItem:
+      description: One validation evidence record.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/ValidationItem'}}}
+    VersionPage:
+      description: A page of versions.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/VersionPage'}}}
+    VersionItem:
+      description: One version.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/VersionItem'}}}
+    RelationshipPage:
+      description: A page of relationships.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/RelationshipPage'}}}
+    RelationshipItem:
+      description: One relationship.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/RelationshipItem'}}}
+    SearchPage:
+      description: A page of search results.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/SearchPage'}}}
+    NotModified:
+      description: The representation matches If-None-Match. No body is returned.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+    BadRequest:
+      description: Invalid parameters or a cursor not valid for this query and snapshot.
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}
+    NotFound:
+      description: The resource does not exist.
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}
+    MethodNotAllowed:
+      description: Only GET and HEAD are supported.
+      headers:
+        Allow: {description: Allowed methods., schema: {type: string, const: 'GET, HEAD'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}
+  schemas:
+    ContentHash:
+      type: string
+      pattern: '^sha256:[a-f0-9]{64}$'
+    TechniqueId:
+      type: string
+      pattern: '^T[0-9]{4}(?:\.[0-9]{3})?$'
+    ResourceId:
+      type: string
+      pattern: '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$'
+    Domain:
+      type: string
+      enum: [Enterprise, Mobile, ICS]
+    ResourceType:
+      type: string
+      enum: [technique, prompt, rule, validation, version]
+    SearchResourceType:
+      type: string
+      enum: [technique, prompt, rule, validation]
+    PageMeta:
+      type: object
+      additionalProperties: false
+      required: [pageSize, totalItems, nextCursor, snapshotHash]
+      properties:
+        pageSize: {type: integer, minimum: 1, maximum: 100}
+        totalItems: {type: integer, minimum: 0}
+        nextCursor: {type: [string, 'null'], maxLength: 512}
+        snapshotHash: {$ref: '#/components/schemas/ContentHash'}
+    ItemMeta:
+      type: object
+      additionalProperties: false
+      required: [snapshotHash]
+      properties:
+        snapshotHash: {$ref: '#/components/schemas/ContentHash'}
+    Technique:
+      type: object
+      additionalProperties: false
+      required: [id, name, domain, kind, tactics, platforms, attackVersion, stixId, parentId, sourceUrl, behavior, telemetry, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/TechniqueId'}
+        name: {type: string, minLength: 1}
+        domain: {$ref: '#/components/schemas/Domain'}
+        kind: {type: string, enum: [technique, subtechnique]}
+        tactics: {type: array, items: {type: string}}
+        platforms: {type: array, items: {type: string}}
+        attackVersion: {type: string, const: '19.2'}
+        stixId: {type: string, pattern: '^attack-pattern--[a-f0-9-]+$'}
+        parentId: {oneOf: [{$ref: '#/components/schemas/TechniqueId'}, {type: 'null'}]}
+        sourceUrl: {type: string, format: uri}
+        behavior: {type: string, minLength: 1}
+        telemetry: {type: array, items: {type: string}}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    Prompt:
+      type: object
+      additionalProperties: false
+      required: [id, techniqueId, domain, status, promptSha256, text, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/TechniqueId'}
+        techniqueId: {$ref: '#/components/schemas/TechniqueId'}
+        domain: {$ref: '#/components/schemas/Domain'}
+        status: {type: string, enum: [generated, reviewed, lab-validated, field-confirmed]}
+        promptSha256: {type: string, pattern: '^[a-f0-9]{64}$'}
+        metadata:
+          type: object
+          description: Compatibility metadata copied from content/prompts/index.json; this legacy object does not claim conformance to the versioned v1 prompt-metadata schema.
+        text: {type: string, minLength: 1, maxLength: 100000}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    NativeRule:
+      type: object
+      description: A native rule is returned only when evidence required by the repository schema exists.
+      required: [id, techniqueId, domain, backend, status, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/ResourceId'}
+        techniqueId: {$ref: '#/components/schemas/TechniqueId'}
+        domain: {$ref: '#/components/schemas/Domain'}
+        backend: {type: string, enum: [panther, sentinel, defender-xdr, splunk]}
+        status: {type: string, enum: [generated, reviewed, lab-validated, field-confirmed]}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    Validation:
+      type: object
+      description: Reproducible evidence conforming to packages/schemas/v1/validation-evidence.schema.json.
+      required: [id, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/ResourceId'}
+        validationLevel: {type: string, enum: [lab-validated, field-confirmed]}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    Version:
+      type: object
+      additionalProperties: false
+      required: [id, attackVersion, libraryVersion, status, sourceCommit, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/ResourceId'}
+        attackVersion: {type: string}
+        libraryVersion: {type: string}
+        contentVersion: {type: string}
+        status: {type: string, const: pinned}
+        sourceCommit: {type: string, pattern: '^[a-f0-9]{40}$'}
+        sourceTag: {type: string}
+        sourceManifestHash: {$ref: '#/components/schemas/ContentHash'}
+        counts: {type: object, additionalProperties: {type: integer, minimum: 0}}
+        limitations: {type: array, items: {type: string}}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    ResourceReference:
+      type: object
+      additionalProperties: false
+      required: [type, id]
+      properties:
+        type: {$ref: '#/components/schemas/ResourceType'}
+        id: {$ref: '#/components/schemas/ResourceId'}
+    Relationship:
+      type: object
+      additionalProperties: false
+      required: [id, type, source, target, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/ResourceId'}
+        type: {type: string, enum: [subtechnique-of, has-prompt, has-rule, validated-by]}
+        source: {$ref: '#/components/schemas/ResourceReference'}
+        target: {$ref: '#/components/schemas/ResourceReference'}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    SearchResult:
+      type: object
+      additionalProperties: false
+      required: [resourceType, resourceId, title, domain, href, contentHash, matchedFields]
+      properties:
+        resourceType: {$ref: '#/components/schemas/SearchResourceType'}
+        resourceId: {$ref: '#/components/schemas/ResourceId'}
+        title: {type: string, minLength: 1}
+        domain: {oneOf: [{$ref: '#/components/schemas/Domain'}, {type: 'null'}]}
+        href: {type: string, pattern: '^/v1/'}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+        matchedFields: {type: array, minItems: 1, uniqueItems: true, items: {type: string}}
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code: {type: string, pattern: '^[a-z][a-z0-9_]{1,63}$'}
+            message: {type: string, minLength: 1, maxLength: 256}
+    TechniquePage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {type: array, items: {$ref: '#/components/schemas/Technique'}}, meta: {$ref: '#/components/schemas/PageMeta'}}
+    TechniqueItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {$ref: '#/components/schemas/Technique'}, meta: {$ref: '#/components/schemas/ItemMeta'}}
+    PromptPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {type: array, items: {$ref: '#/components/schemas/Prompt'}}, meta: {$ref: '#/components/schemas/PageMeta'}}
+    PromptItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {$ref: '#/components/schemas/Prompt'}, meta: {$ref: '#/components/schemas/ItemMeta'}}
+    RulePage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {type: array, items: {$ref: '#/components/schemas/NativeRule'}}, meta: {$ref: '#/components/schemas/PageMeta'}}
+    RuleItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {$ref: '#/components/schemas/NativeRule'}, meta: {$ref: '#/components/schemas/ItemMeta'}}
+    ValidationPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {type: array, items: {$ref: '#/components/schemas/Validation'}}, meta: {$ref: '#/components/schemas/PageMeta'}}
+    ValidationItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {$ref: '#/components/schemas/Validation'}, meta: {$ref: '#/components/schemas/ItemMeta'}}
+    VersionPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {type: array, items: {$ref: '#/components/schemas/Version'}}, meta: {$ref: '#/components/schemas/PageMeta'}}
+    VersionItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {$ref: '#/components/schemas/Version'}, meta: {$ref: '#/components/schemas/ItemMeta'}}
+    RelationshipPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {type: array, items: {$ref: '#/components/schemas/Relationship'}}, meta: {$ref: '#/components/schemas/PageMeta'}}
+    RelationshipItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {$ref: '#/components/schemas/Relationship'}, meta: {$ref: '#/components/schemas/ItemMeta'}}
+    SearchPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties: {data: {type: array, items: {$ref: '#/components/schemas/SearchResult'}}, meta: {$ref: '#/components/schemas/PageMeta'}}

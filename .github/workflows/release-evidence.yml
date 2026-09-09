@@ -1,0 +1,122 @@
+name: Build release-candidate evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_evidence_only:
+        description: 'Build evidence only; do not create a GitHub Release or publish a package'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify candidate without signing authority
+    if: inputs.confirm_evidence_only == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the explicitly selected source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require a reviewed revision reachable from main
+        env:
+          EVIDENCE_COMMIT: ${{ github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EVIDENCE_COMMIT"
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor HEAD refs/remotes/origin/main
+      - name: Select Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Verify and build the static workbench
+        run: |
+          npm run check
+          npm test
+          npm run build
+
+  evidence:
+    name: Package and sign candidate evidence
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout the explicitly selected source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require a reviewed revision reachable from main
+        env:
+          EVIDENCE_COMMIT: ${{ github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EVIDENCE_COMMIT"
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor HEAD refs/remotes/origin/main
+      - name: Create an immutable source archive
+        id: archive
+        env:
+          EVIDENCE_DIRECTORY: ${{ runner.temp }}/release-evidence
+        run: |
+          mkdir -p "$EVIDENCE_DIRECTORY"
+          commit_sha=$(git rev-parse HEAD)
+          test -n "$commit_sha"
+          git archive --format=zip --prefix=Prompt-as-Detection-Library/ --output="$EVIDENCE_DIRECTORY/prompt-as-detection-library-source.zip" HEAD
+          printf '%s\n' "$commit_sha" > "$EVIDENCE_DIRECTORY/SOURCE-COMMIT"
+          echo "commit_sha=$commit_sha" >> "$GITHUB_OUTPUT"
+      - name: Generate an SPDX JSON software bill of materials
+        uses: anchore/sbom-action@aa0e114b2e19480f157109b9922bda359bd98b90 # v0.20.8
+        with:
+          path: .
+          format: spdx-json
+          output-file: ${{ runner.temp }}/release-evidence/prompt-as-detection-library.spdx.json
+          upload-artifact: false
+      - name: Compute release-evidence checksums
+        env:
+          EVIDENCE_DIRECTORY: ${{ runner.temp }}/release-evidence
+        run: |
+          cd "$EVIDENCE_DIRECTORY"
+          sha256sum SOURCE-COMMIT prompt-as-detection-library-source.zip prompt-as-detection-library.spdx.json > SHA256SUMS
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
+      - name: Sign the candidate archive with GitHub OIDC
+        env:
+          EVIDENCE_DIRECTORY: ${{ runner.temp }}/release-evidence
+        run: |
+          cosign sign-blob --yes \
+            --bundle "$EVIDENCE_DIRECTORY/prompt-as-detection-library-source.zip.sigstore.json" \
+            "$EVIDENCE_DIRECTORY/prompt-as-detection-library-source.zip"
+      - name: Create GitHub artifact provenance
+        id: provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
+        with:
+          subject-path: ${{ runner.temp }}/release-evidence/prompt-as-detection-library-source.zip
+      - name: Retain the bounded candidate evidence bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-candidate-evidence-${{ steps.archive.outputs.commit_sha }}
+          path: ${{ runner.temp }}/release-evidence/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Record publication boundary
+        env:
+          ATTESTATION_URL: ${{ steps.provenance.outputs.attestation-url }}
+          SOURCE_COMMIT: ${{ steps.archive.outputs.commit_sha }}
+        run: |
+          echo "Candidate evidence built for commit: $SOURCE_COMMIT" >> "$GITHUB_STEP_SUMMARY"
+          echo "GitHub provenance: $ATTESTATION_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo 'This manual workflow does not create a GitHub Release, tag, package, container, or deployment. Evidence is a release input, not proof that the v1.0 validation gates have passed.' >> "$GITHUB_STEP_SUMMARY"

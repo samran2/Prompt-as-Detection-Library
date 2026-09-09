@@ -89,7 +89,7 @@ of The MITRE Corporation; this independent project is not endorsed by MITRE.
 Original project code and associated documentation use the owner-approved
 [MIT License](../LICENSE), Copyright (c) 2026 samran2. This does not replace
 MITRE's terms for reproduced ATT&CK content; see the
-[resolved licensing record](../LICENSE_TODO.md).
+[resolved licensing record](licensing.md).
 
 Raw bundles and the complete procedure file are repository artifacts and never
 enter the eight-file static-site build. The preceding 12-record sample and its

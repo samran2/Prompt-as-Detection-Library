@@ -29,30 +29,47 @@
         <span class="eyebrow">REFERENCE SNAPSHOT</span>
         <strong>MITRE ATT&CK 19.2</strong>
         <p>All active techniques.<br>Every prompt is a draft.</p>
-        <span class="version">Workbench 0.3.0-dev.3</span>
+        <span class="version">Workbench 0.4.0-dev.0</span>
       </div>
     </aside>
 
-    <main id="workbench" tabindex="-1">
+    <main id="workbench" tabindex="-1" aria-busy="true">
+      <section id="app-status" class="status-screen" role="status" aria-live="polite">
+        <div class="status-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p class="eyebrow">LOCAL RESEARCH WORKBENCH</p>
+        <strong id="app-status-title">Loading the pinned library…</strong>
+        <p id="app-status-detail">Preparing 918 local ATT&amp;CK 19.2 records. Nothing is uploaded.</p>
+        <button id="reload-app" hidden>Reload workbench</button>
+      </section>
+      <div id="app-content" hidden>
       <header class="workspace-header">
         <div><p class="eyebrow">EXPLORE. ADAPT. DETECT.</p><h1>Detection workbench</h1></div>
-        <span class="demo-badge"><span aria-hidden="true">◈</span> Full active library</span>
+        <div class="header-actions">
+          <label class="theme-control" for="theme"><span>Appearance</span><select id="theme" aria-label="Appearance theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option><option value="contrast">High contrast</option></select></label>
+          <span class="demo-badge"><span aria-hidden="true">◈</span> Full active library</span>
+        </div>
       </header>
-      <div class="library-notice"><div><strong id="library-count">Loading active library…</strong><span>ATT&CK 19.2 · unvalidated drafts</span></div><p id="coverage-summary"></p></div>
+      <div class="library-notice" aria-label="Library snapshot">
+        <div class="snapshot-primary"><span class="snapshot-label">Active coverage</span><strong id="library-count">Loading active library…</strong><span>Every record is a draft unless review evidence says otherwise.</span></div>
+        <div class="snapshot-meta"><span class="snapshot-label">Pinned source</span><strong>ATT&amp;CK 19.2</strong><span>Enterprise · Mobile · ICS</span></div>
+        <div class="snapshot-meta"><span class="snapshot-label">Privacy boundary</span><strong>Runs in this browser</strong><span>No account · no telemetry</span></div>
+        <p id="coverage-summary"></p>
+      </div>
       <div class="workspace">
         <section class="catalog" aria-labelledby="library-heading">
           <div class="catalog-controls">
             <div class="section-heading"><h2 id="library-heading">Technique library</h2><span id="result-count" class="count" role="status"></span></div>
             <label for="search" class="sr-only">Search techniques</label>
-            <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="ID, parent, or behavior…" maxlength="200" autocomplete="off" aria-describedby="domain-count"><kbd aria-hidden="true">/</kbd></div>
-            <div class="domains" role="group" aria-label="ATT&CK domain">
+            <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="ID, parent, or behavior…" maxlength="200" autocomplete="off" aria-describedby="domain-count" aria-controls="techniques"><kbd aria-hidden="true">/</kbd></div>
+            <div class="domains" role="group" aria-label="ATT&CK domain" aria-controls="techniques">
               <button data-domain="" aria-pressed="true">All</button><button data-domain="Enterprise" aria-pressed="false">Enterprise</button><button data-domain="Mobile" aria-pressed="false">Mobile</button><button data-domain="ICS" aria-pressed="false">ICS</button>
             </div>
             <p id="domain-count" class="domain-count"></p>
-            <div class="filter-grid"><label>Tactic<select id="tactic"><option value="">All tactics</option></select></label><label>Platform<select id="platform"><option value="">All platforms</option></select></label></div>
+            <div class="filter-grid"><label>Tactic<select id="tactic" aria-controls="techniques"><option value="">All tactics</option></select></label><label>Platform<select id="platform" aria-controls="techniques"><option value="">All platforms</option></select></label></div>
+            <div id="active-filters" class="filter-summary" hidden><span id="active-filter-text"></span><button id="clear-active-filters" class="text-button">Reset</button></div>
           </div>
           <ul id="techniques" class="technique-list" aria-label="Matching techniques"></ul>
-          <div id="empty-results" class="empty-state" hidden><h3>No matching techniques</h3><p>Try fewer search terms or reset the domain, tactic, and platform filters. Revoked and deprecated records are excluded from this active library.</p><button id="clear-filters">Clear all filters</button></div>
+          <div id="empty-results" class="empty-state" hidden><span class="empty-icon" aria-hidden="true">⌕</span><h3>No matching techniques</h3><p>Try fewer search terms or reset the domain, tactic, and platform filters. Revoked and deprecated records are excluded from this active library.</p><button id="clear-filters">Clear all filters</button></div>
           <div class="pagination" aria-label="Technique result pages"><p id="page-range"></p><div class="page-controls"><button id="page-first" aria-label="First page">«</button><button id="page-previous" aria-label="Previous page">‹</button><span id="page-status" role="status"></span><button id="page-next" aria-label="Next page">›</button><button id="page-last" aria-label="Last page">»</button></div></div>
           <div class="catalog-footer"><button id="export-library" class="quiet-button">Export filtered JSONL <span aria-hidden="true">↗</span></button><p>All matching records · current mode and target</p></div>
         </section>
@@ -60,17 +77,46 @@
         <section class="detail" aria-labelledby="technique-title">
           <div id="no-selection" class="empty-state" hidden><h2>No technique selected</h2><p>Adjust or clear your filters to return to the active library.</p></div>
           <div id="selected-detail">
-            <div class="detail-header"><p id="breadcrumb" class="breadcrumb"></p><div class="title-row"><h2 id="technique-title">Loading technique…</h2><span id="technique-id" class="technique-id"></span></div><p id="technique-kind" class="technique-kind"></p><p id="behavior" class="behavior"></p><button id="show-source" class="text-button">Read complete source context →</button><div id="platform-tags" class="tags"></div></div>
+            <div class="detail-header">
+              <p id="breadcrumb" class="breadcrumb"></p>
+              <div class="title-row"><h2 id="technique-title" tabindex="-1">Loading technique…</h2><span id="technique-id" class="technique-id"></span></div>
+              <p id="technique-kind" class="technique-kind"></p><p id="behavior" class="behavior"></p>
+              <div class="detail-utilities"><button id="show-source" class="text-button">Read complete source context →</button><button id="compare-add" class="compare-button" aria-describedby="compare-help">Add to comparison <span aria-hidden="true">＋</span></button></div>
+              <p id="compare-help" class="sr-only">Add up to two techniques, then open the Compare tab.</p>
+              <div id="platform-tags" class="tags"></div>
+              <div class="trust-strip" aria-label="Content status and provenance">
+                <div><span class="trust-label">Validation</span><strong id="validation-level">Generated · not reviewed</strong></div>
+                <div><span class="trust-label">Provenance</span><strong id="provenance-summary">MITRE ATT&amp;CK 19.2 source</strong></div>
+                <div><span class="trust-label">Local privacy</span><strong>No account or telemetry</strong></div>
+              </div>
+            </div>
             <div class="tabs" role="tablist" aria-label="Technique detail">
-              <button id="tab-prompt" role="tab" aria-selected="true" aria-controls="panel-prompt">Detection prompt</button><button id="tab-source" role="tab" aria-selected="false" aria-controls="panel-source" tabindex="-1">Source context</button><button id="tab-review" role="tab" aria-selected="false" aria-controls="panel-review" tabindex="-1">Review guide</button>
+              <button id="tab-prompt" role="tab" aria-selected="true" aria-controls="panel-prompt">Prompt</button><button id="tab-source" role="tab" aria-selected="false" aria-controls="panel-source" tabindex="-1">Source</button><button id="tab-map" role="tab" aria-selected="false" aria-controls="panel-map" tabindex="-1">Evidence map</button><button id="tab-compare" role="tab" aria-selected="false" aria-controls="panel-compare" tabindex="-1">Compare <span id="compare-count" class="tab-count">0</span></button><button id="tab-review" role="tab" aria-selected="false" aria-controls="panel-review" tabindex="-1">Review</button>
             </div>
             <section id="panel-prompt" role="tabpanel" aria-labelledby="tab-prompt">
               <div class="configuration"><label>Mode<select id="mode"><option value="detect">Detect</option><option value="hunt">Hunt</option><option value="triage">Triage</option><option value="validate">Validate</option></select></label><label>Output target<select id="target"></select></label></div>
               <details class="context-box"><summary>Adapt to your environment <span>Optional context</span></summary><label for="context">Telemetry and schema notes</label><textarea id="context" rows="3" maxlength="4000" placeholder="Example: Windows process events are available. Confirm field names before proposing logic." aria-describedby="context-help"></textarea><p id="context-help">Use synthetic text, never secrets. Apply updates this prompt and future templates/JSONL exports; other saved drafts are unchanged. Everything clears on reload.</p><button id="apply-context">Apply context to prompt</button></details>
               <div class="prompt-box"><div class="prompt-toolbar"><label for="prompt">EDITABLE TEXT PROMPT</label><span id="draft-state">Draft template</span></div><textarea id="prompt" rows="15" spellcheck="false" aria-describedby="draft-warning"></textarea><div class="prompt-meta"><span id="character-count"></span><button id="reset-prompt" class="text-button">Reset template</button></div></div>
               <p id="draft-warning" class="draft-warning"><span aria-hidden="true">ⓘ</span> Unvalidated draft · no model calls, rule execution, or verified detection coverage.</p>
-              <div class="actions"><button id="copy" class="primary">Copy prompt <span aria-hidden="true">⧉</span></button><button id="download">Download .txt <span aria-hidden="true">↓</span></button></div>
+              <div class="actions"><button id="copy" class="primary">Copy prompt <span aria-hidden="true">⧉</span></button><button id="download">Download .txt <span aria-hidden="true">↓</span></button><button id="export-research">Export research JSON <span aria-hidden="true">↓</span></button><button id="share-view">Copy view link <span aria-hidden="true">⌁</span></button></div>
               <p id="action-status" class="action-status" role="status" aria-live="polite"></p>
+            </section>
+            <section id="panel-map" class="info-panel" role="tabpanel" aria-labelledby="tab-map" tabindex="0" hidden>
+              <p class="eyebrow">EVIDENCE BEFORE LOGIC</p><h3 id="relationship-title">Technique → telemetry → rule readiness</h3>
+              <p>Explore what the pinned source connects to this technique. The map does not assert that telemetry exists in your environment or that a native rule has been validated.</p>
+              <div id="relationship-figure" class="relationship-figure" role="figure" aria-labelledby="relationship-title" aria-describedby="relationship-caption">
+                <div id="relationship-visual" class="relationship-visual" aria-hidden="true"></div>
+                <div class="relationship-fallback"><h4>Accessible relationship outline</h4><ol id="relationship-text"></ol></div>
+                <p id="relationship-caption" class="fine-print">Source relationships are descriptive reference data. Native output remains a draft until its local schema, fixtures, reviewer evidence, and backend execution are recorded.</p>
+              </div>
+            </section>
+            <section id="panel-compare" class="info-panel compare-panel" role="tabpanel" aria-labelledby="tab-compare" hidden>
+              <p class="eyebrow">SIDE-BY-SIDE RESEARCH</p><h3>Compare techniques without losing your filters.</h3>
+              <p id="compare-instructions">Use “Add to comparison” on one or two techniques. This view compares source metadata and evidence readiness—not detection quality.</p>
+              <div id="compare-slots" class="compare-slots" aria-live="polite"></div>
+              <div id="comparison-region" class="table-scroll" tabindex="0" role="region" aria-label="Technique comparison table" aria-describedby="compare-instructions" hidden>
+                <table id="comparison-table"><caption class="sr-only">Selected ATT&amp;CK techniques compared by source metadata and validation state</caption><thead><tr><th scope="col">Attribute</th><th id="compare-heading-a" scope="col">Slot one</th><th id="compare-heading-b" scope="col">Slot two</th></tr></thead><tbody id="comparison-body"></tbody></table>
+              </div>
             </section>
             <section id="panel-source" class="info-panel" role="tabpanel" aria-labelledby="tab-source" hidden>
               <p class="eyebrow">TRACEABLE CONTEXT</p><h3>Start with the evidence.</h3><p id="source-behavior" class="source-text"></p><a id="source-link" class="source-link" target="_blank" rel="noopener noreferrer">Read technique on MITRE ATT&CK <span aria-hidden="true">↗</span></a><h4>Source-derived telemetry suggestions</h4><ul id="telemetry"></ul><h4>Local baseline guidance</h4><p id="false-positives"></p><h4>Linked detection strategies and analytics</h4><div id="strategies"></div><h4>Documented procedure examples</h4><p id="procedure-count"></p><div id="procedure-examples"></div><p class="fine-print">Descriptions, linked analytics, and procedure examples come from the pinned ATT&CK 19.2 source. Prompt framing and local baseline guidance are independently written. Source text is displayed literally; linked live pages may have changed. Links open only when selected.</p>
@@ -82,9 +128,10 @@
         </section>
       </div>
       <footer class="workspace-footer"><span>Browser-only composition</span><span>No account. No API key. No telemetry.</span></footer>
+      </div>
     </main>
   </div>
-  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering every active Enterprise, Mobile, and ICS technique and sub-technique in the pinned MITRE ATT&CK 19.2 release. Revoked and deprecated records are excluded.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft; no model is called and no detection is certified or executed.</p><p>Search, composition, edits, and downloads run in your browser. Context and drafts stay in this tab’s memory and clear on reload. The app sends no context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">MITRE copyright and license</a>.</p></dialog>
+  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering every active Enterprise, Mobile, and ICS technique and sub-technique in the pinned MITRE ATT&CK 19.2 release. Revoked and deprecated records are excluded.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft unless its record explicitly displays stronger review evidence; no model is called and no detection is certified or executed.</p><p>Search, composition, comparison, edits, and downloads run in your browser. Context and drafts stay in this tab’s memory and clear on reload. Search, filters, mode, target, selection, comparison and appearance are represented in or restored from the page URL; appearance is also remembered locally when storage is available. The app sends no analyst context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Research JSON adds source relationships and explicit validation state. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">MITRE copyright and license</a>.</p></dialog>
   <noscript><p class="noscript">Enable JavaScript to search and compose prompts. No account or network API is required.</p></noscript>
 </body>
 </html>

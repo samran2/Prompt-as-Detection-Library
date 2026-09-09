@@ -6,6 +6,20 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const catalog = require('../demo/catalog.js');
 const core = require('../demo/core.js');
+const project = require('../package.json');
+
+function contrastRatio(first, second) {
+  const channels = value => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+  const luminance = value => {
+    const linear = channels(value).map(channel => {
+      const normalized = channel / 255;
+      return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+    return (0.2126 * linear[0]) + (0.7152 * linear[1]) + (0.0722 * linear[2]);
+  };
+  const [lighter, darker] = [luminance(first), luminance(second)].sort((a, b) => b - a);
+  return (lighter + 0.05) / (darker + 0.05);
+}
 
 (async () => {
   const base = process.env.DEMO_URL || 'http://127.0.0.1:8766/';
@@ -134,6 +148,52 @@ const core = require('../demo/core.js');
       await page.keyboard.press('Escape'); assert.equal(await page.locator('#about-dialog').isVisible(), false);
       assert.equal(await page.evaluate(() => document.activeElement.id), 'about-open');
     });
+    await check('skip link and primary controls expose visible keyboard focus', async () => {
+      await page.goto(base);
+      await page.keyboard.press('Tab');
+      assert.equal(await page.evaluate(() => document.activeElement.className), 'skip');
+      const skipBox = await page.locator('.skip').boundingBox();
+      assert.ok(skipBox && skipBox.y >= 0);
+      await page.locator('#copy').focus();
+      const outline = await page.locator('#copy').evaluate(node => getComputedStyle(node).outlineStyle);
+      assert.notEqual(outline, 'none');
+    });
+    await check('heading order and filter relationships remain explicit', async () => {
+      assert.equal(await page.locator('h1').count(), 1);
+      assert.equal(await page.locator('#search').getAttribute('aria-controls'), 'techniques');
+      assert.equal(await page.locator('.domains').getAttribute('aria-controls'), 'techniques');
+      assert.equal(await page.locator('#tactic').getAttribute('aria-controls'), 'techniques');
+      assert.equal(await page.locator('#platform').getAttribute('aria-controls'), 'techniques');
+      const accessibilityTree = await page.locator('main').ariaSnapshot();
+      assert.match(accessibilityTree, /heading "Detection workbench" \[level=1\]/);
+      assert.match(accessibilityTree, /list "Matching techniques"/);
+      assert.match(accessibilityTree, /tablist "Technique detail"/);
+      assert.match(accessibilityTree, /textbox "EDITABLE TEXT PROMPT"/);
+    });
+    await check('light, dark and high-contrast themes preserve readable primary actions', async () => {
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      for (const theme of ['light', 'dark', 'contrast']) {
+        await page.locator('#theme').selectOption(theme);
+        assert.equal(await page.locator('html').getAttribute('data-theme'), theme);
+        const colors = await page.locator('#copy').evaluate(node => {
+          const style = getComputedStyle(node);
+          return { foreground: style.color, background: style.backgroundColor };
+        });
+        assert.ok(contrastRatio(colors.foreground, colors.background) >= 4.5, `${theme} primary action contrast must be at least 4.5:1`);
+        const navigationColors = await page.locator('.nav-item.current').evaluate(node => {
+          const style = getComputedStyle(node);
+          return { foreground: style.color, background: style.backgroundColor };
+        });
+        assert.ok(contrastRatio(navigationColors.foreground, navigationColors.background) >= 4.5, `${theme} navigation contrast must be at least 4.5:1`);
+        const statusColors = await page.locator('#action-status').evaluate(node => ({
+          foreground: getComputedStyle(node).color,
+          background: getComputedStyle(document.querySelector('main')).backgroundColor,
+        }));
+        assert.ok(contrastRatio(statusColors.foreground, statusColors.background) >= 4.5, `${theme} status contrast must be at least 4.5:1`);
+      }
+      await page.locator('#theme').selectOption('system');
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+    });
     await page.goto(base);
     await check('draft context clears on reload', async () => { assert.equal(await page.locator('#context').inputValue(), ''); assert.equal((await page.locator('#prompt').inputValue()).includes('demoInjected'), false); });
     for (const width of [320, 768, 1024, 1440]) await check(`no horizontal overflow at ${width}px`, async () => {
@@ -141,6 +201,16 @@ const core = require('../demo/core.js');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.locator('#copy').isVisible(), true);
       await page.screenshot({ path: path.join(output, `demo-${width}.png`), fullPage: true });
+    });
+    await check('compact layouts keep key touch targets at least 44px square', async () => {
+      await page.setViewportSize({ width: 320, height: 1000 });
+      for (const selector of ['#theme', '.domains button', '.page-controls button', '#compare-add', '.actions button']) {
+        for (const box of await page.locator(selector).evaluateAll(nodes => nodes.filter(node => !node.disabled).map(node => {
+          const rect = node.getBoundingClientRect(); return { width: rect.width, height: rect.height };
+        }))) {
+          assert.ok(box.width >= 44 && box.height >= 44, `${selector} touch target is ${box.width}×${box.height}`);
+        }
+      }
     });
     await check('200% text scaling remains within the viewport', async () => {
       // Test-only accessibility preference emulation, restored immediately afterward.
@@ -155,7 +225,7 @@ const core = require('../demo/core.js');
       assert.equal(await page.locator('#techniques button').count(), 50);
       assert.match(await page.locator('#prompt').inputValue(), /DRAFT/);
     });
-    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:'0.3.0-dev.3', catalogRecords:catalog.length, browser: browser.version(), node: process.version, basePath:parsed.pathname, checks: results, failures, externalRequests: external, limitations: ['No screen-reader audit or complete WCAG certification.', 'Clipboard denial tested; actual platform clipboard success is not asserted.', 'Hosted GitHub Pages and original application were not tested.'] }, null, 2) + '\n');
+    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:project.version, catalogRecords:catalog.length, browser: browser.version(), node: process.version, basePath:parsed.pathname, checks: results, failures, externalRequests: external, limitations: ['No screen-reader audit or complete WCAG certification.', 'Clipboard denial tested; actual platform clipboard success is not asserted.', 'Hosted GitHub Pages and original application were not tested.'] }, null, 2) + '\n');
     console.log(`${results.length} browser checks passed.`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

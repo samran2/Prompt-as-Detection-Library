@@ -1,142 +1,105 @@
-# Publishing and release process
+# Publishing overview
 
-## Current status
+## Current publication state
 
-The complete active ATT&CK 19.2 library is an independent development rebuild at
-`0.3.0.dev3` (npm `0.3.0-dev.3`). The original v0.2.0 archive is unavailable; no
-recovery, original test preservation or format compatibility is claimed.
-The verified public repository is
-[samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
-The owner-approved dev3 prompt-quality update and public workbench are published.
-Keep the observed commit,
-hosted-check results and public-demo status in the
-[verification record](verification.md#dev3-hosted-publication).
+The approved public repository is
+[samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library),
+and the `0.3.0.dev3` static workbench has been published as a development demo.
+Observed commit, workflow and hosted-demo results belong in
+[verification](verification.md), not in evergreen instructions.
 
-All 918 active techniques have been generated and checked. The owner approved
-the MIT project-code license, the public repository and the public demo.
-GitHub private vulnerability reporting is enabled and was verified on the actual
-repository. See [SECURITY](../SECURITY.md) for the reporting route. Preserve MITRE
-terms independently.
+The `0.4.0.dev0` work is an unreleased foundation. There is no stable v1.0
+release, package publication or claim that all prompts or native rules have been
+human- or lab-validated. Local success never authorizes a push, deployment, tag
+or release on its own.
 
-## Prepare a reviewable candidate
+These documents divide the process:
 
-1. Run `npm run library:verify`, `npm run check`, `npm test`, the real-browser
-   checks and foundation checks in [development](development.md). Confirm exact
-   active source/catalog/text ID sets, procedures, analytic links and exclusions.
-2. Build a fresh `dist/` with `npm run build`. Inspect its exact eight allowed
-   files, source-data notice and bounded catalog. Never publish the repository
-   root as the site. Raw source bundles belong only in the reviewed repository
-   archive; they do not enter the public static build.
-3. Review the exact repository and public artifact for credentials, private logs,
-   unexpected files, source rights and dependencies. Use maintained secret
-   scanning in addition to the included limited pattern checks. Review any Git
-   history that will be uploaded.
-4. Record actual verification results and limits in
-   [verification](verification.md), build the candidate archive, compare its
-   files against the reviewed tree and retain its SHA-256 checksum.
-5. Preserve the approved [license decision](../LICENSE_TODO.md), the enabled
-   private vulnerability-reporting route, and the approved destination and
-   public visibility. Additional publication destinations need separate approval.
+- [release process](release-process.md) defines candidate evidence, approval,
+  signing, publication and rollback;
+- [versioning](versioning.md) defines application, content, API and tag versions;
+- [repository settings](repository-settings.md) lists desired GitHub protections
+  and how to verify them without pretending policy files apply remote settings;
+- [development](development.md) lists local commands and evidence expectations;
+  and
+- [verification](verification.md) records checks actually observed for a
+  particular commit or artifact.
 
-Local implementation and passing checks do not authorize publication. A missing
-original archive does not prevent review of this independent rebuild's rights,
-but no rights to the original application may be claimed.
+## Publication boundaries
 
-## Repository CI and archive preview
+Three deliverables have different risk and approval boundaries:
 
-Repository CI runs foundation checks and the reusable full-library checks. The
-latter verify generated source outputs, JavaScript syntax, Node behavior, static
-build boundaries and real-browser flows. Python matrix jobs cover foundation
-tooling only; they are not compatibility tests for an original Python app.
-A separate pinned CodeQL workflow analyzes GitHub Actions, JavaScript and Python.
-It was added after the earlier immutable audit and is not covered by that audit.
-Actual hosted run outcomes are recorded in [verification](verification.md#dev3-hosted-publication).
+1. **Static workbench.** A manual Pages deployment publishes only the allowlisted
+   static `dist/` payload. It does not publish the repository root or create a
+   release.
+2. **Source release.** A GitHub Release binds immutable source and evidence
+   artifacts to an authorized stable or prerelease tag. It is not created by the
+   archive-preview workflow.
+3. **Packages and containers.** npm, PyPI and OCI publication are separate
+   destinations. The root package is private, no PyPI distribution exists, and
+   no package publication is implied by a GitHub Release.
 
-The manual **Library archive preview** first requires the reusable library checks
-and runs foundation checks before archiving committed `HEAD`. It uploads only
-its generated ZIP and SHA-256 file as a short-lived Actions artifact, with
-read-only repository permissions. It does not create a GitHub Release or publish
-a package. Its ZIP contains the committed repository, including source bundles
-and readable prompts; it is separate from the eight-file website payload.
-Artifact access follows the repository's GitHub settings.
+Only an owner-approved destination, visibility, version and exact commit may be
+published. Preserve the MIT license for project code, separate MITRE source
+terms and item-level SPDX/origin metadata for contributed rule material.
 
-## Publish the static workbench
+## Development demo deployment
 
-For the owner-approved public repository and demo:
+For an explicitly authorized Pages update:
 
-1. Use the verified destination and push only the reviewed tree using
-   a real configured Git identity. No author or remote URL should be invented.
-2. Preserve GitHub Pages' **GitHub Actions** source, HTTPS enforcement and the
-   `github-pages` environment's `main`-only deployment rule. No environment
-   reviewer is configured; the confirmation input is the deliberate operator
-   approval. Preserve enabled private vulnerability reporting and review CI
-   on the exact commit to be deployed.
-3. Wait for Repository CI on the reviewed commit. Manually run **Publish library
-   workbench to GitHub Pages** on `main`, explicitly checking its confirmation
-   input. It reruns full-library checks and uploads only the verified `dist/`.
-4. Inspect the URL returned by the deployment. Recheck all-domain search,
-   pagination, source detail, downloads and responsive layout under the repository
-   prefix. Only then add that observed live URL to the README and repository.
+1. verify the exact commit and wait for all required repository checks;
+2. build and inspect a fresh eight-file static payload;
+3. confirm GitHub Pages uses the Actions source, HTTPS and the protected
+   `github-pages` environment;
+4. manually dispatch **Publish library workbench to GitHub Pages** from the
+   reviewed `main` commit with its confirmation input; and
+5. inspect the returned URL, commit identity, asset hashes, console/network
+   behavior, all-domain search, source detail, exports and representative
+   desktop/mobile layouts.
 
-The workflow never deploys automatically on push, pull request or tag. Only the
-deployment job has Pages and identity-token write permission. Its boolean input
-represents the operator's approval; it cannot itself verify licensing or enforce
-a separate human reviewer without configured environment protection. The Pages
-workflow runs library/browser checks; the instruction to wait for full Repository
-CI also covers its separate Python foundation job.
+The workflow's input expresses operator intent; it does not prove license,
+security, CI, accessibility or content review. Relative asset URLs support a
+repository subpath. Clipboard permission depends on the browser. Hosting logs and
+headers outside the static payload remain the hosting provider's responsibility.
 
-Relative asset URLs support repository subpaths. Clipboard access depends on
-browser permissions; manual copy and TXT download remain available. The page's
-restrictive meta CSP cannot provide every HTTP-header policy, including
-`frame-ancestors`. Hosting request logs are outside the app's control. The
-loopback Python server is a local preview, not a production application service.
+## Archive preview
 
-## Roll back a faulty deployment
+The manual **Library archive preview** workflow creates a short-lived candidate
+ZIP and checksum from committed `HEAD` after repository checks. It must retain
+read-only repository permission and must not create a tag, GitHub Release or
+package. The source archive contains reviewed repository files and pinned source
+data; it is intentionally different from the public eight-file website payload.
 
-Rollback is a deliberate maintainer action; this project does not perform it
-automatically. Use it if the deployed workbench fails verification or the
-published files differ from the reviewed static payload.
+Treat preview artifacts as disposable evidence inputs. A release candidate must
+still pass the complete process in [release process](release-process.md), bind
+evidence to the exact candidate commit and receive explicit authorization.
 
-1. Record the faulty deployment's workflow run and commit, the observed problem,
-   and the last successful reviewed deployment, if one exists. Retain its
-   archive and checksum as evidence.
-2. From current `main`, prepare a focused revert of the faulty change on a review
-   branch. Review the resulting diff against the intended working version.
-   For multiple commits or merges, identify the exact changes and merge parent
-   before reverting. Preserve history: do not reset shared `main`, force-push,
-   or move existing release tags.
-3. Run the relevant local checks, inspect a fresh eight-file static build, and
-   review the revert before merging it. Wait for Repository CI to pass on the
-   resulting `main` commit. Retain the same source pins and license notices
-   unless the reviewed fix specifically requires a change.
-4. Deliberately dispatch **Publish library workbench to GitHub Pages** on `main`
-   with its confirmation input enabled. Verify that the dispatched run uses
-   the exact reviewed revert commit whose CI passed. If `main` has advanced,
-   review and verify that revision before deploying it. The workflow reruns
-   checks and uploads only its fresh `dist/`.
-5. Verify the deployed commit and observed site URL, then repeat all-domain
-   search, pagination, source detail, downloads and responsive-layout checks.
-   Record the outcome; a successful workflow alone does not prove the UI works.
+## Stable release barrier
 
-If the first deployment has no known-good predecessor, there is no earlier site
-to restore. Keep Pages unpublished while preparing a reviewed fix. If that first
-site already became live and then failed verification, deliberately unpublish
-or disable the Pages site in repository settings while correcting it. Deploy
-again only after review, passing CI and the same explicit manual deployment flow.
+Do not create a stable v1.0 tag or release until evidence proves every gate in
+[ROADMAP](../ROADMAP.md), including:
 
-## Versioning and later releases
+- 918 prompts with two independent expert reviews bound to current prompt hashes;
+- complete Enterprise, Mobile and ICS support matrices with lab results or
+  reviewed `not-applicable` decisions;
+- zero critical source fabrication, dangerous instruction or unsupported
+  validation claim;
+- independent WCAG 2.2 AA review and documented performance/browser evidence;
+- passing security and supply-chain gates; and
+- a clean reproducible build with SBOM, license report, SHA-256 values, Sigstore
+  verification and at least SLSA Build L2 provenance.
 
-Keep `VERSION`, root and QA package metadata, CLI/UI displays and release notes
-aligned: `0.3.0.dev3` is represented as `0.3.0-dev.3` in npm metadata. A future
-stable tag is `vMAJOR.MINOR.PATCH`; development artifacts must not be marked stable.
-No npm or PyPI publication configuration is provided.
+Missing people, licensed labs or independent audits are genuine blocked gates.
+Record them as such; do not lower a status or convert planned work into evidence.
 
-For a later authorized release, run the complete current checks, inspect the
-exact artifacts and notices, then tag the reviewed commit and publish only the
-approved files. Keep release tags immutable and fix defects through a new version.
-Retain prior archives and checksums for investigation and rollback.
+## Incident response and rollback
 
-All six action commit pins were verified against their official upstream tag
-references on 2026-09-08 (Europe/Helsinki). This identifies the selected actions;
-it does not audit upstream implementations or establish that hosted workflows
-or repository settings have been exercised.
+If a published demo or release is faulty, stop further promotion, preserve the
+observed commit, workflow run, artifacts and evidence, and follow the rollback
+procedure in [release process](release-process.md). Never reset shared `main`,
+force-push or move a published tag to conceal the fault. Revert through review,
+or issue a new patch/prerelease version as appropriate.
+
+If no known-good Pages deployment exists, unpublish or disable the affected site
+while preparing a reviewed fix. A successful redeploy is not complete until the
+live URL and critical user flows have been checked and recorded.

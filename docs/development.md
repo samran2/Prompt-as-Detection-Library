@@ -1,11 +1,22 @@
 # Development guide
 
-## Local runtime and commands
+## Development baseline
 
-This `0.3.0.dev3` independent rebuild uses Node.js 22+ for the CLI, generation,
-unit tests and static build. No npm installation is required for those commands
-or the browser runtime. Python 3.11+ supports preview and repository checks;
-the unavailable original Python application is not included.
+The working target is the `0.4.0.dev0` trust-and-contract foundation (npm
+`0.4.0-dev.0`). It builds on the published `0.3.0.dev3` independent rebuild.
+The pinned ATT&CK release remains 19.2, and the existing CLI and static browser
+workbench remain supported.
+
+Node.js 22+ runs generation, the CLI, unit tests and the static build. The
+browser and root package have zero runtime dependencies. Python 3.11+ is used
+only for local preview and repository-quality checks; the unavailable original
+Python application is not included.
+
+Read [AGENTS](../AGENTS.md), [architecture](architecture.md), [CONTRIBUTING](../CONTRIBUTING.md)
+and the relevant schema before changing behavior. Treat ATT&CK text, analyst
+context, model output and rule fixtures as untrusted data.
+
+## Fast local loop
 
 ```sh
 npm run library:help
@@ -17,34 +28,103 @@ npm test
 npm run build
 ```
 
-The root `package.json` and lockfile use SemVer `0.3.0-dev.3`; `VERSION` uses
-`0.3.0.dev3`. Keep these and QA metadata, CLI/UI version displays and release
-notes aligned. The root package is private and has no runtime dependencies.
+No dependency installation or network access is required for these commands.
+Run the focused test for a changed component first, then the full suite once the
+change is green. For publication-documentation changes, the focused check is:
 
-`npm run library:build` explicitly regenerates `demo/catalog.js`, all readable
-texts under `library/prompts/`, `library/procedures.jsonl` and coverage evidence.
-Run it after an intentional shared-composer or generator change, then inspect
-the generated differences. `npm run library:verify` recomputes expected bytes
-and fails on differences without writing. Never silently fetch a newer dataset.
+```sh
+node --test tests/release_docs.test.cjs
+```
 
-`npm run build` verifies the generated library first and then creates `dist/`.
-It refuses an existing directory. Preserve or move an old build before rerunning.
-The builder's exported `build(root)` remains independently testable using small
-fixtures; invoke the package script for a verified production candidate.
+The root package is private and is not an npm publication target. `npm run
+build` verifies the generated library and then creates `dist/`; it refuses an
+existing output directory. `dist/` is disposable build output and must not be
+committed.
+
+## Version synchronization
+
+Development versions use two equivalent spellings:
+
+- `VERSION` and Python-facing prose: `0.4.0.dev0`
+- npm metadata and browser-safe SemVer: `0.4.0-dev.0`
+
+Keep the root and QA package metadata, lockfiles, UI/CLI display, generated
+reports and changelog aligned. Do not replace the ATT&CK content version with the
+application version: `19.2` and `0.4.0.dev0` describe different things. See
+[versioning](versioning.md).
+
+## Deterministic library generation
+
+`npm run library:build` regenerates `demo/catalog.js`, the readable files in
+`library/prompts/`, `library/procedures.jsonl` and coverage evidence from the
+committed ATT&CK inputs. Use it only after an intentional generator, source or
+shared-composer change, then inspect every generated difference.
+
+`npm run library:verify` recomputes the expected bytes without writing and fails
+on stale, missing or additional generated output. Never fetch a newer ATT&CK
+release implicitly. A source upgrade needs a proposed migration with official
+release identity, source hashes, license review, identifier diff and regression
+evidence.
+
+Coverage means exact parity with active records in the pinned source, not
+detection effectiveness. Preserve the documented revoked/deprecated exclusions,
+records without qualifying procedures and unlinked analytics.
+
+## Prompt review evidence
+
+Every prompt begins at validation status `generated` unless evidence proves a
+higher state:
+
+1. `generated` — deterministic content and structural checks only;
+2. `reviewed` — two independent expert reviews pass the current rubric;
+3. `lab-validated` — the associated behavior or rule passes reproducible,
+   product-specific fixtures in a declared lab; and
+4. `field-confirmed` — a maintainer-approved, sanitized production observation
+   is attached without private telemetry.
+
+Do not infer a status from a filename, parser result, model score or previous
+version. Review evidence must bind to the prompt SHA-256, ATT&CK and content
+versions, two distinct reviewer identities, dates and rubric version. If the
+prompt bytes change, the old attestations remain historical but do not validate
+the new hash.
+
+A model evaluation is supplementary evidence. Record provider, exact model ID,
+settings, date, prompt hash and response hash. Keep provider keys in the process
+environment, never in manifests or results; do not submit analyst context or
+private logs. Fixture-only evaluation must remain the CI default.
+
+## Native rule and fixture workflow
+
+Native rule contributions target a named product and syntax, not a generic claim
+of support. Before adding an executable rule:
+
+1. document the real telemetry source and required fields;
+2. map the rule to a stable prompt/ATT&CK identifier and content hash;
+3. include SPDX license and origin metadata for every external fragment;
+4. add positive, benign-lookalike, missing-telemetry and boundary fixtures;
+5. run the native parser/linter and fixture replay in a versioned environment;
+6. record expected and observed results, environment version, fixture hashes and
+   known limitations; and
+7. obtain the required content and product-owner reviews.
+
+If a product cannot observe the behavior, submit an evidence-backed
+`not-applicable` assessment. An unassessed cell is not `not-applicable`.
+Synthetic parser success is structural evidence and must not be labeled
+`lab-validated`.
 
 ## Browser preview and QA
 
-Serve only the browser asset directory, not the repository root:
+Serve only the browser assets, never the repository root:
 
 ```sh
 python3 -m http.server 8766 --bind 127.0.0.1 --directory demo
 ```
 
-Open `http://127.0.0.1:8766/`. The page also opens directly from `demo/index.html`;
-clipboard permissions depend on the browser. No server API or model service is
-required. Context and edits remain in memory; export intentionally writes files.
+Open `http://127.0.0.1:8766/`. Direct `file:` use also works, with browser
+clipboard limitations. Context and edits remain local and in memory; exports are
+explicit user actions.
 
-Optional real-browser QA has a separate, locked dependency boundary:
+Optional real-browser QA has a separate locked development boundary:
 
 ```sh
 npm ci --prefix qa --ignore-scripts
@@ -52,43 +132,41 @@ node qa/node_modules/playwright/cli.js install chromium
 node scripts/browser_smoke.cjs
 ```
 
-Keep the loopback server running in another terminal. Linux may require
-`install --with-deps chromium` for browser system libraries. The script uses an
-isolated browser, synthetic input and a loopback target, and writes reports and
-screenshots under ignored `work/browser-demo/`. `CHROME_PATH` and
-`PLAYWRIGHT_MODULE` select an already installed trusted browser or QA module.
-`DEMO_URL` can point at a loopback preview under a repository URL prefix.
+The smoke script uses isolated browser state, synthetic input and a loopback
+target. It writes ignored output below `work/browser-demo/`. `CHROME_PATH`,
+`PLAYWRIGHT_MODULE` and `DEMO_URL` may select a reviewed local browser,
+dependency or repository-prefix preview.
 
-Verify browse, all domains, filters, page boundaries, source details, context,
-copy, TXT and JSONL flows at 320/768/1024/1440 pixels. The acceptance criteria are
-in [UI quality](ui-quality.md). Record only actual results in
-[verification](verification.md); old sample screenshots and reports do not prove
-full-library behavior. Automated checks are not WCAG certification.
+For premium UI acceptance, test Chromium, Firefox and WebKit from 320 through
+1440 CSS pixels; keyboard-only use; zoom/reflow; reduced motion; dark and
+high-contrast modes; persistent URL state; comparison; relationship views; and
+all export paths. Record console and unexpected-network results. Automated
+checks do not establish WCAG 2.2 AA: complete independent manual VoiceOver and
+NVDA reviews before v1.0.
+
+Measure Core Web Vitals using a documented environment and sufficient field or
+representative lab samples. The targets are p75 LCP ≤ 2.5 s, INP ≤ 200 ms and
+CLS ≤ 0.1. A single local trace does not prove the p75 gate.
 
 ## CLI and export contract
 
-CLI help defines the exact supported options. Commands list matching records,
-compose a selected prompt, or export matching templates. Modes are `hunt`,
-`detect`, `triage`, `validate`; targets must exactly match shared-core values.
-Context files must be regular UTF-8 files, no more than 16,000 bytes and 4,000
-JavaScript string units. The CLI performs no network calls or detection execution.
+CLI help is the authoritative option list. Commands list records, compose a
+selected prompt or export filtered templates. Modes are `hunt`, `detect`,
+`triage` and `validate`; targets must match the shared-core values.
 
-Export writes a new JSONL file exclusively, rejects existing output and symlinked
-path components, and preserves literal source/analyst text. The parent output
-directory must already exist. Use canonical paths; on macOS `/tmp` is a symlink,
-so use `/private/tmp` when testing temporary output.
+Context files must be regular UTF-8 files no larger than 16,000 bytes and 4,000
+JavaScript string units. Export creates a new JSONL file exclusively, rejects
+existing output and symlinked path components, and preserves source and analyst
+text literally. The parent directory must exist. On macOS, use `/private/tmp`
+instead of the `/tmp` symlink when checking canonical temporary paths.
 
-Each row includes `prompt_sha256` for its UTF-8 prompt text. Standard output
-reports `{records, sha256}` for the whole JSONL byte stream, including line endings.
-No checksum sidecar is created. Browser JSONL uses the shared template format;
-it exports all filtered records, not only the visible page or remembered edits.
-TXT download/copy uses the current editor text exactly.
+Each row includes the SHA-256 of its UTF-8 prompt. Standard output reports the
+record count and SHA-256 of the complete JSONL byte stream, including newlines.
+Browser JSONL exports every filtered record; TXT copy/download uses the current
+editor text exactly. No command makes model calls, uploads content or executes a
+generated detection.
 
-## Foundation checks
-
-The Python checker verifies repository files and selected credential patterns.
-It does not validate ATT&CK coverage, model outputs or detection effectiveness.
-From this directory:
+## Python foundation checks
 
 ```sh
 python3 -m venv .venv
@@ -101,42 +179,27 @@ python -m ruff check .
 python -m ruff format --check .
 ```
 
-On Windows, activate `.venv\Scripts\Activate.ps1`. Top-level Python development
-tools are pinned; this is not a complete transitive lock. Once Git is initialized
-and files are staged, `python scripts/check_foundation.py --tracked` also rejects
-tracked excluded paths and symlinks. `python -m pre_commit install` installs local
-hooks. These commands do not publish anything.
+On Windows, activate `.venv\\Scripts\\Activate.ps1`. The development tools
+are pinned at the top level, not as a complete transitive lock. Once files are
+staged, `python scripts/check_foundation.py --tracked` also rejects tracked
+excluded paths and symlinks. The pattern-based secret check is one layer, not a
+complete security review.
 
-## Required verification evidence
+## Evidence expected before handoff
 
-| Area | Evidence |
+| Area | Minimum evidence |
 | --- | --- |
-| Source identity | Official release/commit, raw bundle hashes and preserved MITRE notice. |
-| Complete coverage | Exact source, catalog and prompt-file ID sets across all domains; explicit historical exclusions and source gaps. |
-| Prompt composition | All 918 × 4 × 6 combinations, complete source context, linked analytics and inert literal input. |
-| Generation | Repeated expected bytes, no stale/missing/extra generated files, all qualifying procedure records preserved. |
-| CLI | Help, selectors, context limits, prompt output, exact hashes and refusal to overwrite or traverse symlinks. |
-| Browser | Required full-catalog flows, prefix deployment, widths, keyboard behavior and no unexpected requests or console errors. |
-| Static build | Exact eight-file inventory; source bundles, complete procedures, QA and private work excluded. |
-| Delivery | New archive compared bytewise to the reviewed source and accompanied by its SHA-256. |
+| Source | Official release/commit, raw hashes, license notice and reviewed diff. |
+| Coverage | Exact source/catalog/prompt ID parity and explicit exclusions/gaps. |
+| Prompts | Structural checks plus status-specific attestations bound to hashes. |
+| Rules | Native lint/parser results, four fixture classes and lab metadata where claimed. |
+| CLI | Help, selectors, context bounds, literal handling, hashes and safe refusal paths. |
+| Browser | Required flows, repository prefix, browser/viewport matrix and manual accessibility results. |
+| Static build | Exact public allowlist; no raw bundles, QA files, context or private data. |
+| Release | Clean-build evidence, archive hash, SBOM, license report, signature and provenance. |
 
-Run the relevant checks after changes, report failures and unavailable checks
-honestly, and inspect generated content before handoff. Zero discovered tests
-is not a passing suite. Current results belong in the verification record.
-
-## Working and publication conventions
-
-Read [AGENTS](../AGENTS.md), [SPEC](../SPEC.md) and
-[CONTRIBUTING](../CONTRIBUTING.md). Preserve unrelated work, keep shared behavior
-in the core and treat all source/context/model text as untrusted data. Do not
-commit credentials, exports, logs, environments, dependencies or build outputs.
-
-Recovery of the original archive is separate future work, not a prerequisite
-for completing this authorized independent rebuild. If it arrives, preserve its
-checksum and inspect its paths, rights and contracts before merging anything.
-The original response evaluator and `python -m huntprompt serve` are not provided.
-
-Follow [publishing](publishing.md) only after preparing reviewable artifacts.
-Original project code uses the owner-approved [MIT License](../LICENSE); retain
-the separate MITRE notices. External publication remains an owner decision;
-passing checks do not authorize a remote, push, deployment or public release.
+Report only commands actually run and outcomes actually observed. Zero discovered
+tests is not a passing run. Record candidate-specific evidence in
+[verification](verification.md), and follow [publishing](publishing.md) only
+after review. A passing test does not authorize a push, deployment, tag, package
+or GitHub Release.

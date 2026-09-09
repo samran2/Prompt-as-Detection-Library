@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:prompt-as-detection:schema:v1:common",
+  "title": "Prompt-as-Detection shared contract definitions",
+  "description": "Shared immutable identifiers, provenance, telemetry, and evidence primitives for version 1 contracts.",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "attackId": {
+      "type": "string",
+      "pattern": "^T[0-9]{4}(?:\\.[0-9]{3})?$"
+    },
+    "attackVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$"
+    },
+    "domain": {
+      "enum": ["enterprise", "mobile", "ics"]
+    },
+    "contentVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,255}$"
+    },
+    "relativeArtifactPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "maturityStatus": {
+      "enum": ["generated", "reviewed", "lab-validated", "field-confirmed"]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "url", "license"],
+      "properties": {
+        "title": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "url": {"type": "string", "format": "uri", "maxLength": 4096},
+        "license": {"type": "string", "pattern": "^(?:[A-Za-z0-9.-]+|LicenseRef-[A-Za-z0-9.-]+)$", "maxLength": 128},
+        "sha256": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/sha256"}
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "tool", "toolVersion", "generatedAt", "sourceRevision"],
+      "properties": {
+        "method": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "tool": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "toolVersion": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/contentVersion"},
+        "generatedAt": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/timestamp"},
+        "sourceRevision": {"type": "string", "pattern": "^[A-Za-z0-9._/-]{7,255}$"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactSha256", "sources", "generation"],
+      "properties": {
+        "artifactSha256": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/sha256"},
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/source"}
+        },
+        "generation": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/generation"}
+      }
+    },
+    "telemetryRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "channel", "dataComponent", "requiredFields"],
+      "properties": {
+        "source": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "channel": {
+          "oneOf": [
+            {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+            {"type": "null"}
+          ]
+        },
+        "dataComponent": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "requiredFields": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 512}
+        }
+      }
+    },
+    "fieldMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semanticField", "nativeField", "dataType", "required"],
+      "properties": {
+        "semanticField": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,256}$"},
+        "nativeField": {"type": "string", "minLength": 1, "maxLength": 512},
+        "dataType": {"enum": ["string", "integer", "number", "boolean", "timestamp", "ip", "array", "object", "unknown"]},
+        "required": {"type": "boolean"},
+        "notes": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "contentVersion", "sha256"],
+      "properties": {
+        "type": {"enum": ["prompt", "native-rule"]},
+        "id": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"},
+        "contentVersion": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/contentVersion"},
+        "sha256": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/sha256"}
+      }
+    },
+    "person": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewerId", "displayName"],
+      "properties": {
+        "reviewerId": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"},
+        "displayName": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "affiliation": {"type": "string", "minLength": 1, "maxLength": 512}
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome"],
+      "properties": {
+        "outcome": {"enum": ["match", "no-match", "indeterminate", "error"]},
+        "errorCode": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,127}$"},
+        "details": {"type": "string", "minLength": 1, "maxLength": 4096}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"outcome": {"const": "error"}}, "required": ["outcome"]},
+          "then": {"required": ["errorCode"]},
+          "else": {"not": {"required": ["errorCode"]}}
+        }
+      ]
+    }
+  }
+}

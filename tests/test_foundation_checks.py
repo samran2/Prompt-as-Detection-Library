@@ -8,12 +8,17 @@ import unittest
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_foundation.py"
+PROJECT_GITIGNORE = SCRIPT.parents[1] / ".gitignore"
 REQUIRED = """
-README.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md LICENSE_TODO.md
-AGENTS.md CHANGELOG.md ROADMAP.md VERSION .gitignore .editorconfig
+README.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md LICENSE docs/licensing.md
+AGENTS.md SPEC.md CHANGELOG.md ROADMAP.md GOVERNANCE.md MAINTAINERS.md SUPPORT.md
+CITATION.cff VERSION .gitignore .editorconfig
 .pre-commit-config.yaml ruff.toml .github/workflows/ci.yml
-.github/workflows/release-preview.yml docs/architecture.md docs/development.md
-docs/publishing.md docs/ui-quality.md
+.github/workflows/release-preview.yml .github/CODEOWNERS .github/dependabot.yml
+.github/allowed-actions.md docs/architecture.md docs/development.md
+docs/publishing.md docs/ui-quality.md packages/schemas/manifest.json
+content/prompts/index.json content/native-rules/support-matrix.json
+validation/evals/static/summary.json apps/research-api/openapi.yaml
 """.split()
 SCOPE = "Foundation checks only; application and ATT&CK content are not verified."
 
@@ -59,6 +64,38 @@ class FoundationChecksTest(unittest.TestCase):
         result = self.run_check("--tracked")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("work/secret.txt: tracked excluded directory", result.stdout)
+        self.assertNotIn(credential, result.stdout + result.stderr)
+
+    def test_known_local_credential_paths_are_ignored_by_git(self):
+        shutil.copy2(PROJECT_GITIGNORE, self.root / ".gitignore")
+        paths = [
+            "credentials.json",
+            "auth.json",
+            ".aws/credentials",
+            ".azure/accessTokens.json",
+            ".config/gcloud/application_default_credentials.json",
+            ".kube/config",
+            ".netrc",
+            ".pypirc",
+        ]
+        for name in paths:
+            self.write(name, "synthetic local credential state\n")
+        self.git("init", "--quiet")
+        self.git("add", ".")
+        staged = self.git("ls-files").stdout.decode().splitlines()
+        for name in paths:
+            with self.subTest(path=name):
+                self.assertNotIn(name, staged)
+
+    def test_force_staged_local_credential_path_fails_without_reading_value(self):
+        credential = "ghp_" + "f" * 36
+        shutil.copy2(PROJECT_GITIGNORE, self.root / ".gitignore")
+        self.write("auth.json", credential)
+        self.git("init", "--quiet")
+        self.git("add", "--force", "auth.json")
+        result = self.run_check("--tracked")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("auth.json: tracked local credential path", result.stdout)
         self.assertNotIn(credential, result.stdout + result.stderr)
 
     def test_tracked_symlink_is_rejected(self):

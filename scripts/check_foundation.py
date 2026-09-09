@@ -13,11 +13,15 @@ import subprocess
 from pathlib import Path
 
 REQUIRED = """
-README.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md LICENSE_TODO.md
-AGENTS.md CHANGELOG.md ROADMAP.md VERSION .gitignore .editorconfig
+README.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md LICENSE docs/licensing.md
+AGENTS.md SPEC.md CHANGELOG.md ROADMAP.md GOVERNANCE.md MAINTAINERS.md SUPPORT.md
+CITATION.cff VERSION .gitignore .editorconfig
 .pre-commit-config.yaml ruff.toml .github/workflows/ci.yml
-.github/workflows/release-preview.yml docs/architecture.md docs/development.md
-docs/publishing.md docs/ui-quality.md
+.github/workflows/release-preview.yml .github/CODEOWNERS .github/dependabot.yml
+.github/allowed-actions.md docs/architecture.md docs/development.md
+docs/publishing.md docs/ui-quality.md packages/schemas/manifest.json
+content/prompts/index.json content/native-rules/support-matrix.json
+validation/evals/static/summary.json apps/research-api/openapi.yaml
 """.split()
 EXCLUDED = {
     ".git",
@@ -40,6 +44,15 @@ EXCLUDED = {
 ARTIFACT_NAMES = {".DS_Store", ".coverage", "Thumbs.db", ".env"}
 ARTIFACT_SUFFIXES = {".pyc", ".pyo", ".log", ".swp", ".swo"}
 ENV_EXAMPLES = {".env.example", ".env.sample", ".env.template"}
+LOCAL_CREDENTIAL_FILES = {
+    "credentials.json",
+    "auth.json",
+    ".config/gcloud/application_default_credentials.json",
+    ".kube/config",
+    ".netrc",
+    ".pypirc",
+}
+LOCAL_CREDENTIAL_DIRECTORIES = {".aws", ".azure"}
 NUMBER = r"(?:0|[1-9][0-9]*)"
 VERSION_PATTERN = re.compile(rf"{NUMBER}\.{NUMBER}\.{NUMBER}\.dev{NUMBER}")
 PATTERNS = {
@@ -131,6 +144,9 @@ def check_tracked(root):
         if not entry:
             continue
         name = os.fsdecode(entry)
+        parts = Path(name).parts
+        if name in LOCAL_CREDENTIAL_FILES or (parts and parts[0] in LOCAL_CREDENTIAL_DIRECTORIES):
+            findings.append(f"{name}: tracked local credential path")
         if any(part in EXCLUDED for part in Path(name).parts[:-1]):
             findings.append(f"{name}: tracked excluded directory")
         if not is_local_file(root, name):
