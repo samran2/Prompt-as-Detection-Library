@@ -1,5 +1,37 @@
 # Verification records
 
+## Research tools — hosted verification 2026-09-09 UTC
+
+The application revision
+[`aea3c30a7276fa56081b145377d8f584aea4daa4`](https://github.com/samran2/Prompt-as-Detection-Library/commit/aea3c30a7276fa56081b145377d8f584aea4daa4)
+was merged through [PR #14](https://github.com/samran2/Prompt-as-Detection-Library/pull/14).
+Its tree exactly matches the reviewed local tree
+`e9ff01115d1a6fc1029a0d152b51822644b359bd`. All five PR workflows passed;
+the hosted library log confirms 308 Node tests and 52 Chrome checks.
+
+The merged revision passed
+[Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34405166080),
+[CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34405165703),
+[supply-chain security](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34405165702),
+[container security](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34405165660),
+[fuzz smoke](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34405165763)
+and [Scorecard](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34405165671).
+
+[Pages run 34405297123](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34405297123)
+was deliberately dispatched after review and PR checks; check/build/deploy jobs
+all succeeded. All **22 served content assets** returned HTTPS success and matched
+the reviewed build's bytes and SHA-256 values. The twenty-third file, `.nojekyll`,
+is a publishing marker. Exact evidence is in [research-publication.json](research-publication.json).
+
+The [live research page](https://samran2.github.io/Prompt-as-Detection-Library/research.html)
+displayed 697 Enterprise and 97 ICS generated records, with zero reviewed or
+lab-validated claims. The ICS Navigator download action reported success. Opening
+CAR-2014-04-003 showed literal hypothesis/pseudocode, telemetry and a commit-pinned
+source link; no browser warning/error was observed. Hosted downloaded-file bytes
+were not separately inspected; the full local and PR browser suites verified
+export contents. This publication is development software, not certified detection
+effectiveness, a full security scan or independent accessibility certification.
+
 ## Research tools — local verification 2026-09-09
 
 This development update adds six scoped offline capabilities. It preserves all
