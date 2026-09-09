@@ -87,12 +87,13 @@ test('OpenAPI 3.1 documents every read-only v1 collection and shared response co
   assert.match(contract, /nextCursor/);
   assert.match(contract, /contentHash/);
   assert.match(contract, /ErrorEnvelope/);
+  assert.match(contract, /enum: \[Enterprise, Mobile, ICS, OT, OperationalTechnology, Operational-Technology, Operational_Technology, 'Operational Technology'\]/);
   assert.match(contract, /Compatibility metadata copied from content\/prompts\/index\.json/);
   assert.doesNotMatch(contract, /Metadata conforming to packages\/schemas\/v1\/prompt-metadata\.schema\.json/);
   assert.doesNotMatch(contract, /^\s+(post|put|patch|delete):/m);
 });
 
-test('technique pagination is deterministic and supports conditional ETags', async () => {
+test('technique pagination is deterministic and supports conditional ETags', async t => {
   await withApi(async ({baseUrl}) => {
     const firstResponse = await fetch(`${baseUrl}/v1/techniques?pageSize=2`);
     assert.equal(firstResponse.status, 200);
@@ -116,10 +117,10 @@ test('technique pagination is deterministic and supports conditional ETags', asy
     });
     assert.equal(notModified.status, 304);
     assert.equal(await notModified.text(), '');
-  });
+  }, t);
 });
 
-test('cursors reject tampering and cannot be replayed against changed filters', async () => {
+test('cursors reject tampering and cannot be replayed against changed filters', async t => {
   await withApi(async ({baseUrl}) => {
     const response = await fetch(`${baseUrl}/v1/techniques?pageSize=1&domain=Enterprise`);
     const body = await json(response);
@@ -138,10 +139,10 @@ test('cursors reject tampering and cannot be replayed against changed filters', 
       assert.equal(typeof error.error.message, 'string');
       assert.doesNotMatch(JSON.stringify(error), /research-catalog|publication-repository|at file:/i);
     }
-  });
+}, t);
 });
 
-test('the API rejects unbounded, duplicate, unknown and malformed inputs', async () => {
+test('the API rejects unbounded, duplicate, unknown and malformed inputs', async t => {
   await withApi(async ({baseUrl}) => {
     const urls = [
       '/v1/techniques?pageSize=0',
@@ -163,10 +164,34 @@ test('the API rejects unbounded, duplicate, unknown and malformed inputs', async
       assert.equal(response.status, 400, pathname);
       assert.equal((await json(response)).error.code, 'invalid_request', pathname);
     }
-  });
+}, t);
 });
 
-test('all public resources are present and unresolved evidence collections remain honestly empty', async () => {
+test('the API normalizes OT aliases to the canonical ICS domain before filtering', async t => {
+  await withApi(async ({baseUrl}) => {
+    const responses = await Promise.all([
+      fetch(`${baseUrl}/v1/techniques?domain=OT`),
+      fetch(`${baseUrl}/v1/techniques?domain=OperationalTechnology`),
+      fetch(`${baseUrl}/v1/techniques?domain=Operational-Technology`),
+      fetch(`${baseUrl}/v1/techniques?domain=ICS`),
+      fetch(`${baseUrl}/v1/search?q=Data&domain=OT&pageSize=50`),
+    ]);
+    for (const response of responses.slice(0, 4)) assert.equal(response.status, 200);
+    const normalized = await Promise.all(responses.slice(0, 4).map(json));
+    assert.deepEqual(normalized[0].data, normalized[1].data);
+    assert.deepEqual(normalized[0].data, normalized[2].data);
+    assert.deepEqual(normalized[0].data, normalized[3].data);
+    assert.deepEqual(normalized[0].meta, normalized[1].meta);
+    assert.deepEqual(normalized[0].meta, normalized[2].meta);
+    assert.deepEqual(normalized[0].meta, normalized[3].meta);
+
+    const search = await json(responses[4]);
+    assert.equal(responses[4].status, 200);
+    assert.deepEqual(search.data, []);
+}, t);
+});
+
+test('all public resources are present and unresolved evidence collections remain honestly empty', async t => {
   await withApi(async ({baseUrl}) => {
     for (const resource of ['techniques', 'prompts', 'rules', 'validations', 'versions', 'relationships']) {
       const response = await fetch(`${baseUrl}/v1/${resource}`);
@@ -191,10 +216,10 @@ test('all public resources are present and unresolved evidence collections remai
 
     const search = await json(await fetch(`${baseUrl}/v1/search?q=credential&pageSize=10`));
     assert.ok(search.data.some(result => result.resourceType === 'technique' && result.resourceId === 'T1003'));
-  });
+}, t);
 });
 
-test('non-read methods, unknown resources and malformed paths return bounded generic errors', async () => {
+test('non-read methods, unknown resources and malformed paths return bounded generic errors', async t => {
   await withApi(async ({baseUrl}) => {
     for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
       const response = await fetch(`${baseUrl}/v1/techniques`, {method, body: method === 'POST' ? '{"secret":"do-not-echo"}' : undefined});
@@ -208,10 +233,10 @@ test('non-read methods, unknown resources and malformed paths return bounded gen
     const missing = await fetch(`${baseUrl}/v1/techniques/%2e%2e%2fprivate-key`);
     assert.equal(missing.status, 404);
     assert.equal((await json(missing)).error.code, 'not_found');
-  });
+}, t);
 });
 
-test('HEAD exposes validators and security headers without a response body', async () => {
+test('HEAD exposes validators and security headers without a response body', async t => {
   await withApi(async ({baseUrl}) => {
     const response = await fetch(`${baseUrl}/v1/techniques/T1001`, {method: 'HEAD'});
     assert.equal(response.status, 200);
@@ -220,10 +245,10 @@ test('HEAD exposes validators and security headers without a response body', asy
     assert.equal(response.headers.get('content-security-policy'), "default-src 'none'; frame-ancestors 'none'");
     assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
     assert.equal(await response.text(), '');
-  });
+}, t);
 });
 
-test('the zero-dependency client follows the same contract and caches validators explicitly', async () => {
+test('the zero-dependency client follows the same contract and caches validators explicitly', async t => {
   await withApi(async ({baseUrl, client}) => {
     const api = client.createResearchApiClient({baseUrl});
     const first = await api.listTechniques({pageSize: 2});
@@ -238,7 +263,7 @@ test('the zero-dependency client follows the same contract and caches validators
     const one = await api.getTechnique('T1001');
     assert.equal(one.body.data.id, 'T1001');
     await assert.rejects(() => api.getTechnique('../secrets'), /valid ATT&CK technique ID/i);
-  });
+}, t);
 });
 
 test('the client stops consuming a chunked response when the decoded body exceeds its limit', async () => {

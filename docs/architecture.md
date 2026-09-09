@@ -3,6 +3,7 @@
 ## Independent rebuild
 
 Version `0.4.0.dev0` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
+It also includes the separately versioned MITRE ATLAS 2026.08 AI knowledge base.
 The original v0.2.0 application remains unavailable. This architecture describes
 the new Node CLI, static browser workbench and readable prompt library; it does
 not claim Python CLI compatibility or restore the original response evaluator.
@@ -12,13 +13,16 @@ not claim Python CLI compatibility or restore the original response evaluator.
 | `sources/attack-19.2/` | Immutable raw bundles, source hashes, release identity and license. |
 | `scripts/build_library.cjs` | Validate pinned inputs; deterministically derive catalog, all procedures, text files and coverage evidence. |
 | `demo/catalog.js` | UMD/CommonJS catalog of all 918 active records with complete descriptions, linked analytics and up to three procedure examples each. |
+| `sources/atlas-2026.08/` | Pinned versioned YAML, deterministic JSON derivative, release/commit hashes and Apache-2.0 notices. |
+| `scripts/build_atlas.cjs` | Offline source validation and deterministic ATLAS artifact generation. |
+| `content/atlas/`, `demo/atlas-catalog.js` | Separate 197-record catalog, readable prompts, source relationships, generated-status index and hash coverage. |
 | `demo/core.js` | One composition implementation for browser, CLI and generated texts; filtering, bounded context and JSONL templates. |
 | `library/prompts/` | One source-specific detect prompt per active technique/subtechnique. |
 | `library/procedures.jsonl` | All 18,885 qualifying procedure relationships, not only the examples embedded in the browser catalog. |
 | `library/coverage.json` | Source, catalog and text identifier sets, exclusions, linkage counts and hashes. |
 | `scripts/library_cli.cjs` | Local list, prompt and export commands with validated options and exclusive file writes. |
 | `demo/app.js`, `index.html`, `style.css` | Search/filter/pagination, source detail, in-memory drafts, explicit context application, copy and downloads. |
-| `scripts/build_demo.cjs` | Eight-file static public allowlist and bounded, validated byte copying. |
+| `scripts/build_demo.cjs` | Ten-file static public allowlist and bounded, validated byte copying. |
 | `packages/schemas/` | Versioned JSON Schema 2020-12 contracts and boundary validation. |
 | `content/`, `validation/` | Prompt/review registries, native-support truth and machine-readable evidence. |
 | `apps/research-api/`, `packages/core/`, `packages/clients/` | Read-only local reference API, immutable catalog core and explicit client. |
@@ -42,6 +46,12 @@ source only. No source relationships are inferred to meet a count. See
 `library:verify` recomputes expected bytes and compares without writes. This
 catches missing, altered and extra generated files. CI and `npm run build` use
 verification so stale files cannot be silently corrected during a release build.
+
+ATLAS follows its own [inclusion policy and provenance](atlas.md), not ATT&CK's
+STIX exclusions. `atlas:build` / `atlas:verify` own only the separate AI outputs.
+The browser combines both arrays, while default CLI commands and `/v1` API
+resources stay ATT&CK-only. `/v1/atlas` exposes AI resources without fabricating
+ATT&CK IDs, STIX IDs or versions. See [ADR 0006](../governance/decisions/0006-separate-atlas-framework.md).
 
 ## Composition and export
 
@@ -71,10 +81,11 @@ model integration, query execution, telemetry or persistent analyst storage.
 Source-link clicks are explicit navigation. Hosting still receives ordinary
 page requests.
 
-Only `index.html`, `style.css`, `catalog.js`, `core.js`, `app.js`, `favicon.svg`,
-`THIRD_PARTY_LICENSE.txt` and `.nojekyll` enter `dist/`. The notice contains the
-complete MITRE data terms and project MIT license. The catalog has a 16 MiB
-limit and every other file a 2 MiB limit. The builder rejects unexpected demo
+Only `index.html`, `style.css`, `catalog.js`, `atlas-catalog.js`, `core.js`,
+`app.js`, `favicon.svg`, `THIRD_PARTY_LICENSE.txt`, `ATLAS_LICENSE.txt` and
+`.nojekyll` enter `dist/`. The notices contain the complete ATT&CK data terms,
+project MIT license and ATLAS Apache-2.0 attribution/license. Each catalog has a
+16 MiB limit and every other file a 2 MiB limit. The builder rejects unexpected demo
 files, symlinks, malformed UTF-8, NULs and selected credential signatures, captures
 validated bytes, then writes a new output exclusively. It never packages raw
 source bundles, the complete procedure file, tests, QA dependencies or repository

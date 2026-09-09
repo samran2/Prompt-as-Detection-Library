@@ -1,7 +1,10 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const catalog = globalThis.PAD_CATALOG;
+  const attackCatalog = globalThis.PAD_CATALOG;
+  const atlasCatalog = globalThis.PAD_ATLAS_CATALOG;
+  const catalog = Array.isArray(attackCatalog) && Array.isArray(atlasCatalog)
+    ? [...attackCatalog, ...atlasCatalog] : null;
   const core = globalThis.PAD;
   $('reload-app').addEventListener('click', () => window.location?.reload());
   const runtimeReady = Array.isArray(catalog) && catalog.length > 0 && core &&
@@ -23,13 +26,15 @@
   try { savedTheme = window.localStorage?.getItem('pad-theme') || 'system'; } catch { /* Storage may be unavailable. */ }
   const initialTheme = restored.theme !== 'system' || !core.THEMES.includes(savedTheme) ? restored.theme : savedTheme;
   const state = {
-    domain: restored.domain, selected: recordIndex.get(restored.technique) || null,
+    domain: restored.domain, domainSelection: restored.domainSelection || restored.domain,
+    selected: recordIndex.get(restored.technique) || null,
     visible: [], page: 0, drafts: new Map(), templates: new Map(), context: '', key: '',
     compare: restored.compare.filter(id => recordIndex.has(id)), theme: initialTheme,
   };
   const options = () => ({ mode: $('mode').value, target: $('target').value, context: state.context });
   const draftKey = () => `${state.selected.id}|${$('mode').value}|${$('target').value}`;
   const notify = message => { $('action-status').textContent = message; };
+  const resolveDomain = domain => core.normalizeDomain(domain);
   const element = (tag, className, text) => {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -38,10 +43,12 @@
   };
   const parentCount = records => records.filter(record => record.kind !== 'subtechnique').length;
   const breakdown = records => `${parentCount(records)} techniques · ${records.length - parentCount(records)} sub-techniques`;
+  const isAtlas = record => record.framework === 'ATLAS';
+  const frameworkLabel = record => isAtlas(record) ? `MITRE ATLAS ${record.atlasVersion}` : `MITRE ATT&CK ${record.attackVersion || '19.2'}`;
   function syncUrl() {
     if (!window.location || !window.history?.replaceState) return;
     const search = core.serializeUiState({
-      query: $('search').value, domain: state.domain, tactic: $('tactic').value,
+      query: $('search').value, domain: state.domainSelection || state.domain, tactic: $('tactic').value,
       platform: $('platform').value, mode: $('mode').value, target: $('target').value,
       technique: state.selected?.id || '', compare: state.compare, theme: state.theme,
     });
@@ -62,7 +69,7 @@
     try {
       const url = new URL(value);
       return url.protocol === 'https:' && !url.username && !url.password && !url.port &&
-        (!mitreOnly || url.hostname === 'attack.mitre.org') ? url.href : null;
+        (!mitreOnly || ['attack.mitre.org', 'atlas.mitre.org'].includes(url.hostname)) ? url.href : null;
     } catch { return null; }
   }
   function sourceLink(text, url, mitreOnly = false) {
@@ -80,6 +87,23 @@
     return section;
   }
   function renderSources(record) {
+    $('attack-source-context').hidden = isAtlas(record);
+    $('atlas-source-context').hidden = !isAtlas(record);
+    if (isAtlas(record)) {
+      $('atlas-source-maturity').textContent = `Source maturity: ${record.sourceMaturity || 'Not specified'}. This describes the threat in MITRE ATLAS, not validation of this detection prompt.`;
+      for (const [id, items, empty] of [
+        ['atlas-case-studies', record.caseStudies || [], 'No case study is linked to this technique in the pinned source.'],
+        ['atlas-mitigations', record.mitigations || [], 'No mitigation is linked to this technique in the pinned source.'],
+      ]) {
+        $(id).replaceChildren(...(items.length ? items.map(item => {
+          const card = element('details', 'source-card');
+          card.append(element('summary', '', `${item.id} · ${item.name}`));
+          card.append(element('p', 'source-text', item.description || 'No description supplied.'));
+          if (item.url) card.append(sourceLink('Read on MITRE ATLAS ↗', item.url, true));
+          return card;
+        }) : [element('p', '', empty)]));
+      }
+    }
     const strategies = record.strategies || [];
     $('strategies').replaceChildren(...(strategies.length ? strategies.map(strategy => {
       const card = element('details', 'source-card');
@@ -119,7 +143,7 @@
       'lab-validated': 'Lab validated · inspect evidence', 'field-confirmed': 'Field confirmed · inspect evidence',
     };
     $('validation-level').textContent = labels[validation.level];
-    $('provenance-summary').textContent = `MITRE ATT&CK ${record.attackVersion || '19.2'} · source linked`;
+    $('provenance-summary').textContent = `${frameworkLabel(record)} · source linked`;
   }
   function renderRelationshipMap(record) {
     const telemetry = record.telemetry || [];
@@ -130,7 +154,9 @@
     const nodes = [
       ['Technique', `${record.id} · ${record.name}`],
       ['Source-listed telemetry', telemetry.length ? `${telemetry.length} suggestion${telemetry.length === 1 ? '' : 's'} to verify locally` : 'No source-listed telemetry'],
-      ['ATT&CK detection references', strategies.length ? `${strategies.length} strategies · ${analyticCount} analytics` : 'No linked strategy or analytic'],
+      isAtlas(record)
+        ? ['ATLAS source relationships', `${(record.caseStudies || []).length} case studies · ${(record.mitigations || []).length} mitigations`]
+        : ['ATT&CK detection references', strategies.length ? `${strategies.length} strategies · ${analyticCount} analytics` : 'No linked strategy or analytic'],
       ['Native rule readiness', validation.lab_validated ? `Evidence recorded for ${validation.validated_backends.join(', ') || 'an unspecified backend'}` : `${$('target').value} remains an unvalidated draft target`],
     ];
     $('relationship-visual').replaceChildren(...nodes.map(([label, value], index) => {
@@ -145,12 +171,13 @@
     const validation = core.validationState(record);
     const values = {
       identity: `${record.id} · ${record.name}`,
+      framework: frameworkLabel(record),
       domain: record.domain,
       tactics: (record.tactics || []).join(', ') || 'Not specified in source',
       platforms: (record.platforms || []).filter(value => value !== 'None').join(', ') || 'Not specified in source',
       telemetry: (record.telemetry || []).join('; ') || 'No source-listed telemetry',
-      strategies: `${(record.strategies || []).length} linked detection strategies`,
-      procedures: `${record.procedureCount || 0} documented procedure relationships`,
+      strategies: isAtlas(record) ? `${(record.mitigations || []).length} ATLAS mitigations; no native rule validation` : `${(record.strategies || []).length} linked detection strategies`,
+      procedures: isAtlas(record) ? `${(record.caseStudies || []).length} ATLAS case studies` : `${record.procedureCount || 0} documented procedure relationships`,
       validation: validation.level === 'generated' ? 'Generated; no human or lab validation recorded' : `${validation.level}; ${validation.human_reviews} human reviews`,
     };
     return values[key];
@@ -177,9 +204,9 @@
     $('compare-heading-a').textContent = records[0] ? records[0].id : 'Slot one';
     $('compare-heading-b').textContent = records[1] ? records[1].id : 'Slot two';
     const rows = [
-      ['Technique', 'identity'], ['Domain', 'domain'], ['Tactics', 'tactics'], ['Platforms', 'platforms'],
+      ['Technique', 'identity'], ['Framework', 'framework'], ['Domain', 'domain'], ['Tactics', 'tactics'], ['Platforms', 'platforms'],
       ['Telemetry suggestions', 'telemetry'], ['Detection references', 'strategies'],
-      ['Procedure relationships', 'procedures'], ['Validation evidence', 'validation'],
+      ['Documented examples', 'procedures'], ['Validation evidence', 'validation'],
     ];
     $('comparison-body').replaceChildren(...rows.map(([label, key]) => {
       const first = comparisonValue(records[0], key); const second = comparisonValue(records[1], key);
@@ -221,6 +248,7 @@
     $('source-link').removeAttribute('href');
     $('source-link').setAttribute('aria-disabled', String(!href));
     if (href) $('source-link').href = href;
+    $('source-link').textContent = `Read technique on ${isAtlas(record) ? 'MITRE ATLAS' : 'MITRE ATT&CK'} ↗`;
     renderSources(record);
     renderTrust(record);
     renderRelationshipMap(record);
@@ -234,8 +262,10 @@
     }
   }
   function populateFilters() {
-    const records = catalog.filter(r => !state.domain || r.domain === state.domain);
-    $('domain-count').textContent = `${state.domain || 'All domains'}: ${records.length} records · ${breakdown(records)}`;
+    const selectedDomain = resolveDomain(state.domain);
+    const records = catalog.filter(record => !selectedDomain || record.domain === selectedDomain);
+    const label = state.domainSelection ? `Domain: ${state.domainSelection}` : 'All domains';
+    $('domain-count').textContent = `${label}: ${records.length} records · ${breakdown(records)}`;
     for (const [id, field, title] of [['tactic', 'tactics', 'All tactics'], ['platform', 'platforms', 'All platforms']]) {
       const choices = [...new Set(records.flatMap(r => field === 'platforms' ? (r.platforms.length ? r.platforms.map(value => value === 'None' ? UNSPECIFIED_PLATFORM : value) : [UNSPECIFIED_PLATFORM]) : r[field]))].sort();
       const makeOption = (value, text) => { const option = element('option', '', text); option.value = value; return option; };
@@ -243,9 +273,10 @@
     }
   }
   function renderActiveFilters() {
+    const domainLabel = state.domainSelection;
     const values = [
       $('search').value ? `Search: “${$('search').value}”` : '',
-      state.domain ? `Domain: ${state.domain}` : '',
+      domainLabel ? `Domain: ${domainLabel}` : '',
       $('tactic').value ? `Tactic: ${$('tactic').value}` : '',
       $('platform').value ? `Platform: ${$('platform').value === UNSPECIFIED_PLATFORM ? 'Not specified' : $('platform').value}` : '',
     ].filter(Boolean);
@@ -299,15 +330,18 @@
   $('target').value = restored.target;
   $('search').value = restored.query;
   $('library-count').textContent = `${catalog.length} active records`;
-  $('coverage-summary').textContent = `${breakdown(catalog)} · ${['Enterprise', 'Mobile', 'ICS'].map(domain => `${domain} ${catalog.filter(record => record.domain === domain).length}`).join(' · ')}`;
+  $('source-versions').textContent = `ATT&CK 19.2${atlasCatalog.length ? ` · ATLAS ${atlasCatalog[0].atlasVersion}` : ''}`;
+  $('coverage-summary').textContent = `${breakdown(catalog)} · ${['Enterprise', 'Mobile', 'ICS'].map(domain => `${domain} ${catalog.filter(record => record.domain === domain).length}`).join(' · ')} (OT)${atlasCatalog.length ? ` · ATLAS AI ${atlasCatalog.length}` : ''}`;
   document.querySelectorAll('[data-domain]').forEach(button => button.addEventListener('click', () => {
-    state.domain = button.dataset.domain;
+    state.domain = resolveDomain(button.dataset.domain);
+    state.domainSelection = button.dataset.domain;
     document.querySelectorAll('[data-domain]').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
     populateFilters(); filter();
   }));
   for (const id of ['search', 'tactic', 'platform']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => filter());
   const clearFilters = () => {
-    state.domain = ''; $('search').value = '';
+    state.domain = ''; state.domainSelection = '';
+    $('search').value = '';
     document.querySelectorAll('[data-domain]').forEach(button => button.setAttribute('aria-pressed', String(!button.dataset.domain)));
     populateFilters(); filter(); $('search').focus();
   };
@@ -375,7 +409,7 @@
   document.addEventListener('keydown', event => {
     if (event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) && !$('about-dialog').open) { event.preventDefault(); $('search').focus(); }
   });
-  document.querySelectorAll('[data-domain]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.domain === state.domain)));
+  document.querySelectorAll('[data-domain]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.domain === state.domainSelection)));
   populateFilters();
   const restoreSelect = (id, value) => {
     if ([...$(id).children].some(option => option.value === value)) $(id).value = value;

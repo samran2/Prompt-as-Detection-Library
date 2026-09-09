@@ -25,6 +25,24 @@ export interface PromptInput {
   metadata?: JsonValue;
 }
 
+export interface AtlasTechniqueInput extends Omit<TechniqueInput, 'attackVersion' | 'stixId' | 'domain'> {
+  framework: 'ATLAS';
+  domain: 'ATLAS';
+  atlasVersion: string;
+  parentName: string | null;
+  sourceMaturity: JsonValue;
+  references: JsonValue[];
+  caseStudies: JsonValue[];
+  mitigations: JsonValue[];
+}
+
+export interface AtlasPromptInput extends PromptInput {
+  framework: 'ATLAS';
+  domain: 'ATLAS';
+  atlasVersion: string;
+  status: 'generated';
+}
+
 export type Hashed<T> = Readonly<T & {contentHash: `sha256:${string}`}>;
 export type CatalogResource = Hashed<{id: string; [key: string]: JsonValue}>;
 
@@ -63,5 +81,10 @@ export declare function createResearchCatalog(input: {
   prompts: PromptInput[];
   rules?: Array<{id: string; [key: string]: JsonValue}>;
   validations?: Array<{id: string; [key: string]: JsonValue}>;
+  version: {id: string; [key: string]: JsonValue};
+}): ResearchCatalog;
+export declare function createAtlasResearchCatalog(input: {
+  techniques: AtlasTechniqueInput[];
+  prompts: AtlasPromptInput[];
   version: {id: string; [key: string]: JsonValue};
 }): ResearchCatalog;

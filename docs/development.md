@@ -6,6 +6,7 @@ The working target is the `0.4.0.dev0` trust-and-contract foundation (npm
 `0.4.0-dev.0`). It builds on the published `0.3.0.dev3` independent rebuild.
 The pinned ATT&CK release remains 19.2, and the existing CLI and static browser
 workbench remain supported.
+ATLAS AI is separately pinned at content version `2026.08` / format `6.0.0`.
 
 Node.js 22+ runs generation, the CLI, unit tests and the static build. The
 browser and root package have zero runtime dependencies. Python 3.11+ is used
@@ -28,6 +29,7 @@ npm run library:help
 node scripts/library_cli.cjs list
 node scripts/library_cli.cjs prompt T1059.001
 npm run library:verify
+npm run atlas:verify
 npm run check
 npm test
 npm run build
@@ -74,6 +76,15 @@ evidence.
 Coverage means exact parity with active records in the pinned source, not
 detection effectiveness. Preserve the documented revoked/deprecated exclusions,
 records without qualifying procedures and unlinked analytics.
+
+`npm run atlas:build` generates the AI catalog and 197 text prompts separately
+under `content/atlas/` plus `demo/atlas-catalog.js` and the public license notice.
+`npm run atlas:verify` recomputes exact output bytes without writes, validates
+pinned input hashes and rejects unexpected generated files. Routine verification
+uses the checked-in JSON derivative and requires neither YAML tooling nor a
+network connection. For a source upgrade, independently verify that the
+derivative is an exact safe parse of the pinned official YAML before changing
+the reviewed hash pins. See [ATLAS](atlas.md) for the scope and license policy.
 
 ## Prompt review evidence
 
@@ -158,6 +169,12 @@ CLS ≤ 0.1. A single local trace does not prove the p75 gate.
 CLI help is the authoritative option list. Commands list records, compose a
 selected prompt or export filtered templates. Modes are `hunt`, `detect`,
 `triage` and `validate`; targets must match the shared-core values.
+
+Default list/export remains ATT&CK-only. `list --domain ATLAS` or
+`list --framework ATLAS` selects AI; `--framework all` opts into both catalogs.
+`prompt AML.T0051` selects an ATLAS record directly. `--domain OT` is an alias
+for the existing ICS corpus, not an extra set of techniques. Framework identity,
+content version and generated status accompany AI exports.
 
 Context files must be regular UTF-8 files no larger than 16,000 bytes and 4,000
 JavaScript string units. Export creates a new JSONL file exclusively, rejects

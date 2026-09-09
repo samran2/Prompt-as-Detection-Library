@@ -1,8 +1,9 @@
 # Prompt-as-Detection Library
 
-Turn MITRE ATT&CK evidence into reviewable detection, hunting and triage prompts.
-Browse **918 active techniques and subtechniques**, inspect their source guidance,
-and export drafts from a browser workbench or local CLI.
+Turn MITRE ATT&CK and ATLAS evidence into reviewable detection, hunting and triage
+prompts. Browse **1,115 techniques and subtechniques**: 918 from ATT&CK 19.2 and
+197 from ATLAS 2026.08. Inspect their source guidance and export drafts from a
+browser workbench or local CLI.
 
 The current `0.4.0.dev0` line is a research-foundation development version, not stable v1.0.
 It adds versioned evidence contracts, a truthful review registry, a read-only API
@@ -13,14 +14,14 @@ contract, governance and supply-chain gates while preserving the pinned ATT&CK
 
 **[Open the live demo →](https://samran2.github.io/Prompt-as-Detection-Library/)**
 
-Search all 918 techniques, adapt a prompt and download it directly in your browser.
+Search the pinned library, adapt a prompt and download it directly in your browser.
 No installation, account or API key needed. Prompts remain unvalidated drafts;
 the demo does not run a model or execute detection rules.
 
 [![Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml)
 
-[Quick start](#run-it-locally) · [Source provenance](docs/source-provenance.md) · [Validation program](docs/validation-program.md) · [Roadmap](ROADMAP.md)
+[Quick start](#run-it-locally) · [ATT&CK provenance](docs/source-provenance.md) · [ATLAS AI](docs/atlas.md) · [Validation program](docs/validation-program.md) · [Roadmap](ROADMAP.md)
 
 [![Full-library workbench showing source guidance and an editable detection prompt](docs/screenshots/desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
 
@@ -28,10 +29,12 @@ the demo does not run a model or execute detection rules.
 
 ## What you can do
 
-- **Find the right technique.** Search all three domains and filter by tactic
+- **Find the right technique.** Search Enterprise, Mobile, ICS/OT and ATLAS AI; filter by tactic
   or platform, with bounded pages of 50 records.
 - **Inspect the evidence.** Read complete source descriptions, linked analytics,
   telemetry references, tuning variables and documented procedure examples.
+  ATLAS adds linked case studies, mitigations and source threat maturity, without
+  presenting them as tested detections.
 - **Choose the task and format.** Use Detect, Hunt, Triage or Validate with
   Platform-neutral, Panther Python, Sentinel KQL, Defender XDR, Splunk SPL or Sigma output.
 - **Compare evidence.** Keep a shareable search URL, compare two techniques and
@@ -56,9 +59,11 @@ Source coverage and passing checks do not establish detection effectiveness.
 | Gate | Current measured state |
 | --- | ---: |
 | Active ATT&CK 19.2 prompts | 918 / 918 generated |
+| ATLAS 2026.08 prompts | 197 / 197 generated |
 | Automated static prompt contract | 918 / 918 pass |
-| Required independent human reviews | 0 / 1,836 complete |
-| Native backend support cells | 0 assessed / 3,672 total |
+| Required ATT&CK independent human reviews | 0 / 1,836 complete |
+| Required ATLAS independent human reviews | 0 / 394 complete |
+| ATT&CK native backend support cells | 0 assessed / 3,672 total |
 | Lab-validated prompts | 0 |
 | Field-confirmed prompts | 0 |
 | Stable v1.0 release | Blocked by evidence gates |
@@ -72,6 +77,11 @@ The [static scorecards](validation/evals/static/summary.json) evaluate source
 grounding, ATT&CK alignment, telemetry feasibility language, benign-lookalike
 handling, safety, citations and platform assumptions for every prompt. They do
 not advance human-review or validation maturity.
+These existing scorecards and support matrices cover ATT&CK only. ATLAS has a
+separate [generated inventory](content/atlas/index.json) and
+[source-parity evidence](content/atlas/coverage.json), not completed expert or
+lab reviews. ATLAS `Realized`, `Demonstrated` and `Feasible` describe source
+threat maturity, never the validation status of our prompts.
 
 ## Run it locally
 
@@ -93,12 +103,16 @@ Use Node.js 22 or later from the repository directory. No `npm install` is neede
 npm run library:help
 node scripts/library_cli.cjs list
 node scripts/library_cli.cjs prompt T1059.001
+node scripts/library_cli.cjs list --domain ATLAS
+node scripts/library_cli.cjs prompt AML.T0051
 node scripts/library_cli.cjs export --output ./detection-prompts.jsonl
 ```
 
 The export example creates `detection-prompts.jsonl` in the current directory;
 it must not already exist. CLI help covers selectors, modes, targets and
 literal context files. See the [development guide](docs/development.md) for details.
+Default list/export commands retain the 918-record ATT&CK contract. Select
+`--framework ATLAS` for AI only or `--framework all` for both frameworks.
 
 ### Experimental local research API
 
@@ -135,7 +149,13 @@ item before redistribution.
 | ICS | 97 |
 | **Total** | **918** |
 
-The library includes **378 parent techniques**, **540 subtechniques**,
+The **ATLAS 2026.08 AI section** separately includes **114 parent techniques +
+83 subtechniques = 197 prompts**, with 16 tactics, 72 case studies and 39
+mitigations in its pinned source. It is not an ATT&CK domain or a claim of extra
+ATT&CK coverage. See [ATLAS sources, limits and usage](docs/atlas.md) and the
+[AI text prompts](content/atlas/prompts/).
+
+The ATT&CK library includes **378 parent techniques**, **540 subtechniques**,
 **18,885 procedure relationships** and **2,053 linked analytics**. Each active
 record has a readable [text prompt](library/prompts/). Revoked and deprecated
 records are excluded from active prompts; source gaps and unlinked analytics
@@ -150,12 +170,13 @@ source hashes, attribution and inclusion policy.
 The earlier dev3 [prompt-quality review](docs/prompt-quality-review.md) covers
 improved drafting instructions, not validated detections. Historical hosted
 results remain in the [verification record](docs/verification.md); they do not
-prove the unmerged `0.4.0.dev0` work or satisfy its release gates.
+prove later changes or satisfy the `0.4.0.dev0` evidence gates.
 
 ## Verify and build
 
 ```sh
 npm run library:verify
+npm run atlas:verify
 npm run reviews:verify
 npm run evals:verify
 npm run check
@@ -165,7 +186,8 @@ npm run build
 
 `library:verify` compares exact source/output identifiers and generated bytes
 without rewriting them. `library:build` intentionally regenerates the pinned
-library. The static build verifies it before copying exactly eight allowed
+library. `atlas:verify` independently checks the pinned AI source and generated
+files. The static build verifies both before copying exactly ten allowed
 files to a new `dist/`; preserve an existing build before rebuilding.
 
 The browser, CLI and text generator share `demo/core.js`. Raw source bundles,
@@ -177,6 +199,7 @@ See [verification](docs/verification.md) for actual checks and their limits.
 | Guide | What it covers |
 | --- | --- |
 | [Architecture](docs/architecture.md) | Shared composition, data flow and the static file boundary. |
+| [ATLAS AI](docs/atlas.md) | AI threat coverage, source maturity, local usage and separate licensing. |
 | [Data contracts](docs/data-contracts.md) | Versioned schemas and cross-record evidence invariants. |
 | [Research API](docs/api.md) | Read-only `/v1` contract and current implementation boundary. |
 | [Development](docs/development.md) | CLI contracts, generation, browser QA and repository checks. |
@@ -197,6 +220,7 @@ Copyright (c) 2026 samran2. Vendored development skills retain
 [Addy Osmani's MIT notice](.agents/AGENT_SKILLS_LICENSE). Reproduced ATT&CK content retains separate
 [MITRE terms](sources/attack-19.2/raw/LICENSE.txt); the
 [static notice](demo/THIRD_PARTY_LICENSE.txt) includes both complete licenses.
+ATLAS source content retains its [MITRE Apache-2.0 notice and license](demo/ATLAS_LICENSE.txt).
 See the [licensing record](docs/licensing.md) for scope. External evidence and rule
 contributions require item-level SPDX and provenance. This independent project is
 not endorsed by MITRE, Apple, Google, VirusTotal or Rösti. The npm packages remain

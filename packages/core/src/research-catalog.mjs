@@ -118,10 +118,49 @@ function relationship(id, type, source, target) {
   return hashed({id, type, source: immutableJson(source), target: immutableJson(target)});
 }
 
-export function createResearchCatalog({techniques, prompts, rules = [], validations = [], version}) {
+const ATLAS_ID = /^AML\.T\d{4}(?:\.\d{3})?$/;
+
+function atlasIdentity(record) {
+  if (record.framework !== 'ATLAS' || record.domain !== 'ATLAS' || !ATLAS_ID.test(record.id)) {
+    throw new TypeError('Invalid ATLAS identity');
+  }
+  return {framework: 'ATLAS', domain: 'ATLAS', atlasVersion: requiredString(record.atlasVersion, 'atlasVersion')};
+}
+
+function atlasTechnique(record) {
+  const identity = atlasIdentity(record);
+  if (record.parentId !== null && !ATLAS_ID.test(record.parentId)) throw new TypeError('Invalid ATLAS parentId');
+  if (!['technique', 'subtechnique'].includes(record.kind)) throw new TypeError('Invalid ATLAS kind');
+  return hashed({
+    ...identity, id: record.id, name: requiredString(record.name, 'name'), kind: record.kind,
+    parentId: record.parentId, parentName: record.parentName === null ? null : requiredString(record.parentName, 'parentName'),
+    tactics: strings(record.tactics, 'tactics'), platforms: strings(record.platforms, 'platforms'),
+    sourceUrl: requiredString(record.sourceUrl, 'sourceUrl'), behavior: requiredString(record.behavior, 'behavior'),
+    sourceMaturity: immutableJson(record.sourceMaturity), references: immutableJson(record.references),
+    caseStudies: immutableJson(record.caseStudies), mitigations: immutableJson(record.mitigations),
+    telemetry: strings(record.telemetry, 'telemetry'),
+  });
+}
+
+function atlasPrompt(record) {
+  const identity = atlasIdentity(record);
+  if (!ATLAS_ID.test(record.techniqueId) || record.status !== 'generated') throw new TypeError('Invalid ATLAS prompt evidence');
+  const {contentHash, ...item} = prompt(record);
+  return hashed({...item, ...identity});
+}
+
+export function createResearchCatalog(input) {
+  return buildCatalog(input, technique, prompt);
+}
+
+export function createAtlasResearchCatalog(input) {
+  return buildCatalog(input, atlasTechnique, atlasPrompt);
+}
+
+function buildCatalog({techniques, prompts, rules = [], validations = [], version}, techniqueMapper, promptMapper) {
   if (![techniques, prompts, rules, validations].every(Array.isArray)) throw new TypeError('Catalog collections must be arrays');
-  const techniqueItems = Object.freeze(techniques.map(technique).sort((a, b) => a.id.localeCompare(b.id)));
-  const promptItems = Object.freeze(prompts.map(prompt).sort((a, b) => a.id.localeCompare(b.id)));
+  const techniqueItems = Object.freeze(techniques.map(techniqueMapper).sort((a, b) => a.id.localeCompare(b.id)));
+  const promptItems = Object.freeze(prompts.map(promptMapper).sort((a, b) => a.id.localeCompare(b.id)));
   const ruleItems = Object.freeze(rules.map(item => suppliedResource(item, 'rule')).sort((a, b) => a.id.localeCompare(b.id)));
   const validationItems = Object.freeze(validations.map(item => suppliedResource(item, 'validation')).sort((a, b) => a.id.localeCompare(b.id)));
   const versionItems = Object.freeze([suppliedResource(version, 'version')]);

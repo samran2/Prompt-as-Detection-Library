@@ -9,6 +9,14 @@ conversations are not independent release evidence.
 
 ### Added
 
+- Added MITRE ATLAS 2026.08 AI coverage: 197 source-linked text prompts,
+  preserved case-study/mitigation relationships, deterministic source pins,
+  Apache-2.0 notices, separate CLI selectors and read-only `/v1/atlas` resources.
+- Added ATLAS AI workbench filtering, cross-framework comparison, source maturity
+  context and TXT/JSONL/research exports. Existing ATT&CK source and prompt bytes
+  remain unchanged; all new AI prompts are generated drafts, not validated rules.
+- Exposed OT as an alias for the existing 97-record ICS corpus in the workbench,
+  CLI and API contract without double-counting coverage.
 - Added all 25 Addy Osmani agent-skills as a pinned project-local snapshot,
   including shared checklists, original MIT notice, per-file SHA-256 inventory,
   Codex routing and an offline integrity check in the existing test/CI suite.
