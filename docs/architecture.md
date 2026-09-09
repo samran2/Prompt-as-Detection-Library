@@ -2,7 +2,7 @@
 
 ## Independent rebuild
 
-Version `0.3.0.dev3` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
+Version `0.4.0.dev0` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
 The original v0.2.0 application remains unavailable. This architecture describes
 the new Node CLI, static browser workbench and readable prompt library; it does
 not claim Python CLI compatibility or restore the original response evaluator.
@@ -19,6 +19,10 @@ not claim Python CLI compatibility or restore the original response evaluator.
 | `scripts/library_cli.cjs` | Local list, prompt and export commands with validated options and exclusive file writes. |
 | `demo/app.js`, `index.html`, `style.css` | Search/filter/pagination, source detail, in-memory drafts, explicit context application, copy and downloads. |
 | `scripts/build_demo.cjs` | Eight-file static public allowlist and bounded, validated byte copying. |
+| `packages/schemas/` | Versioned JSON Schema 2020-12 contracts and boundary validation. |
+| `content/`, `validation/` | Prompt/review registries, native-support truth and machine-readable evidence. |
+| `apps/research-api/`, `packages/core/`, `packages/clients/` | Read-only local reference API, immutable catalog core and explicit client. |
+| `integrations/rosti/`, `scripts/rosti_sync.cjs` | Opt-in external research enrichment with credentials kept outside repository state. |
 
 ## Source and generation contract
 
@@ -90,4 +94,4 @@ Dataset upgrades, original-archive recovery, model services, executable response
 validation and persistent user data are separate changes requiring their own
 compatibility and trust-boundary decisions. Original project code uses the
 owner-approved [MIT License](../LICENSE), while reproduced ATT&CK source content
-retains separate MITRE terms; see the [licensing record](../LICENSE_TODO.md).
+retains separate MITRE terms; see the [licensing record](licensing.md).

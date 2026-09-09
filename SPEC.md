@@ -1,100 +1,71 @@
-# Complete active ATT&CK 19.2 prompt library
+# Prompt-as-Detection 0.4 foundation specification
 
-## Objective and scope
+## Product boundary
 
-Implement the user's instruction: finish every technique before publication.
-Rebuild independently from official MITRE attack-stix-data v19.2, commit
-6cda5ad8462c79e14fbb872f4e09059b18e0cfc4. Do not claim the missing application
-was recovered. Include Enterprise (697), Mobile (124), ICS (97): 918 active
-techniques/subtechniques, including both parents and children. Exclude revoked
-or deprecated techniques from active prompts and list them in coverage evidence.
-The owner approved publication to the public `samran2/Prompt-as-Detection-Library`
-repository and a public demo. The dev2 full library is pushed and private
-vulnerability reporting is enabled. The dev3 prompt-quality update is authorized
-for publication after verification. Observed checks, hosted CI and Pages outcomes
-are recorded in
-[verification](docs/verification.md#hosted-publication-status).
-Automatic model calls and query execution remain out of scope.
+Prompt-as-Detection is a local-first, independently rebuilt research library for
+all 918 active techniques and subtechniques in the pinned MITRE ATT&CK 19.2
+dataset. The canonical browser workbench and CLI remain supported while the
+repository adopts versioned data contracts and a read-only reference API.
 
-## Stack and commands
+`0.4.0.dev0` is a development foundation. It is not a stable v1 release, a
+production detection service, an endorsement by MITRE or a design benchmark
+company, or evidence that generated prompts work in a particular environment.
 
-Zero runtime dependencies. Node.js >=22 for CLI, deterministic generation,
-unit tests and static build. Python >=3.11 for existing foundation checks.
-Commands to implement and verify: `npm test`, `npm run check`,
-`npm run library:build`, `npm run library:verify`, `npm run build`,
-`node scripts/library_cli.cjs list`, `node scripts/library_cli.cjs prompt T1059.001`,
-`node scripts/library_cli.cjs export --output /absolute/new-file.jsonl`.
-The static site uses local scripts only and works below a repository subpath.
+## Non-negotiable invariants
 
-## Data contract (provider first)
+1. The active source set is exactly 918 records: Enterprise 697, Mobile 124 and
+   ICS 97. The procedure relationship set is exactly 18,885.
+2. `demo/core.js` composes the browser, CLI and generated text prompts. Generated
+   prompt bytes and hashes must remain deterministic.
+3. Source descriptions, procedures, imported intelligence, IOCs and analyst
+   context are untrusted literal data. They are never executed or interpreted as
+   instructions.
+4. Local browser and CLI use have zero runtime dependencies, make no model calls,
+   upload no context and collect no analytics.
+5. `demo/`, `library/` and `scripts/library_cli.cjs` remain compatibility entry
+   points until a documented migration is released.
+6. Every prompt begins at `generated`. Only two real independent reviewers may
+   advance it to `reviewed`; fixture-bound evidence is required for
+   `lab-validated`, and operational evidence for `field-confirmed`.
+7. Native backend support begins as `unassessed`. A runnable rule or an audited
+   `not-applicable` rationale must be backed by real product telemetry evidence.
+8. External intelligence is corroboration, not validation. Rösti mappings accept
+   only provider-explicit active ATT&CK technique IDs, redact IOC values by
+   default and require an explicit local network action.
+9. The reference API is read-only, resource bounded and loopback-first. It accepts
+   only `GET` and `HEAD`; accounts, uploads, model runs, samples and private logs
+   remain out of scope.
+10. Stable v1 publication stays blocked until human review, domain support,
+    security, accessibility and signed release-evidence gates are satisfied.
 
-`demo/catalog.js` retains UMD/CommonJS exports and the existing record fields:
-`id`, `name`, `domain` (Enterprise/Mobile/ICS), `tactics` (source tactic names),
-`platforms` (source list; empty means unspecified), `behavior` (complete source
-description), `telemetry` (source-derived suggested log descriptions),
-`falsePositives` (clearly labelled local-baseline guidance), `sourceUrl`.
-Add: `kind` (technique/subtechnique), `parentId` (ID/null), `stixId`,
-`attackVersion` (19.2), `procedureCount`, `strategies` and `procedureExamples`.
-Each strategy: `{id, name, url, analytics:[{id, name, description, platforms,
-logSources:[{name,channel,dataComponent}], mutableElements:[]}]}`.
-Each example: `{id, actorId, actorName, description, references:[]}`; include
-up to three deterministic examples, retain ALL qualifying 18,885 relationships
-separately in `library/procedures.jsonl` with `techniqueId`, `domain`, and source
-STIX identifiers. Preserve source external references. Do not infer links for
-13 active analytics not referenced by active strategies.
+## Public contracts
 
-`demo/core.js` is the ONE composition implementation used by browser, CLI and
-text generator. Preserve detect/hunt/triage/validate and six existing targets.
-Full-library records are not samples; legacy synthetic sample fixtures may remain
-samples. Include whole technique description and linked analytic descriptions,
-source log references and tuning variables, procedure examples and limitations.
-Source/analyst strings stay literal; never evaluate them or interpolate again.
-All output is an unvalidated draft, not executable/production-approved detection.
+- `packages/schemas/manifest.json` indexes the JSON Schema 2020-12 contracts.
+- `content/prompts/index.json` is the 918-record prompt and review registry.
+- `content/native-rules/support-matrix.json` records all 918 × 4 backend cells.
+- `validation/evals/static/summary.json` summarizes automated static prompt
+  checks without advancing review maturity.
+- `apps/research-api/openapi.yaml` is the OpenAPI 3.1 contract for the local
+  reference implementation.
+- `integrations/rosti/source.json` records the bounded external provider source.
 
-## Structure and acceptance criteria
+See `docs/data-contracts.md`, `docs/api.md` and `docs/architecture.md` for the
+versioning and dependency rules around these contracts.
 
-- `sources/attack-19.2/`: immutable raw source JSON, MITRE license, source hashes
-  and official tag/commit evidence; not copied into the public site.
-- `scripts/build_library.cjs`: strict deterministic source-to-catalog conversion.
-  Writes only explicit generated paths; refuses symlinks and unknown source
-  shapes. A check mode compares expected bytes without mutating files.
-- `library/prompts/{enterprise,mobile,ics}/Txxxx[.xxx].txt`: one readable detect
-  prompt per active record, not merely a link or shared generic prompt.
-- `library/coverage.json`: exact source/record/text ID sets, domain, parent/sub
-  counts, historical exclusions, procedure and analytic linkage counts, hashes.
-- `demo/`: preserve premium light UI, add pagination (50 per page), accurate
-  coverage counts, all-domain search, source/analytic detail, TXT/JSONL export.
-- `scripts/library_cli.cjs`: local list/prompt/export with validated selectors,
-  bounded context, no network, exclusive new output writes; no arbitrary code.
-- Docs and package version describe `0.3.0.dev3` (npm `0.3.0-dev.3`), independently rebuilt provenance,
-  separate source rights, owner-approved MIT project-code license, and actual
-  repository, CI and deployment status.
+## Acceptance gates for each development revision
 
-## Style and trust boundaries
+- Source ID sets, generated prompt paths and content hashes match exactly.
+- Repository, schema, API, CLI, browser, security-boundary and adversarial tests
+  pass; zero discovered tests is a failure.
+- The real browser suite covers keyboard use, URL restoration, exports, supported
+  viewports, console errors and unexpected external requests.
+- Credential-pattern and tracked-sensitive-path checks pass without allowlisting
+  real secrets.
+- All remote GitHub Actions references are exact allowlisted commit SHAs.
+- The API container build context is deny-by-default, includes source license
+  notices, and runs as a non-root user from a digest-pinned base image.
+- A fresh security review covers the final diff before publication.
 
-Use existing CommonJS/UMD and single-quoted strings. Validate at source/CLI
-boundaries; use textContent/value for DOM. Example: `const record = records.find(
-item => item.id === id); if (!record) throw new Error('Unknown technique');`.
-Untrusted STIX and analyst context can contain HTML or instruction-like text:
-encode generated JSON safely, retain strict CSP, no eval, innerHTML, fetch or
-storage of private context. CLI writes reject overwrite and symlink targets.
-Bound source inputs, context and generated-site assets. No new dependencies.
-
-## Testing
-
-Write failing tests for source coverage and full-record prompt behavior first.
-Independently compare source ID sets to generated catalog AND all text files;
-count alone is insufficient. Verify 918 x4 x6 =22,032 compositions, deterministic
-rebuild, no stale/extra prompts, complete 18,885 procedure relationships and all
-linked analytics. Keep existing safe-export, literal text, CSP and build tests.
-Test browser at 320/768/1024/1440px, repository prefix, first/last-page selections,
-all-domain searches, copy, TXT, JSONL and zero console/external network errors.
-No claim that these checks validate model quality or detection effectiveness.
-
-## Boundaries and remaining owner decisions
-
-Always preserve reviewed prior demo artifacts unchanged; work in this new repo.
-The owner-approved MIT project-code license is recorded in LICENSE_TODO.md.
-The named public repository and demo are approved. Ask before future license
-changes, external AI integration or publication beyond that approved scope.
-Never invent provenance, original tests passing, or operational validation.
+Passing these gates proves deterministic structure and guarded behavior only. It
+does not prove detection effectiveness, complete WCAG conformance, independent
+human review, laboratory validation or production API readiness.

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:prompt-as-detection:schema:v1:catalog-envelope",
+  "title": "Catalog envelope v1",
+  "description": "A versioned, content-addressed collection of one contract kind. catalogSha256 is the SHA-256 of canonical UTF-8 JSON for items only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "catalogKind", "contentVersion", "generatedAt", "sourceRevision", "catalogSha256", "itemCount", "items"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "catalogKind": {"enum": ["prompt-metadata", "review-evidence", "validation-evidence", "native-rule-support"]},
+    "contentVersion": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/contentVersion"},
+    "generatedAt": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/timestamp"},
+    "sourceRevision": {"type": "string", "pattern": "^[A-Za-z0-9._/-]{7,255}$"},
+    "catalogSha256": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/sha256"},
+    "itemCount": {"type": "integer", "minimum": 0, "maximum": 1000000},
+    "items": {"type": "array", "maxItems": 1000000},
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limit", "cursor"],
+      "properties": {
+        "limit": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "cursor": {"type": ["string", "null"], "maxLength": 2048},
+        "nextCursor": {"type": ["string", "null"], "maxLength": 2048}
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "catalogKind": {"const": "prompt-metadata"},
+        "items": {"items": {"$ref": "urn:prompt-as-detection:schema:v1:prompt-metadata"}}
+      }
+    },
+    {
+      "properties": {
+        "catalogKind": {"const": "review-evidence"},
+        "items": {"items": {"$ref": "urn:prompt-as-detection:schema:v1:review-evidence"}}
+      }
+    },
+    {
+      "properties": {
+        "catalogKind": {"const": "validation-evidence"},
+        "items": {"items": {"$ref": "urn:prompt-as-detection:schema:v1:validation-evidence"}}
+      }
+    },
+    {
+      "properties": {
+        "catalogKind": {"const": "native-rule-support"},
+        "items": {"items": {"$ref": "urn:prompt-as-detection:schema:v1:native-rule-support"}}
+      }
+    }
+  ]
+}

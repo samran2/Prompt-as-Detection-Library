@@ -33,7 +33,8 @@ Prompt options:
   --target NAME (default: Platform-neutral)
   Targets: ${core.TARGETS.join(', ')}
   --context-file FILE (literal UTF-8, at most 4,000 JavaScript characters;
-    at most 16,000 bytes read, no symbolic-link or non-regular file)
+    at most 16,000 bytes read, no terminal controls, symbolic links or
+    non-regular files)
 
 Output:
   Prompt text goes to stdout unless --output names a new file.
@@ -128,6 +129,9 @@ function readContext(filename) {
       throw new CLIError('Context must contain valid UTF-8 text.');
     }
     if (context.length > 4000) throw new CLIError('Context exceeds the 4,000-character limit.');
+    if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(context)) {
+      throw new CLIError('Context contains terminal control characters.');
+    }
     return context;
   } catch (error) {
     if (error instanceof CLIError) throw error;

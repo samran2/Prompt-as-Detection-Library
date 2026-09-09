@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:prompt-as-detection:schema:v1:prompt-metadata",
+  "title": "Prompt metadata v1",
+  "description": "Traceable metadata for one detection prompt. Review slots are explicit and may remain pending; no review evidence is implied.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "id", "attackId", "attackVersion", "domain", "title", "tactics", "platforms",
+    "contentVersion", "status", "artifactPath", "promptSha256", "license", "provenance",
+    "telemetryRequirements", "fieldMappings", "limitations", "reviewSlots", "validationEvidenceIds"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "id": {"type": "string", "pattern": "^prompt:(?:enterprise|mobile|ics):T[0-9]{4}(?:\\.[0-9]{3})?$"},
+    "attackId": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/attackId"},
+    "attackVersion": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/attackVersion"},
+    "domain": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/domain"},
+    "title": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+    "tactics": {
+      "type": "array", "minItems": 1, "maxItems": 32, "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,127}$"}
+    },
+    "platforms": {
+      "type": "array", "maxItems": 64, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 128}
+    },
+    "contentVersion": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/contentVersion"},
+    "status": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/maturityStatus"},
+    "artifactPath": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/relativeArtifactPath"},
+    "promptSha256": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/sha256"},
+    "license": {"type": "string", "pattern": "^(?:[A-Za-z0-9.-]+|LicenseRef-[A-Za-z0-9.-]+)$", "maxLength": 128},
+    "provenance": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/provenance"},
+    "telemetryRequirements": {
+      "type": "array", "maxItems": 256,
+      "items": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/telemetryRequirement"}
+    },
+    "fieldMappings": {
+      "type": "array", "maxItems": 512,
+      "items": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/fieldMapping"}
+    },
+    "limitations": {
+      "type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+    },
+    "reviewSlots": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {"$ref": "#/$defs/reviewSlotOne"},
+        {"$ref": "#/$defs/reviewSlotTwo"}
+      ],
+      "items": false
+    },
+    "validationEvidenceIds": {
+      "type": "array", "maxItems": 256, "uniqueItems": true,
+      "items": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"}
+    }
+  },
+  "$defs": {
+    "reviewSlotOne": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["slot", "status"], "properties": {"slot": {"const": 1}, "status": {"const": "pending"}}},
+        {"type": "object", "additionalProperties": false, "required": ["slot", "status", "evidenceId"], "properties": {"slot": {"const": 1}, "status": {"const": "completed"}, "evidenceId": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"}}}
+      ]
+    },
+    "reviewSlotTwo": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["slot", "status"], "properties": {"slot": {"const": 2}, "status": {"const": "pending"}}},
+        {"type": "object", "additionalProperties": false, "required": ["slot", "status", "evidenceId"], "properties": {"slot": {"const": 2}, "status": {"const": "completed"}, "evidenceId": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"}}}
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "generated"}}, "required": ["status"]},
+      "then": {"properties": {"reviewSlots": {"contains": {"properties": {"status": {"const": "pending"}}, "required": ["status"]}}}}
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["reviewed", "lab-validated", "field-confirmed"]}}, "required": ["status"]},
+      "then": {"properties": {"reviewSlots": {"minContains": 2, "contains": {"properties": {"status": {"const": "completed"}}, "required": ["status"]}}}}
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["lab-validated", "field-confirmed"]}}, "required": ["status"]},
+      "then": {"properties": {"validationEvidenceIds": {"minItems": 1}}},
+      "else": {"properties": {"validationEvidenceIds": {"maxItems": 0}}}
+    }
+  ]
+}

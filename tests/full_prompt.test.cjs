@@ -19,11 +19,19 @@ const record = {
 test('full records include source analytic, telemetry, tuning and documented procedure context', () => {
   const prompt = core.composePrompt(record);
   for (const expected of [record.behavior, 'AN0001', 'DET0001', record.strategies[0].analytics[0].description,
-    'Source channel', 'Process Creation', 'Tune to local baseline', 'S0001', 'relationship--example', '2 documented']) {
+    'Source channel', 'Process Creation', 'Tune to local baseline', 'S0001', 'relationship--example', '2 documented',
+    'Parent technique: T1059 — Command and Scripting Interpreter']) {
     assert.ok(prompt.includes(expected), `Missing source context: ${expected}`);
   }
   assert.match(prompt, /DRAFT.*NOT VALIDATED/);
   assert.doesNotMatch(prompt, /SAMPLE DETECTION PROMPT/);
+});
+
+test('parent context is included only for complete subtechnique records', () => {
+  const child = core.composePrompt(record);
+  const parent = core.composePrompt({ ...record, id: 'T1059', kind: 'technique', parentId: null, parentName: null });
+  assert.match(child, /Parent technique: T1059 — Command and Scripting Interpreter/);
+  assert.doesNotMatch(parent, /Parent technique:/);
 });
 
 test('full JSONL is not marked as a sample and keeps explicit scope/provenance', () => {

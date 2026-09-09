@@ -181,6 +181,25 @@ test('context enforces UTF-8 and character limits before creating output', t => 
   fails(cli(['prompt', sample.id, '--context-file', contextFile]), /Context/);
 });
 
+test('context rejects terminal control sequences before they can reach stdout', t => {
+  const root = fixture(t);
+  const contextFile = path.join(root, 'context.txt');
+  const output = path.join(root, 'must-not-exist.txt');
+  for (const bytes of [
+    Buffer.from([0x1b, 0x5d, 0x30, 0x3b, 0x78, 0x07]),
+    Buffer.from([0xc2, 0x9b, 0x33, 0x31, 0x6d]),
+    Buffer.from([0x7f]),
+  ]) {
+    fs.writeFileSync(contextFile, bytes);
+    const result = cli(['prompt', sample.id, '--context-file', contextFile, '--output', output]);
+    fails(result, /Context/);
+    assert.equal(result.stdout, '');
+    assert.equal(fs.existsSync(output), false);
+  }
+  fs.writeFileSync(contextFile, 'line one\n\tline two\r\n');
+  succeeds(cli(['prompt', sample.id, '--context-file', contextFile]));
+});
+
 test('missing, directory, and symbolic-link context inputs are rejected without path disclosure', t => {
   const root = fixture(t);
   const contextFile = path.join(root, 'synthetic-private-path.txt');

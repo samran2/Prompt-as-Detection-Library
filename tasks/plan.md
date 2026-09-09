@@ -43,4 +43,4 @@ Task checklist: todo.md. Existing demo and its audit remain immutable in outputs
 - Malicious-looking source/log text: literal output and no execution/network.
 - Source package remains missing: independent rebuild and traceable provenance.
 - Rights: preserve the owner-approved MIT project-code license and separate MITRE
-  notices; the completed decision is recorded in ../LICENSE_TODO.md.
+  notices; the completed decision is recorded in ../docs/licensing.md.

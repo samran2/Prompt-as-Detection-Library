@@ -1,11 +1,11 @@
 # Contributing
 
-This independent `0.3.0.dev3` rebuild prepares a complete active ATT&CK 19.2
+This independent `0.4.0.dev0` rebuild prepares a complete active ATT&CK 19.2
 prompt library. The original v0.2.0 source archive remains unavailable. Do not
 claim original implementation preservation or transfer older audit results to
 new code. Original project code and associated documentation use the owner-approved
 [MIT License](LICENSE), Copyright (c) 2026 samran2. MITRE data retains separate
-terms; see the [resolved licensing record](LICENSE_TODO.md).
+terms; see the [resolved licensing record](docs/licensing.md).
 
 ## Making a change
 
@@ -20,7 +20,10 @@ terms; see the [resolved licensing record](LICENSE_TODO.md).
 4. Regenerate intentionally with `npm run library:build`, then run
    `npm run library:verify`, `npm run check`, `npm test` and the relevant browser
    and foundation checks. Record actual outcomes and any unavailable checks.
-5. Update documentation and the unreleased changelog. Review generated diffs,
+5. Add `Signed-off-by: Name <address>` to every commit to certify the
+   [Developer Certificate of Origin](https://developercertificate.org/). This
+   project uses DCO sign-off and does not require a CLA.
+6. Update documentation and the unreleased changelog. Review generated diffs,
    source identities, licensing, and the exact proposed distribution contents.
 
 Node.js 22+ runs the application tooling without runtime packages. Python 3.11+
@@ -47,6 +50,19 @@ Use synthetic context in tests, issues and screenshots. Never contribute
 credentials, private logs, customer details or production model responses.
 Use the private-reporting process in [SECURITY](SECURITY.md) for vulnerabilities.
 
+Prompt maturity changes must follow the
+[evidence contribution guide](docs/evidence-contributions.md) and versioned
+[data contracts](docs/data-contracts.md). Two independent qualified human
+reviews are required for a reviewed prompt. Executable native rules additionally
+need hash-bound fixtures and product-specific lab evidence. An `unassessed` cell
+cannot be relabelled `not-applicable` without an auditable telemetry rationale.
+
+External evidence may be linked as corroboration, but it does not by itself
+promote a prompt. Preserve the publisher, canonical URL, retrieval date, content
+hash and item-level license/SPDX information. Never commit API keys or dynamic
+IOC collections; the optional [Rösti integration](integrations/rosti/README.md)
+creates private local output by default.
+
 ## Browser and release review
 
 Verify the [UI acceptance criteria](docs/ui-quality.md), including keyboard
@@ -55,6 +71,8 @@ responsive widths and failure states. Record screenshots and limitations with
 the exact tested version; older sample screenshots are historical evidence.
 
 Reviewers need the resulting behavior, compatibility implications, relevant
-checks and remaining limits. Creating a remote, pushing, deploying a site or
-publishing an artifact requires the owner's explicit authorization. Follow the
-[publication process](docs/publishing.md) after the candidate is reviewable.
+checks and remaining limits. Content, native-rule, security and release workflow
+changes target two independent approvals. The repository currently has only one
+named maintainer, so that rule must not be represented as enforced until the
+[maintainer onboarding gate](docs/maintainer-onboarding.md) is satisfied. Follow
+the [release process](docs/release-process.md) after the candidate is reviewable.

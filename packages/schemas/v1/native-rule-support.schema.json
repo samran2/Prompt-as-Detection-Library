@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:prompt-as-detection:schema:v1:native-rule-support",
+  "title": "Native rule support decision v1",
+  "description": "A backend-specific support decision. Executable rules require evidence at claimed maturity; not-applicable decisions require a named audit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "attackId", "attackVersion", "domain", "tactics", "platforms", "backend", "contentVersion", "supportStatus", "telemetryAssessment"],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "id": {"type": "string", "pattern": "^support:(?:enterprise|mobile|ics):T[0-9]{4}(?:\\.[0-9]{3})?:(?:panther|sentinel|defender-xdr|splunk)$"},
+    "attackId": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/attackId"},
+    "attackVersion": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/attackVersion"},
+    "domain": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/domain"},
+    "tactics": {
+      "type": "array", "minItems": 1, "maxItems": 32, "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,127}$"}
+    },
+    "platforms": {
+      "type": "array", "maxItems": 64, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 128}
+    },
+    "backend": {"enum": ["panther", "sentinel", "defender-xdr", "splunk"]},
+    "contentVersion": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/contentVersion"},
+    "supportStatus": {"enum": ["supported", "not-applicable", "planned", "unassessed"]},
+    "telemetryAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "requiredTelemetry", "notes"],
+      "properties": {
+        "status": {"enum": ["available", "unavailable", "unknown"]},
+        "requiredTelemetry": {
+          "type": "array", "maxItems": 128, "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
+        "notes": {"type": "string", "minLength": 1, "maxLength": 10000}
+      }
+    },
+    "rule": {"$ref": "#/$defs/nativeRule"},
+    "rationale": {"type": "string", "minLength": 20, "maxLength": 10000},
+    "audit": {"$ref": "#/$defs/notApplicableAudit"}
+  },
+  "$defs": {
+    "nativeRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "language", "artifactPath", "sha256", "license", "status", "provenance", "fieldMappings", "limitations", "validationEvidenceIds"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^rule:(?:panther|sentinel|defender-xdr|splunk):T[0-9]{4}(?:\\.[0-9]{3})?$"},
+        "title": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "language": {"enum": ["panther-python", "sentinel-kql", "defender-advanced-hunting-kql", "splunk-spl"]},
+        "artifactPath": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/relativeArtifactPath"},
+        "sha256": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/sha256"},
+        "license": {"type": "string", "pattern": "^(?:[A-Za-z0-9.-]+|LicenseRef-[A-Za-z0-9.-]+)$", "maxLength": 128},
+        "status": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/maturityStatus"},
+        "provenance": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/provenance"},
+        "fieldMappings": {
+          "type": "array", "minItems": 1, "maxItems": 512,
+          "items": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/fieldMapping"}
+        },
+        "limitations": {
+          "type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
+        "validationEvidenceIds": {
+          "type": "array", "maxItems": 256, "uniqueItems": true,
+          "items": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"}
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"enum": ["lab-validated", "field-confirmed"]}}, "required": ["status"]},
+          "then": {"properties": {"validationEvidenceIds": {"minItems": 1}}},
+          "else": {"properties": {"validationEvidenceIds": {"maxItems": 0}}}
+        }
+      ]
+    },
+    "notApplicableAudit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewerId", "displayName", "reviewedAt", "evidenceUrls"],
+      "properties": {
+        "reviewerId": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/identifier"},
+        "displayName": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/nonEmptyString"},
+        "reviewedAt": {"$ref": "urn:prompt-as-detection:schema:v1:common#/$defs/timestamp"},
+        "evidenceUrls": {
+          "type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true,
+          "items": {"type": "string", "format": "uri", "maxLength": 4096}
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "supportStatus": {"const": "supported"},
+        "telemetryAssessment": {"properties": {"status": {"const": "available"}}}
+      },
+      "required": ["rule"],
+      "not": {"anyOf": [{"required": ["rationale"]}, {"required": ["audit"]}]}
+    },
+    {
+      "properties": {
+        "supportStatus": {"const": "not-applicable"},
+        "telemetryAssessment": {"properties": {"status": {"const": "unavailable"}}}
+      },
+      "required": ["rationale", "audit"],
+      "not": {"required": ["rule"]}
+    },
+    {
+      "properties": {"supportStatus": {"enum": ["planned", "unassessed"]}},
+      "not": {"anyOf": [{"required": ["rule"]}, {"required": ["rationale"]}, {"required": ["audit"]}]}
+    }
+  ]
+}

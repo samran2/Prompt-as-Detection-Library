@@ -2,6 +2,7 @@ name: Repository CI
 
 on:
   pull_request:
+  merge_group:
   push:
     branches: [main]
   workflow_dispatch:
@@ -47,3 +48,17 @@ jobs:
       - name: Record limited verification scope
         run: |
           echo 'This job checks repository tooling only. The separate library job checks the independent full-library rebuild. Neither job verifies the unavailable original application or detection effectiveness.' >> "$GITHUB_STEP_SUMMARY"
+  quality-gate:
+    name: Quality gate
+    if: always()
+    needs: [library, foundation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require the complete library and foundation checks
+        env:
+          FOUNDATION_RESULT: ${{ needs.foundation.result }}
+          LIBRARY_RESULT: ${{ needs.library.result }}
+        run: |
+          test "$FOUNDATION_RESULT" = success
+          test "$LIBRARY_RESULT" = success
