@@ -163,6 +163,10 @@ test('the only OCI build boundary is digest-pinned and has a blocking image scan
   assert.deepEqual(containerFiles, ['apps/research-api/Dockerfile']);
   const dockerfile = read(containerFiles[0]);
   assert.match(dockerfile, /^FROM\s+[^\s@]+@sha256:[0-9a-f]{64}$/m);
+  assert.match(
+    dockerfile,
+    /^FROM node:24\.20\.0-alpine3\.24@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf$/m,
+  );
   assert.match(dockerfile, /^USER node$/m);
   const dockerignore = read('.dockerignore');
   assert.match(dockerignore, /^\*\*$/m);

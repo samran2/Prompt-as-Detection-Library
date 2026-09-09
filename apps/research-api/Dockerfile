@@ -1,4 +1,4 @@
-FROM node:22.22.3-alpine3.23@sha256:968df39aedcea65eeb078fb336ed7191baf48f972b4479711397108be0966920
+FROM node:24.20.0-alpine3.24@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
 
 LABEL org.opencontainers.image.title="Prompt-as-Detection Research API" \
       org.opencontainers.image.description="Read-only reference API for pinned public research data" \
