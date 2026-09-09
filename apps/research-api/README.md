@@ -55,7 +55,7 @@ framework, resource, filters and source snapshot. Existing `/v1/techniques`,
 filter accepts `ATLAS`. ATLAS rules and validations currently return empty
 collections. The local reference API is separate from the static Pages demo.
 
-The relationship collection describes prompt-to-technique and subtechnique-to-
+The relationship collection describes technique-to-prompt and subtechnique-to-
 parent links. Source case-study and mitigation relationships are embedded in
 technique objects; the complete 1,318-edge ATLAS source graph is separately
 preserved in `content/atlas/relationships.json`, not exposed as API resources.
