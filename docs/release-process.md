@@ -53,6 +53,13 @@ Machine-readable results must include tool and environment versions, timestamps,
 the candidate commit and input hashes. A passing lint or structural check cannot
 stand in for a human review, WCAG audit, native-product lab or field observation.
 
+The ATLAS AI addition is a separate 197-record corpus. A stable candidate that
+includes it also needs exact ATLAS 2026.08 source parity, Apache-2.0 attribution,
+and two real independent current-hash reviews per AI prompt. Extend the
+framework-aware evidence contracts before promotion; the existing 918-record
+ATT&CK registry and scorecards are not an AI review result. No stable release
+can bypass this gap by presenting source threat maturity as prompt validation.
+
 ## Candidate procedure
 
 1. Create a short-lived release-candidate branch from reviewed `main`. Update

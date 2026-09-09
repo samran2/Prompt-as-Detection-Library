@@ -243,7 +243,8 @@
     $('behavior').textContent = $('source-behavior').textContent = record.behavior;
     $('platform-tags').replaceChildren(...(record.platforms.length ? record.platforms : ['None']).map(p => element('span', '', p === 'None' ? 'Platform not specified' : p)));
     $('telemetry').replaceChildren(...(record.telemetry.length ? record.telemetry : ['No source-derived telemetry suggestions available. Confirm available logs and schema.']).map(t => element('li', '', t)));
-    $('false-positives').textContent = record.falsePositives;
+    $('false-positives').textContent = record.falsePositives
+      || 'No record-specific baseline is supplied. Compare with authorized behavior and inert benign examples in your own environment.';
     const href = safeSourceUrl(record.sourceUrl, true);
     $('source-link').removeAttribute('href');
     $('source-link').setAttribute('aria-disabled', String(!href));

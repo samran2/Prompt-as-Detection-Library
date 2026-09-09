@@ -92,7 +92,7 @@ MITRE's terms for reproduced ATT&CK content; see the
 [resolved licensing record](licensing.md).
 
 Raw bundles and the complete procedure file are repository artifacts and never
-enter the eight-file static-site build. The preceding 12-record sample and its
+enter the static-site build. The preceding 12-record sample and its
 provenance are historical; see [sample provenance](sample-provenance.md).
 
 Formatting tools exclude only `sources/attack-19.2/raw/` to preserve pinned

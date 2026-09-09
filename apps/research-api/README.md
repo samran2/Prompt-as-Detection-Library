@@ -55,9 +55,14 @@ framework, resource, filters and source snapshot. Existing `/v1/techniques`,
 filter accepts `ATLAS`. ATLAS rules and validations currently return empty
 collections. The local reference API is separate from the static Pages demo.
 
+The relationship collection describes prompt-to-technique and subtechnique-to-
+parent links. Source case-study and mitigation relationships are embedded in
+technique objects; the complete 1,318-edge ATLAS source graph is separately
+preserved in `content/atlas/relationships.json`, not exposed as API resources.
+
 ## OCI image
 
-The official Node base is version- and digest-pinned. Build from the repository
+The Distroless Node.js base is version- and digest-pinned. Build from the repository
 root so that only the explicit `COPY` inputs are available to the service:
 
 ```console
@@ -68,7 +73,9 @@ docker run --read-only --cap-drop=ALL --security-opt=no-new-privileges \
   prompt-as-detection-research-api:dev
 ```
 
-The image runs as the unprivileged `node` user. This reference process does not
+The image runs as unprivileged UID:GID `65532:65532`. It binds to `0.0.0.0`
+inside the container; the example publishes it only on the host loopback address.
+This reference process does not
 terminate TLS, authenticate callers, enforce a distributed rate limit or
 provide a production service-level objective. A public deployment must add
 those controls at a trusted gateway and must not enable write paths.

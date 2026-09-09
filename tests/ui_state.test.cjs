@@ -195,6 +195,13 @@ test('ATLAS source links reject host lookalikes and unsafe URL schemes', () => {
   }
 });
 
+test('real ATLAS records show an explicit gap when no local baseline is supplied', () => {
+  const atlas = require('../demo/atlas-catalog.js');
+  const ui = launch([], atlas);
+  assert.match(ui.get('false-positives').textContent, /No record-specific baseline/);
+  assert.doesNotMatch(ui.get('false-positives').textContent, /undefined/);
+});
+
 test('test DOM parser decodes text entities exactly once without creating markup', () => {
   const document = parseDocument('<body><p id="sample">&amp;lt;script&amp;gt; &amp;quot; &quot; &amp;amp; &lt; &gt; &unknown;</p></body>');
   assert.equal(document.getElementById('sample').textContent, '&lt;script&gt; &quot; " &amp; < > &unknown;');

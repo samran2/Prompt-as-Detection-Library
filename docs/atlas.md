@@ -5,6 +5,10 @@ The AI section contains **197 source-linked text prompts** from MITRE ATLAS
 the unchanged ATT&CK 19.2 corpus of 918 records. The combined workbench contains
 1,115 records, with separate framework identifiers and versions.
 
+![ATLAS AI workbench displaying a source-linked indirect prompt-injection detection draft](screenshots/atlas-desktop.png)
+
+*Actual local Chromium verification capture; generated drafts are not validated rules.*
+
 ## Use the AI section
 
 Open the workbench and select **ATLAS · AI**. Search by an AML identifier such as
