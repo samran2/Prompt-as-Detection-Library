@@ -67,8 +67,8 @@ class Element {
     if (!this.listeners.has(type)) this.listeners.set(type, []);
     this.listeners.get(type).push(handler);
   }
-  dispatch(type) {
-    for (const handler of this.listeners.get(type) || []) handler({ type, target: this, currentTarget: this, preventDefault() {} });
+  dispatch(type, details = {}) {
+    for (const handler of this.listeners.get(type) || []) handler({ type, target: this, currentTarget: this, preventDefault() {}, ...details });
   }
   click() { if (!this.disabled) this.dispatch('click'); }
   focus() { this.ownerDocument.activeElement = this; }
@@ -128,18 +128,25 @@ function records() {
     }));
 }
 
-function launch(catalog = records(), atlas = []) {
+function launch(catalog = records(), atlas = [], supplemental = {}) {
   const demo = path.join(__dirname, '..', 'demo');
   const document = parseDocument(fs.readFileSync(path.join(demo, 'index.html'), 'utf8'));
+  const downloads = [];
+  class DownloadURL extends URL {
+    static createObjectURL(blob) { downloads.push(blob); return 'blob:synthetic-download'; }
+    static revokeObjectURL() {}
+  }
   const context = vm.createContext({
-    document, PAD_CATALOG: catalog, PAD_ATLAS_CATALOG: atlas, URL, Blob,
+    document, PAD_CATALOG: catalog, PAD_ATLAS_CATALOG: atlas, URL: DownloadURL, Blob,
+    PAD_D3FEND_CATALOG: supplemental.catalog, PAD_DEFENSES: supplemental.helper,
     window: { confirm: () => true }, navigator: { clipboard: { writeText: async () => {} } },
     setTimeout: () => {},
   });
-  for (const name of ['core.js', 'app.js']) vm.runInContext(fs.readFileSync(path.join(demo, name), 'utf8'), context, { filename: name });
+  const scripts = ['core.js', ...(supplemental.renderer ? ['defenses-ui.js'] : []), 'app.js'];
+  for (const name of scripts) vm.runInContext(fs.readFileSync(path.join(demo, name), 'utf8'), context, { filename: name });
   const get = id => { const node = document.getElementById(id); assert.ok(node, `Missing #${id} in demo/index.html`); return node; };
   return {
-    catalog, document, get,
+    catalog, document, get, downloads,
     rows: () => get('techniques').querySelectorAll('button'),
     select(id) {
       const button = get('techniques').querySelectorAll('button').find(row => row.dataset.id === id);
@@ -152,6 +159,108 @@ function launch(catalog = records(), atlas = []) {
     input(id, value, event = 'input') { const node = get(id); node.value = value; node.dispatch(event); },
   };
 }
+
+function defenseContext(id = 'T1000') {
+  return {
+    schemaVersion: 'pad-d3fend-context-1', d3fendVersion: '1.6.0', techniqueId: id,
+    sourceNotice: 'Synthetic D3FEND fixture license notice.',
+    sourceUrl: 'https://d3fend.mitre.org/ontologies/d3fend.owl',
+    licenseUrl: 'https://d3fend.mitre.org/about/terms/', mappingKind: 'inferred', status: 'mapped',
+    techniques: [{
+      id: 'D3-PSA', name: 'Process Spawn Analysis', definition: 'Observe <script>literal</script> ${SCHEMA}.',
+      url: 'https://d3fend.mitre.org/technique/d3f:ProcessSpawnAnalysis/', tactics: ['Detect'],
+      paths: [{ queryLabel: 'Synthetic technique', topLabel: 'Execution',
+        defenseArtifact: 'd3f:Process', defenseArtifactLabel: 'Process',
+        offenseArtifact: 'd3f:Process', offenseArtifactLabel: 'Process',
+        defenseRelation: 'd3f:analyzes', offenseRelation: 'd3f:creates', sourceRows: [1, 7] }],
+    }],
+  };
+}
+
+function supplemental(context = defenseContext()) {
+  return {
+    renderer: true, catalog: {}, helper: { createLibrary: () => ({
+      lookup: id => id === context.techniqueId ? context : { ...context, techniqueId: id, status: 'unmapped', techniques: [] },
+      composeBrief: record => `D3FEND research draft for ${record.id}\nLiteral source ${'${SCHEMA}'}\n`,
+      exportJSON: record => JSON.stringify({ ...context, techniqueId: record.id }, null, 2) + '\n',
+    }) },
+  };
+}
+
+test('D3FEND tab renders exact inferred relationship paths and literal source text without changing prompts', () => {
+  const baseline = launch();
+  const ui = launch(records(), [], supplemental());
+  ui.get('tab-defenses').click();
+  assert.equal(ui.get('panel-defenses').hidden, false);
+  assert.equal(ui.get('panel-prompt').hidden, true);
+  assert.equal(ui.get('prompt').value, baseline.get('prompt').value);
+  assert.equal(ui.get('library-count').textContent, baseline.get('library-count').textContent);
+  assert.match(ui.get('defenses-summary').textContent, /1 related countermeasure/);
+  const text = ui.get('defenses-results').textContent;
+  assert.match(text, /D3-PSA.*Process Spawn Analysis.*<script>literal<\/script> \$\{SCHEMA\}/s);
+  assert.match(text, /Detect.*d3f:analyzes.*d3f:Process.*T1000.*d3f:creates.*d3f:Process/s);
+  assert.match(text, /Source data rows: 1, 7/);
+  assert.match(ui.get('defenses-caveat').textContent, /inferred.*not.*effectiveness/s);
+  assert.equal(ui.get('defenses-results').querySelectorAll('script').length, 0);
+  assert.ok(ui.get('defenses-results').querySelectorAll('a').some(link => link.href === defenseContext().techniques[0].url));
+});
+
+test('D3FEND unmapped state states the snapshot gap and clears prior countermeasures', () => {
+  const ui = launch(records(), [], supplemental());
+  ui.select(ui.catalog[1].id);
+  assert.match(ui.get('defenses-summary').textContent, /No exact mapping/);
+  assert.match(ui.get('defenses-results').textContent, /does not mean.*no defense/s);
+  assert.equal(ui.get('defenses-results').querySelectorAll('details').length, 0);
+  assert.equal(ui.get('download-defense-brief').disabled, false);
+  assert.equal(ui.get('export-defenses').disabled, false);
+});
+
+test('missing or invalid D3FEND assets are unavailable without breaking the prompt workbench', () => {
+  for (const assets of [
+    {}, { renderer: true }, { ...supplemental(), catalog: undefined },
+    { ...supplemental(), helper: { createLibrary() { throw new Error('invalid catalog'); } } },
+    { ...supplemental(), helper: { createLibrary: () => ({ lookup: () => { throw new Error('invalid record'); } }) } },
+  ]) {
+    const ui = launch(records(), [], assets);
+    assert.equal(ui.get('app-content').hidden, false);
+    assert.match(ui.get('prompt').value, /DRAFT/);
+    ui.get('tab-defenses').click();
+    assert.match(ui.get('defenses-summary').textContent, /unavailable/i);
+    assert.equal(ui.get('download-defense-brief').disabled, true);
+    assert.equal(ui.get('export-defenses').disabled, true);
+    assert.doesNotMatch(ui.get('defenses-summary').textContent, /No exact mapping/);
+  }
+});
+
+test('D3FEND source links reject unsafe schemes, lookalikes, credentials and custom ports', () => {
+  for (const url of ['javascript:alert(1)', 'http://d3fend.mitre.org/', '//d3fend.mitre.org/',
+    'https://d3fend.mitre.org.evil.example/', 'https://user@d3fend.mitre.org/', 'https://d3fend.mitre.org:8443/']) {
+    const context = defenseContext();
+    context.techniques[0].url = context.sourceUrl = context.licenseUrl = url;
+    const ui = launch(records(), [], supplemental(context));
+    assert.equal(ui.get('panel-defenses').querySelectorAll('a').some(link => link.href === url), false);
+  }
+});
+
+test('D3FEND exports are separate, exact UTF-8 bytes and exclude applied analyst context', async () => {
+  const ui = launch(records(), [], supplemental());
+  ui.input('context', 'PRIVATE SYNTHETIC CONTEXT'); ui.get('apply-context').click();
+  ui.input('prompt', 'Private edited offensive prompt');
+  ui.get('download-defense-brief').click(); ui.get('export-defenses').click();
+  assert.equal(ui.downloads.length, 2);
+  assert.equal(await ui.downloads[0].text(), 'D3FEND research draft for T1000\nLiteral source ${SCHEMA}\n');
+  assert.equal(await ui.downloads[1].text(), JSON.stringify(defenseContext(), null, 2) + '\n');
+  assert.match(ui.get('defenses-action-status').textContent, /context.*not included/i);
+});
+
+test('D3FEND tab participates in keyboard navigation and leaves Review as the last tab', () => {
+  const ui = launch(records(), [], supplemental());
+  ui.get('tab-map').dispatch('keydown', { key: 'ArrowRight' });
+  assert.equal(ui.document.activeElement, ui.get('tab-defenses'));
+  assert.equal(ui.get('tab-defenses').getAttribute('aria-selected'), 'true');
+  ui.get('tab-defenses').dispatch('keydown', { key: 'End' });
+  assert.equal(ui.document.activeElement, ui.get('tab-review'));
+});
 
 test('ATLAS AI selection shows its source context without implying ATT&CK or lab validation', () => {
   const atlas = {

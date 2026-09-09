@@ -7,6 +7,7 @@ The working target is the `0.4.0.dev0` trust-and-contract foundation (npm
 The pinned ATT&CK release remains 19.2, and the existing CLI and static browser
 workbench remain supported.
 ATLAS AI is separately pinned at content version `2026.08` / format `6.0.0`.
+D3FEND defensive context is separately pinned at ontology version `1.6.0`.
 
 Node.js 22+ runs generation, the CLI, unit tests and the static build. The
 browser and root package have zero runtime dependencies. Python 3.11+ is used
@@ -30,6 +31,7 @@ node scripts/library_cli.cjs list
 node scripts/library_cli.cjs prompt T1059.001
 npm run library:verify
 npm run atlas:verify
+npm run d3fend:verify
 npm run check
 npm test
 npm run build
@@ -85,6 +87,14 @@ uses the checked-in JSON derivative and requires neither YAML tooling nor a
 network connection. For a source upgrade, independently verify that the
 derivative is an exact safe parse of the pinned official YAML before changing
 the reviewed hash pins. See [ATLAS](atlas.md) for the scope and license policy.
+
+`npm run d3fend:build` derives the supplementary defensive catalog, coverage and
+public notice from pinned D3FEND inputs. `npm run d3fend:verify` validates source
+hashes, strict file inventories and exact deterministic bytes without writes.
+It runs in the normal static build; no network access is used. The browser and
+`defenses ID` CLI command share `demo/defenses.js`. Default prompt bytes remain
+unchanged. See [D3FEND](d3fend.md) for exact-ID joins, separate artifact paths,
+source exclusions and inference limits.
 
 ## Prompt review evidence
 

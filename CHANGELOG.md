@@ -9,6 +9,13 @@ conversations are not independent release evidence.
 
 ### Added
 
+- Added pinned MITRE D3FEND 1.6.0 defensive context for 369 exact library IDs
+  (311 Enterprise, 58 ICS/OT), with 154 related countermeasures, source-row
+  provenance, separate artifact paths, offline source verification and notices.
+- Added the D3FEND workbench tab and `defenses ID` CLI command with separate
+  draft TXT/JSON exports, explicit unmapped/unavailable states and no analyst
+  context leakage. Existing 918 ATT&CK and 197 ATLAS prompt bytes are unchanged;
+  inferred relationships do not advance validation maturity.
 - Added MITRE ATLAS 2026.08 AI coverage: 197 source-linked text prompts,
   preserved case-study/mitigation relationships, deterministic source pins,
   Apache-2.0 notices, separate CLI selectors and read-only `/v1/atlas` resources.

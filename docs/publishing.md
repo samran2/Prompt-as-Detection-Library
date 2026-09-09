@@ -48,7 +48,7 @@ terms and item-level SPDX/origin metadata for contributed rule material.
 For an explicitly authorized Pages update:
 
 1. verify the exact commit and wait for all required repository checks;
-2. build and inspect a fresh ten-file static payload;
+2. build and inspect a fresh fourteen-file static payload;
 3. confirm GitHub Pages uses the Actions source, HTTPS and the protected
    `github-pages` environment;
 4. manually dispatch **Publish library workbench to GitHub Pages** from the
@@ -68,7 +68,7 @@ The manual **Library archive preview** workflow creates a short-lived candidate
 ZIP and checksum from committed `HEAD` after repository checks. It must retain
 read-only repository permission and must not create a tag, GitHub Release or
 package. The source archive contains reviewed repository files and pinned source
-data; it is intentionally different from the public ten-file website payload.
+data; it is intentionally different from the public fourteen-file website payload.
 
 Treat preview artifacts as disposable evidence inputs. A release candidate must
 still pass the complete process in [release process](release-process.md), bind

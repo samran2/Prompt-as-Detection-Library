@@ -1,5 +1,26 @@
 # Verification records
 
+## D3FEND 1.6.0 supplement — local verification 2026-09-09
+
+The D3FEND addition retains application version `0.4.0.dev0` and all 918 ATT&CK
+and 197 ATLAS prompt bytes. It adds inferred defensive research context, not
+human-reviewed detections or validated controls. The following checks were run
+locally before publication; hosted outcomes must be recorded separately.
+
+| Check | Observed result |
+| --- | --- |
+| Node regression suite | 240 tests passed, zero failures/skips. The initial sandboxed attempt could not bind local API test servers; the complete rerun passed with loopback permission. |
+| Foundation | 16 Python tests passed; foundation credential/artifact patterns, Ruff lint/format and JavaScript syntax passed. The local pre-commit module is unavailable; no local pre-commit success is claimed. |
+| Data integrity | ATT&CK, ATLAS, D3FEND, review-registry and static-evaluation read-only verification passed. D3FEND preserves 14,830 matching source rows as 10,892 distinct paths for 369 exact local IDs, with 154 relation-bearing defensive techniques. |
+| Browser | 41 Chrome checks passed: existing workbench regressions plus D3FEND paths, separate exact-byte TXT/JSON exports including notices, private-context exclusion, unmapped/unavailable states, literal hostile text, allowed links, keyboard tabs and 320/1440 px layouts. Screenshots were visually inspected. No unexpected external requests or main-page console errors/warnings were observed. |
+| Independent review | A separate agent reconciled every accepted source row and reviewed data, UI, helper and CLI boundaries. One required detached-export license issue was corrected and verified; no required findings remained in that scope. This was not a new full Codex Security scan or human domain validation. |
+| Static payload | A fresh fourteen-file allowlisted build passed. Original ATT&CK/ATLAS inputs, catalogs, composer and text prompts have no diff. Raw ontology/mapping inputs and private working files remain outside the public build. |
+
+The D3FEND catalog adds approximately 5.58 MB uncompressed. Local smoke timing
+is not field Core Web Vitals evidence. Firefox/WebKit, independent accessibility,
+real expert/lab review and stable-release evidence remain incomplete gates.
+Historical reports and screenshots below do not validate these newer changes.
+
 ## ATLAS development demo — 2026-09-09 verification
 
 The application and content revision is
