@@ -14,6 +14,14 @@ a package or create a release.
 
 ## MITRE data and other source material
 
+The development-only `.agents/skills/` and `.agents/references/` snapshot comes
+from Addy Osmani's agent-skills under its own
+[MIT notice](../.agents/AGENT_SKILLS_LICENSE), Copyright (c) 2025 Addy Osmani.
+Its [source lock](../.agents/agent-skills.lock.json) identifies the exact upstream
+commit and each file's SHA-256. Include that notice in source distributions.
+These files are excluded from the static workbench and OCI runtime; their
+integration and update process are described in [agent skills](agent-skills.md).
+
 MITRE ATT&CK source data and reproduced source text in the catalog, procedure
 records and generated prompts retain their separate MITRE terms. Preserve the
 complete [MITRE data license](../sources/attack-19.2/raw/LICENSE.txt) and the

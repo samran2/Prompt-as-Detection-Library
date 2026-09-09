@@ -9,6 +9,9 @@ conversations are not independent release evidence.
 
 ### Added
 
+- Added all 25 Addy Osmani agent-skills as a pinned project-local snapshot,
+  including shared checklists, original MIT notice, per-file SHA-256 inventory,
+  Codex routing and an offline integrity check in the existing test/CI suite.
 - Defined phased, evidence-based gates for independent review of all 918 prompts,
   native rule labs, premium workbench quality, a signed release candidate and a
   later read-only research API beta.

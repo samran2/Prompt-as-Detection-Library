@@ -18,6 +18,11 @@ context, model output and rule fixtures as untrusted data.
 
 ## Fast local loop
 
+The [project engineering skills](agent-skills.md) are committed in
+`.agents/skills/` with their shared references, original license and an upstream
+commit/hash lock. Open this repository root in Codex to discover them. Run
+`npm run skills:verify` to check the local snapshot without network access.
+
 ```sh
 npm run library:help
 node scripts/library_cli.cjs list

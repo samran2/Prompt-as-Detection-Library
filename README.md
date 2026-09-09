@@ -180,6 +180,7 @@ See [verification](docs/verification.md) for actual checks and their limits.
 | [Data contracts](docs/data-contracts.md) | Versioned schemas and cross-record evidence invariants. |
 | [Research API](docs/api.md) | Read-only `/v1` contract and current implementation boundary. |
 | [Development](docs/development.md) | CLI contracts, generation, browser QA and repository checks. |
+| [Agent skills](docs/agent-skills.md) | Pinned project-local engineering workflows for Codex, with shared checklists and offline verification. |
 | [Contributing](CONTRIBUTING.md) | Focused changes, source fidelity and review expectations. |
 | [Governance](GOVERNANCE.md) | Maintainer roles, DCO decisions and evidence approvals. |
 | [Prompt quality review](docs/prompt-quality-review.md) | Semantic sample, shared-template improvements and validation limits. |
@@ -192,7 +193,8 @@ See [verification](docs/verification.md) for actual checks and their limits.
 ## License and attribution
 
 Original code and associated documentation use the [MIT License](LICENSE),
-Copyright (c) 2026 samran2. Reproduced ATT&CK content retains separate
+Copyright (c) 2026 samran2. Vendored development skills retain
+[Addy Osmani's MIT notice](.agents/AGENT_SKILLS_LICENSE). Reproduced ATT&CK content retains separate
 [MITRE terms](sources/attack-19.2/raw/LICENSE.txt); the
 [static notice](demo/THIRD_PARTY_LICENSE.txt) includes both complete licenses.
 See the [licensing record](docs/licensing.md) for scope. External evidence and rule
