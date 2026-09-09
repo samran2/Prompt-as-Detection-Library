@@ -186,10 +186,14 @@
   function validationState(record) {
     const supplied = record.validation && typeof record.validation === 'object' ? record.validation : {};
     const reviews = Number.isSafeInteger(supplied.humanReviews) && supplied.humanReviews > 0 ? supplied.humanReviews : 0;
+    const reviewerIds = Array.isArray(supplied.reviewers)
+      ? supplied.reviewers.filter(value => typeof value === 'string').map(value => value.trim()).filter(Boolean)
+      : [];
     const requested = ['generated', 'reviewed', 'lab-validated', 'field-confirmed'].includes(supplied.level) ? supplied.level : 'generated';
+    const reviewGatePassed = reviews >= 2 && new Set(reviewerIds).size >= 2;
     let level = 'generated';
-    if (reviews && ['reviewed', 'lab-validated', 'field-confirmed'].includes(requested)) level = 'reviewed';
-    if (reviews && supplied.labValidated === true && ['lab-validated', 'field-confirmed'].includes(requested)) level = 'lab-validated';
+    if (reviewGatePassed && ['reviewed', 'lab-validated', 'field-confirmed'].includes(requested)) level = 'reviewed';
+    if (reviewGatePassed && supplied.labValidated === true && ['lab-validated', 'field-confirmed'].includes(requested)) level = 'lab-validated';
     if (level === 'lab-validated' && supplied.fieldConfirmed === true && requested === 'field-confirmed') level = 'field-confirmed';
     const labValidated = ['lab-validated', 'field-confirmed'].includes(level);
     const fieldConfirmed = level === 'field-confirmed';

@@ -72,6 +72,58 @@ test('research export preserves supplied reviewed state but never infers lab or 
   assert.equal(item.validation.field_confirmed, false);
 });
 
+test('one human review cannot advance any displayed or exported maturity claim', () => {
+  const singlyReviewed = {
+    ...record,
+    validation: {
+      level: 'field-confirmed',
+      humanReviews: 1,
+      reviewers: ['reviewer-a'],
+      labValidated: true,
+      fieldConfirmed: true,
+      validatedBackends: ['Panther Python'],
+    },
+  };
+
+  assert.deepEqual(core.validationState(singlyReviewed), {
+    level: 'generated', human_reviews: 1, lab_validated: false,
+    field_confirmed: false, validated_backends: [],
+  });
+  assert.deepEqual(
+    JSON.parse(core.exportResearchJSON([singlyReviewed], {})).records[0].validation,
+    core.validationState(singlyReviewed),
+  );
+});
+
+test('review counts without two distinct non-empty reviewer identifiers cannot advance maturity', () => {
+  const invalidReviewerSets = [
+    { label: 'missing reviewers', reviewers: undefined },
+    { label: 'duplicate reviewers', reviewers: ['reviewer-a', 'reviewer-a'] },
+    { label: 'blank reviewer', reviewers: ['reviewer-a', '   '] },
+  ];
+
+  for (const { label, reviewers } of invalidReviewerSets) {
+    const unverified = {
+      ...record,
+      validation: {
+        level: 'field-confirmed', humanReviews: 2, reviewers,
+        labValidated: true, fieldConfirmed: true, validatedBackends: ['Panther Python'],
+      },
+    };
+    const expected = {
+      level: 'generated', human_reviews: 2, lab_validated: false,
+      field_confirmed: false, validated_backends: [],
+    };
+
+    assert.deepEqual(core.validationState(unverified), expected, label);
+    assert.deepEqual(
+      JSON.parse(core.exportResearchJSON([unverified], {})).records[0].validation,
+      expected,
+      `${label} export`,
+    );
+  }
+});
+
 test('incoherent maturity flags fail closed instead of displaying validation claims', () => {
   const incoherent = { ...record, validation: { level: 'field-confirmed', humanReviews: 0, labValidated: false, fieldConfirmed: true, validatedBackends: ['Panther Python'] } };
   assert.deepEqual(core.validationState(incoherent), {

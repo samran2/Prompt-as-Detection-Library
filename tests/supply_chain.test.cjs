@@ -165,9 +165,14 @@ test('the only OCI build boundary is digest-pinned and has a blocking image scan
   assert.match(dockerfile, /^FROM\s+[^\s@]+@sha256:[0-9a-f]{64}$/m);
   assert.match(
     dockerfile,
-    /^FROM node:24\.20\.0-alpine3\.24@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf$/m,
+    /^FROM gcr\.io\/distroless\/nodejs24-debian13:nonroot@sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79$/m,
   );
-  assert.match(dockerfile, /^USER node$/m);
+  assert.doesNotMatch(dockerfile, /^RUN\b/m, 'runtime construction must not depend on mutable package repositories');
+  assert.doesNotMatch(dockerfile, /\b(?:apk|apt(?:-get)?|npm|npx|corepack|yarn)\b/);
+  assert.match(dockerfile, /^COPY --chown=65532:65532 /m);
+  assert.match(dockerfile, /^USER 65532:65532$/m);
+  assert.match(dockerfile, /^\s*CMD \["\/nodejs\/bin\/node", "-e", /m);
+  assert.match(dockerfile, /^CMD \["apps\/research-api\/src\/server\.mjs"\]$/m);
   const dockerignore = read('.dockerignore');
   assert.match(dockerignore, /^\*\*$/m);
   assert.doesNotMatch(dockerignore, /^!(?:apps\/research-api|packages\/core|library\/prompts)\/\*\*$/m);
@@ -190,6 +195,7 @@ test('the only OCI build boundary is digest-pinned and has a blocking image scan
   assert.match(workflow, /aquasecurity\/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25/);
   assert.match(workflow, /severity: ['"]?HIGH,CRITICAL/);
   assert.match(workflow, /exit-code: ['"]1['"]/);
+  assert.match(workflow, /ignore-unfixed: false/);
   assert.match(workflow, /version: v0\.70\.0/);
   assert.doesNotMatch(workflow, /docker\s+(?:push|login)|push-to-registry/);
 

@@ -4,25 +4,26 @@
 
 Version `0.4.0.dev0` is the current world-class-foundation development version.
 The earlier owner-approved dev3 library and demo are published at the approved
-public destination following the recorded verification; the current feature
-branch and its new surfaces require fresh review before publication.
+public destination following the recorded verification. The current feature
+branch received a fresh standard review, regression fixes and contiguous
+zero-finding diff reviews through immutable revision
+`443421d906b6442ace03e1ef52785b1e35377d11`. The final diff scan was
+`b9655d59-de04-4118-8806-3a866c11250a`; its local scope and limitations are
+recorded in the verification document. The hosted image build and blocking
+Trivy result still must pass on the exact publication head before merge.
 Observed checks and deployment status are recorded in
 [verification](docs/verification.md). No supported
 public release is declared. Earlier foundation and 12-record sample reviews
 apply only to their historical artifacts, not to this version or the missing
 original application.
 
-A prior offline Codex Security review of the immutable dev2 full-library snapshot
-completed without reportable findings. Subsequent dev2 publication changes added
-approved licensing/documentation, a CodeQL workflow and a test-fixture correction;
-they were outside that review. The dev3 composer and regenerated prompt revisions
-are also outside the earlier audit. Pinned source data remains unchanged, but
-unchanged data does not transfer audit coverage to changed runtime instructions.
-The earlier report cannot establish the security of the new research API,
-versioned contracts, Rösti client, premium state/compare UI or release workflows.
-They require a fresh scan and the gates in [release evidence](docs/release-evidence.md).
-See [verification](docs/verification.md)
-for exact scope and outcomes. This is not a guarantee that vulnerabilities are absent.
+The 0.4 review chain covers the new research API, versioned contracts, Rösti
+client, premium state/compare UI, release workflows, publication fixes and their
+tests. Pinned source data remains unchanged and was verified for exact generated
+parity, but bulk ATT&CK narratives were not individually security-reviewed.
+See [verification](docs/verification.md) for exact scan identifiers, scope and
+outcomes, and [release evidence](docs/release-evidence.md) for remaining gates.
+This is not a guarantee that vulnerabilities are absent.
 
 GitHub private vulnerability reporting is enabled and was verified for
 [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library).
