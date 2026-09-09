@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Explore the complete active MITRE ATT&CK 19.2 prompt library across Enterprise, Mobile and ICS. Local composition, editable drafts and exports. No account or API key.">
+  <meta name="description" content="Explore source-linked detection prompts for MITRE ATT&CK 19.2 and MITRE ATLAS AI threats. Enterprise, Mobile, ICS/OT and AI research, composed locally. No account or API key.">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>Prompt-as-Detection · ATT&CK prompt library</title>
+  <title>Prompt-as-Detection · ATT&CK &amp; ATLAS AI library</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./style.css">
   <script defer src="./catalog.js"></script>
+  <script defer src="./atlas-catalog.js"></script>
   <script defer src="./core.js"></script>
   <script defer src="./app.js"></script>
 </head>
@@ -27,7 +28,7 @@
       </nav>
       <div class="sidebar-note">
         <span class="eyebrow">REFERENCE SNAPSHOT</span>
-        <strong>MITRE ATT&CK 19.2</strong>
+        <strong>ATT&amp;CK + ATLAS AI</strong>
         <p>All active techniques.<br>Every prompt is a draft.</p>
         <span class="version">Workbench 0.4.0-dev.0</span>
       </div>
@@ -38,7 +39,7 @@
         <div class="status-mark" aria-hidden="true"><span></span><span></span><span></span></div>
         <p class="eyebrow">LOCAL RESEARCH WORKBENCH</p>
         <strong id="app-status-title">Loading the pinned library…</strong>
-        <p id="app-status-detail">Preparing 918 local ATT&amp;CK 19.2 records. Nothing is uploaded.</p>
+        <p id="app-status-detail">Preparing the pinned ATT&amp;CK and ATLAS AI catalogs. Nothing is uploaded.</p>
         <button id="reload-app" hidden>Reload workbench</button>
       </section>
       <div id="app-content" hidden>
@@ -51,7 +52,7 @@
       </header>
       <div class="library-notice" aria-label="Library snapshot">
         <div class="snapshot-primary"><span class="snapshot-label">Active coverage</span><strong id="library-count">Loading active library…</strong><span>Every record is a draft unless review evidence says otherwise.</span></div>
-        <div class="snapshot-meta"><span class="snapshot-label">Pinned source</span><strong>ATT&amp;CK 19.2</strong><span>Enterprise · Mobile · ICS</span></div>
+        <div class="snapshot-meta"><span class="snapshot-label">Pinned sources</span><strong id="source-versions">ATT&amp;CK 19.2 · ATLAS</strong><span>Enterprise · Mobile · ICS/OT · AI</span></div>
         <div class="snapshot-meta"><span class="snapshot-label">Privacy boundary</span><strong>Runs in this browser</strong><span>No account · no telemetry</span></div>
         <p id="coverage-summary"></p>
       </div>
@@ -61,8 +62,8 @@
             <div class="section-heading"><h2 id="library-heading">Technique library</h2><span id="result-count" class="count" role="status"></span></div>
             <label for="search" class="sr-only">Search techniques</label>
             <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="ID, parent, or behavior…" maxlength="200" autocomplete="off" aria-describedby="domain-count" aria-controls="techniques"><kbd aria-hidden="true">/</kbd></div>
-            <div class="domains" role="group" aria-label="ATT&CK domain" aria-controls="techniques">
-              <button data-domain="" aria-pressed="true">All</button><button data-domain="Enterprise" aria-pressed="false">Enterprise</button><button data-domain="Mobile" aria-pressed="false">Mobile</button><button data-domain="ICS" aria-pressed="false">ICS</button>
+            <div class="domains" role="group" aria-label="Framework and domain" aria-controls="techniques">
+              <button data-domain="" aria-pressed="true">All</button><button data-domain="Enterprise" aria-pressed="false">Enterprise</button><button data-domain="Mobile" aria-pressed="false">Mobile</button><button data-domain="ICS" aria-pressed="false">ICS</button><button data-domain="OT" aria-pressed="false">OT</button><button data-domain="ATLAS" aria-pressed="false">ATLAS · AI</button>
             </div>
             <p id="domain-count" class="domain-count"></p>
             <div class="filter-grid"><label>Tactic<select id="tactic" aria-controls="techniques"><option value="">All tactics</option></select></label><label>Platform<select id="platform" aria-controls="techniques"><option value="">All platforms</option></select></label></div>
@@ -115,14 +116,17 @@
               <p id="compare-instructions">Use “Add to comparison” on one or two techniques. This view compares source metadata and evidence readiness—not detection quality.</p>
               <div id="compare-slots" class="compare-slots" aria-live="polite"></div>
               <div id="comparison-region" class="table-scroll" tabindex="0" role="region" aria-label="Technique comparison table" aria-describedby="compare-instructions" hidden>
-                <table id="comparison-table"><caption class="sr-only">Selected ATT&amp;CK techniques compared by source metadata and validation state</caption><thead><tr><th scope="col">Attribute</th><th id="compare-heading-a" scope="col">Slot one</th><th id="compare-heading-b" scope="col">Slot two</th></tr></thead><tbody id="comparison-body"></tbody></table>
+                <table id="comparison-table"><caption class="sr-only">Selected techniques compared by framework, source metadata and validation state</caption><thead><tr><th scope="col">Attribute</th><th id="compare-heading-a" scope="col">Slot one</th><th id="compare-heading-b" scope="col">Slot two</th></tr></thead><tbody id="comparison-body"></tbody></table>
               </div>
             </section>
             <section id="panel-source" class="info-panel" role="tabpanel" aria-labelledby="tab-source" hidden>
-              <p class="eyebrow">TRACEABLE CONTEXT</p><h3>Start with the evidence.</h3><p id="source-behavior" class="source-text"></p><a id="source-link" class="source-link" target="_blank" rel="noopener noreferrer">Read technique on MITRE ATT&CK <span aria-hidden="true">↗</span></a><h4>Source-derived telemetry suggestions</h4><ul id="telemetry"></ul><h4>Local baseline guidance</h4><p id="false-positives"></p><h4>Linked detection strategies and analytics</h4><div id="strategies"></div><h4>Documented procedure examples</h4><p id="procedure-count"></p><div id="procedure-examples"></div><p class="fine-print">Descriptions, linked analytics, and procedure examples come from the pinned ATT&CK 19.2 source. Prompt framing and local baseline guidance are independently written. Source text is displayed literally; linked live pages may have changed. Links open only when selected.</p>
+              <p class="eyebrow">TRACEABLE CONTEXT</p><h3>Start with the evidence.</h3><p id="source-behavior" class="source-text"></p><a id="source-link" class="source-link" target="_blank" rel="noopener noreferrer">Read technique on MITRE <span aria-hidden="true">↗</span></a><h4>Source-derived telemetry suggestions</h4><ul id="telemetry"></ul><h4>Local baseline guidance</h4><p id="false-positives"></p>
+              <div id="attack-source-context"><h4>Linked detection strategies and analytics</h4><div id="strategies"></div><h4>Documented procedure examples</h4><p id="procedure-count"></p><div id="procedure-examples"></div></div>
+              <div id="atlas-source-context" hidden><h4>ATLAS threat maturity</h4><p id="atlas-source-maturity"></p><h4>Linked case studies</h4><div id="atlas-case-studies"></div><h4>Linked mitigations</h4><div id="atlas-mitigations"></div></div>
+              <p class="fine-print">Descriptions and linked reference material come from the selected framework's pinned source. Prompt framing and local baseline guidance are independently written. Source text is displayed literally; linked live pages may have changed. Links open only when selected.</p>
             </section>
             <section id="panel-review" class="info-panel" role="tabpanel" aria-labelledby="tab-review" tabindex="0" hidden>
-              <p class="eyebrow">HUMAN REVIEW REQUIRED</p><h3>A starting point, not a verdict.</h3><p>This workbench composes text. Full library coverage means all active techniques and sub-techniques in ATT&CK 19.2 are present. It does not establish detection effectiveness.</p><ol class="review-list"><li><strong>Confirm the data.</strong><span>Check actual log sources, field names, timestamps, and collection gaps.</span></li><li><strong>Challenge the hypothesis.</strong><span>Use synthetic positive and negative cases. Account for normal administration.</span></li><li><strong>Test in isolation.</strong><span>Review generated code before any execution in a controlled environment.</span></li><li><strong>Document the result.</strong><span>Record evidence, limitations, reviewer, and test environment before promotion.</span></li></ol>
+              <p class="eyebrow">HUMAN REVIEW REQUIRED</p><h3>A starting point, not a verdict.</h3><p>This workbench composes text for the pinned ATT&amp;CK and ATLAS catalogs. Catalog coverage does not establish detection effectiveness. ATLAS source maturity describes known threats, not local rule validation.</p><ol class="review-list"><li><strong>Confirm the data.</strong><span>Check actual log sources, field names, timestamps, and collection gaps.</span></li><li><strong>Challenge the hypothesis.</strong><span>Use synthetic positive and negative cases. Account for normal administration.</span></li><li><strong>Test in isolation.</strong><span>Review generated code before any execution in a controlled environment.</span></li><li><strong>Document the result.</strong><span>Record evidence, limitations, reviewer, and test environment before promotion.</span></li></ol>
             </section>
           </div>
         </section>
@@ -131,7 +135,7 @@
       </div>
     </main>
   </div>
-  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering every active Enterprise, Mobile, and ICS technique and sub-technique in the pinned MITRE ATT&CK 19.2 release. Revoked and deprecated records are excluded.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft unless its record explicitly displays stronger review evidence; no model is called and no detection is certified or executed.</p><p>Search, composition, comparison, edits, and downloads run in your browser. Context and drafts stay in this tab’s memory and clear on reload. Search, filters, mode, target, selection, comparison and appearance are represented in or restored from the page URL; appearance is also remembered locally when storage is available. The app sends no analyst context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Research JSON adds source relationships and explicit validation state. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">MITRE copyright and license</a>.</p></dialog>
+  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering 918 active Enterprise, Mobile, and ICS/OT records in MITRE ATT&amp;CK 19.2, plus 197 AI techniques and subtechniques in MITRE ATLAS 2026.08. ATT&amp;CK excludes revoked and deprecated records; ATLAS includes every technique record present in its pinned release.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft unless its record explicitly displays stronger review evidence; no model is called and no detection is certified or executed. ATLAS source threat maturity is not evidence of prompt validation.</p><p>Search, composition, comparison, edits, and downloads run in your browser. Context and drafts stay in this tab’s memory and clear on reload. Search, filters, mode, target, selection, comparison and appearance are represented in or restored from the page URL; appearance is also remembered locally when storage is available. The app sends no analyst context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Research JSON adds source relationships and explicit validation state. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&amp;CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATT&amp;CK and project licenses</a> · <a href="./ATLAS_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATLAS Apache-2.0 notice and license</a>.</p></dialog>
   <noscript><p class="noscript">Enable JavaScript to search and compose prompts. No account or network API is required.</p></noscript>
 </body>
 </html>

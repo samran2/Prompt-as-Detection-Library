@@ -20,6 +20,8 @@ security: []
 tags:
   - name: Catalog
   - name: Discovery
+  - name: ATLAS
+    description: Separate ATLAS AI catalog with AML identifiers and source maturity distinct from prompt evidence.
 paths:
   /v1/techniques:
     get:
@@ -248,8 +250,245 @@ paths:
         '304': {$ref: '#/components/responses/NotModified'}
         '400': {$ref: '#/components/responses/BadRequest'}
         '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/techniques:
+    get:
+      tags: [ATLAS]
+      operationId: listAtlasTechniques
+      summary: List ATLAS techniques.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/AtlasDomain'
+        - name: tactic
+          in: query
+          schema: {type: string, minLength: 1, maxLength: 128}
+        - name: platform
+          in: query
+          schema: {type: string, minLength: 1, maxLength: 128}
+        - name: kind
+          in: query
+          schema: {type: string, enum: [technique, subtechnique]}
+      responses:
+        '200': {$ref: '#/components/responses/AtlasTechniquePage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/techniques/{id}:
+    get:
+      tags: [ATLAS]
+      operationId: getAtlasTechnique
+      summary: Get one ATLAS technique.
+      parameters:
+        - $ref: '#/components/parameters/AtlasTechniqueId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/AtlasTechniqueItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/prompts:
+    get:
+      tags: [ATLAS]
+      operationId: listAtlasPrompts
+      summary: List ATLAS prompts.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/AtlasDomain'
+        - $ref: '#/components/parameters/Status'
+        - $ref: '#/components/parameters/AtlasTechniqueIdQuery'
+      responses:
+        '200': {$ref: '#/components/responses/AtlasPromptPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/prompts/{id}:
+    get:
+      tags: [ATLAS]
+      operationId: getAtlasPrompt
+      summary: Get one ATLAS prompt.
+      parameters:
+        - $ref: '#/components/parameters/AtlasTechniqueId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/AtlasPromptItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/rules:
+    get:
+      tags: [ATLAS]
+      operationId: listAtlasRules
+      summary: List ATLAS rules.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/AtlasDomain'
+        - $ref: '#/components/parameters/Status'
+        - $ref: '#/components/parameters/AtlasTechniqueIdQuery'
+        - name: backend
+          in: query
+          schema: {type: string, enum: [panther, sentinel, defender-xdr, splunk]}
+      responses:
+        '200': {$ref: '#/components/responses/AtlasEmptyPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/rules/{id}:
+    get:
+      tags: [ATLAS]
+      operationId: getAtlasRule
+      summary: Get one ATLAS rule.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/validations:
+    get:
+      tags: [ATLAS]
+      operationId: listAtlasValidations
+      summary: List ATLAS validations.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Status'
+        - name: ruleId
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceId'}
+        - name: promptId
+          in: query
+          schema: {$ref: '#/components/schemas/AtlasTechniqueId'}
+      responses:
+        '200': {$ref: '#/components/responses/AtlasEmptyPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/validations/{id}:
+    get:
+      tags: [ATLAS]
+      operationId: getAtlasValidation
+      summary: Get one ATLAS validation.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/versions:
+    get:
+      tags: [ATLAS]
+      operationId: listAtlasVersions
+      summary: List ATLAS versions.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Status'
+      responses:
+        '200': {$ref: '#/components/responses/AtlasVersionPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/versions/{id}:
+    get:
+      tags: [ATLAS]
+      operationId: getAtlasVersion
+      summary: Get one ATLAS version.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/AtlasVersionItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/relationships:
+    get:
+      tags: [ATLAS]
+      operationId: listAtlasRelationships
+      summary: List ATLAS relationships.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - name: type
+          in: query
+          schema: {type: string, minLength: 1, maxLength: 128}
+        - name: sourceType
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceType'}
+        - name: sourceId
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceId'}
+        - name: targetType
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceType'}
+        - name: targetId
+          in: query
+          schema: {$ref: '#/components/schemas/ResourceId'}
+      responses:
+        '200': {$ref: '#/components/responses/RelationshipPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/relationships/{id}:
+    get:
+      tags: [ATLAS]
+      operationId: getAtlasRelationship
+      summary: Get one ATLAS relationship.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200': {$ref: '#/components/responses/RelationshipItem'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
+  /v1/atlas/search:
+    get:
+      tags: [ATLAS, Discovery]
+      operationId: searchAtlasCatalog
+      summary: Search ATLAS techniques and prompts, including parent technique names.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/AtlasDomain'
+        - name: q
+          in: query
+          required: true
+          schema: {type: string, minLength: 1, maxLength: 256}
+        - name: resourceType
+          in: query
+          schema: {$ref: '#/components/schemas/SearchResourceType'}
+      responses:
+        '200': {$ref: '#/components/responses/AtlasSearchPage'}
+        '304': {$ref: '#/components/responses/NotModified'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '405': {$ref: '#/components/responses/MethodNotAllowed'}
 components:
   parameters:
+    AtlasDomain:
+      name: domain
+      in: query
+      schema: {type: string, const: ATLAS}
+    AtlasTechniqueId:
+      name: id
+      in: path
+      required: true
+      schema: {$ref: '#/components/schemas/AtlasTechniqueId'}
+    AtlasTechniqueIdQuery:
+      name: techniqueId
+      in: query
+      schema: {$ref: '#/components/schemas/AtlasTechniqueId'}
     IfNoneMatch:
       name: If-None-Match
       in: header
@@ -272,7 +511,13 @@ components:
       name: domain
       in: query
       required: false
-      schema: {type: string, enum: [Enterprise, Mobile, ICS]}
+      description: >
+        ATT&CK domain filter. Canonical values are `Enterprise`, `Mobile`, and
+        `ICS`. The following aliases are also accepted and normalized to `ICS`:
+        `OT`, `OperationalTechnology`, `Operational-Technology`,
+        `Operational_Technology`, and `Operational Technology`. Alias matching
+        also ignores case and punctuation; canonical names remain case-sensitive.
+      schema: {type: string, enum: [Enterprise, Mobile, ICS, OT, OperationalTechnology, Operational-Technology, Operational_Technology, 'Operational Technology']}
     Status:
       name: status
       in: query
@@ -303,6 +548,38 @@ components:
       description: SHA-256 digest of the exact JSON response bytes.
       schema: {type: string}
   responses:
+    AtlasTechniquePage:
+      description: A page of ATLAS techniques.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/AtlasTechniquePage'}}}
+    AtlasTechniqueItem:
+      description: One ATLAS technique.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/AtlasTechniqueItem'}}}
+    AtlasPromptPage:
+      description: A page of ATLAS prompts.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/AtlasPromptPage'}}}
+    AtlasPromptItem:
+      description: One ATLAS prompt.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/AtlasPromptItem'}}}
+    AtlasVersionPage:
+      description: A page of ATLAS versions.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/AtlasVersionPage'}}}
+    AtlasVersionItem:
+      description: One ATLAS version.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/AtlasVersionItem'}}}
+    AtlasSearchPage:
+      description: A page of ATLAS search results.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/AtlasSearchPage'}}}
+    AtlasEmptyPage:
+      description: No ATLAS native rules or validation evidence have been published.
+      headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/AtlasEmptyPage'}}}
     TechniquePage:
       description: A page of techniques.
       headers: {ETag: {$ref: '#/components/headers/ETag'}, Content-Digest: {$ref: '#/components/headers/ContentDigest'}}
@@ -370,6 +647,136 @@ components:
         Allow: {description: Allowed methods., schema: {type: string, const: 'GET, HEAD'}}
       content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}
   schemas:
+    AtlasTechniqueId:
+      type: string
+      pattern: '^AML\.T[0-9]{4}(?:\.[0-9]{3})?$'
+    AtlasTechnique:
+      type: object
+      additionalProperties: false
+      required: [id, framework, domain, atlasVersion, name, kind, parentId, parentName, tactics, platforms, sourceUrl, behavior, sourceMaturity, references, caseStudies, mitigations, telemetry, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/AtlasTechniqueId'}
+        framework: {type: string, const: ATLAS}
+        domain: {type: string, const: ATLAS}
+        atlasVersion: {type: string, minLength: 1}
+        name: {type: string, minLength: 1}
+        kind: {type: string, enum: [technique, subtechnique]}
+        parentId: {oneOf: [{$ref: '#/components/schemas/AtlasTechniqueId'}, {type: 'null'}]}
+        parentName: {type: [string, 'null']}
+        tactics: {type: array, items: {type: string}}
+        platforms: {type: array, items: {type: string}}
+        sourceUrl: {type: string, format: uri}
+        behavior: {type: string, minLength: 1}
+        sourceMaturity:
+          description: Literal source maturity metadata; not a project detection validation status.
+        references: {type: array, items: {}}
+        caseStudies: {type: array, items: {}}
+        mitigations: {type: array, items: {}}
+        telemetry: {type: array, items: {type: string}}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    AtlasPrompt:
+      type: object
+      additionalProperties: false
+      required: [id, techniqueId, framework, domain, atlasVersion, status, promptSha256, text, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/AtlasTechniqueId'}
+        techniqueId: {$ref: '#/components/schemas/AtlasTechniqueId'}
+        framework: {type: string, const: ATLAS}
+        domain: {type: string, const: ATLAS}
+        atlasVersion: {type: string, minLength: 1}
+        status: {type: string, const: generated}
+        promptSha256: {type: string, pattern: '^[a-f0-9]{64}$'}
+        metadata:
+          description: Source and prompt provenance from the verified ATLAS coverage artifact.
+          type: object
+        text: {type: string, minLength: 1, maxLength: 100000}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    AtlasVersion:
+      type: object
+      additionalProperties: false
+      required: [id, framework, atlasVersion, formatVersion, libraryVersion, status, sourceCommit, sourceManifestHash, contentHash]
+      properties:
+        id: {$ref: '#/components/schemas/ResourceId'}
+        framework: {type: string, const: ATLAS}
+        atlasVersion: {type: string}
+        formatVersion: {type: string}
+        libraryVersion: {type: string}
+        status: {type: string, const: pinned}
+        sourceCommit: {type: string, pattern: '^[a-f0-9]{40}$'}
+        sourceTag: {type: string}
+        sourceManifestHash: {$ref: '#/components/schemas/ContentHash'}
+        coverageHash: {$ref: '#/components/schemas/ContentHash'}
+        counts: {type: object, additionalProperties: {type: integer, minimum: 0}}
+        limitations: {type: array, items: {type: string}}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+    AtlasSearchResult:
+      type: object
+      additionalProperties: false
+      required: [resourceType, resourceId, title, domain, href, contentHash, matchedFields]
+      properties:
+        resourceType: {$ref: '#/components/schemas/SearchResourceType'}
+        resourceId: {$ref: '#/components/schemas/ResourceId'}
+        title: {type: string, minLength: 1}
+        domain: {type: string, const: ATLAS}
+        href: {type: string, pattern: '^/v1/atlas/'}
+        contentHash: {$ref: '#/components/schemas/ContentHash'}
+        matchedFields: {type: array, minItems: 1, uniqueItems: true, items: {type: string}}
+    AtlasEmptyPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: {type: array, maxItems: 0}
+        meta: {$ref: '#/components/schemas/PageMeta'}
+    AtlasTechniquePage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: {type: array, items: {$ref: '#/components/schemas/AtlasTechnique'}}
+        meta: {$ref: '#/components/schemas/PageMeta'}
+    AtlasTechniqueItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: {$ref: '#/components/schemas/AtlasTechnique'}
+        meta: {$ref: '#/components/schemas/ItemMeta'}
+    AtlasPromptPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: {type: array, items: {$ref: '#/components/schemas/AtlasPrompt'}}
+        meta: {$ref: '#/components/schemas/PageMeta'}
+    AtlasPromptItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: {$ref: '#/components/schemas/AtlasPrompt'}
+        meta: {$ref: '#/components/schemas/ItemMeta'}
+    AtlasVersionPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: {type: array, items: {$ref: '#/components/schemas/AtlasVersion'}}
+        meta: {$ref: '#/components/schemas/PageMeta'}
+    AtlasVersionItem:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: {$ref: '#/components/schemas/AtlasVersion'}
+        meta: {$ref: '#/components/schemas/ItemMeta'}
+    AtlasSearchPage:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data: {type: array, items: {$ref: '#/components/schemas/AtlasSearchResult'}}
+        meta: {$ref: '#/components/schemas/PageMeta'}
     ContentHash:
       type: string
       pattern: '^sha256:[a-f0-9]{64}$'

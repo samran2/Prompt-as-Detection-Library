@@ -128,11 +128,11 @@ function records() {
     }));
 }
 
-function launch(catalog = records()) {
+function launch(catalog = records(), atlas = []) {
   const demo = path.join(__dirname, '..', 'demo');
   const document = parseDocument(fs.readFileSync(path.join(demo, 'index.html'), 'utf8'));
   const context = vm.createContext({
-    document, PAD_CATALOG: catalog, URL, Blob,
+    document, PAD_CATALOG: catalog, PAD_ATLAS_CATALOG: atlas, URL, Blob,
     window: { confirm: () => true }, navigator: { clipboard: { writeText: async () => {} } },
     setTimeout: () => {},
   });
@@ -153,6 +153,55 @@ function launch(catalog = records()) {
   };
 }
 
+test('ATLAS AI selection shows its source context without implying ATT&CK or lab validation', () => {
+  const atlas = {
+    id: 'AML.T0051', name: 'LLM Prompt Injection', framework: 'ATLAS', domain: 'ATLAS',
+    atlasVersion: '2026.08', kind: 'technique', parentId: null, parentName: null,
+    tactics: ['Initial Access'], platforms: ['Generative AI'],
+    behavior: 'Literal source example: <script>not executed</script> ${context}',
+    sourceUrl: 'https://atlas.mitre.org/techniques/AML.T0051', sourceMaturity: 'Realized',
+    telemetry: [], falsePositives: 'Project guidance: benign quoted instructions.',
+    strategies: [], procedureExamples: [], procedureCount: 0, references: [],
+    caseStudies: [{ id: 'AML.CS0001', name: 'Source case', description: '<img> literal case', url: 'https://atlas.mitre.org/studies/AML.CS0001' }],
+    mitigations: [{ id: 'AML.M0001', name: 'Source mitigation', description: 'Reference mitigation.', url: 'https://atlas.mitre.org/mitigations/AML.M0001' }],
+  };
+  const ui = launch(records(), [atlas]);
+  assert.equal(ui.get('result-count').textContent, '122 matches');
+  ui.domain('ATLAS');
+  assert.equal(ui.get('result-count').textContent, '1 matches');
+  assert.equal(ui.get('technique-id').textContent, atlas.id);
+  assert.match(ui.get('provenance-summary').textContent, /MITRE ATLAS 2026\.08/);
+  assert.match(ui.get('validation-level').textContent, /Generated.*not reviewed/);
+  assert.equal(ui.get('source-link').href, atlas.sourceUrl);
+  assert.match(ui.get('source-link').textContent, /MITRE ATLAS/);
+  assert.match(ui.get('atlas-source-context').textContent, /Realized.*not.*validation/s);
+  assert.match(ui.get('atlas-case-studies').textContent, /AML\.CS0001.*<img> literal case/s);
+  assert.match(ui.get('atlas-mitigations').textContent, /AML\.M0001.*Reference mitigation/s);
+  assert.match(ui.get('source-behavior').textContent, /<script>not executed<\/script> \$\{context\}/);
+  assert.match(ui.get('prompt').value, /MITRE ATLAS|ATLAS 2026\.08/);
+  assert.doesNotMatch(ui.get('prompt').value, /ATT&CK 19\.2 reference|SAMPLE DETECTION/);
+  ui.domain('Enterprise');
+  assert.equal(ui.get('atlas-source-context').hidden, true);
+  assert.match(ui.get('source-link').textContent, /MITRE ATT&CK/);
+});
+
+test('ATLAS source links reject host lookalikes and unsafe URL schemes', () => {
+  for (const sourceUrl of ['https://atlas.mitre.org.evil.example/techniques/AML.T0051', 'javascript:alert(1)', 'https://user@atlas.mitre.org/techniques/AML.T0051']) {
+    const atlas = { ...records()[0], framework: 'ATLAS', domain: 'ATLAS', id: 'AML.T0051',
+      atlasVersion: '2026.08', sourceUrl, caseStudies: [], mitigations: [], sourceMaturity: 'Feasible' };
+    const ui = launch([], [atlas]);
+    assert.equal(ui.get('source-link').href, '');
+    assert.equal(ui.get('source-link').getAttribute('aria-disabled'), 'true');
+  }
+});
+
+test('real ATLAS records show an explicit gap when no local baseline is supplied', () => {
+  const atlas = require('../demo/atlas-catalog.js');
+  const ui = launch([], atlas);
+  assert.match(ui.get('false-positives').textContent, /No record-specific baseline/);
+  assert.doesNotMatch(ui.get('false-positives').textContent, /undefined/);
+});
+
 test('test DOM parser decodes text entities exactly once without creating markup', () => {
   const document = parseDocument('<body><p id="sample">&amp;lt;script&amp;gt; &amp;quot; &quot; &amp;amp; &lt; &gt; &unknown;</p></body>');
   assert.equal(document.getElementById('sample').textContent, '&lt;script&gt; &quot; " &amp; < > &unknown;');
@@ -172,6 +221,9 @@ test('workbench starts with all domains and reports full-library counts', () => 
   ui.domain('Mobile');
   assert.match(ui.get('domain-count').textContent, /Mobile: 40 records.*34 techniques.*6 sub-techniques/);
   assert.match(ui.get('library-count').textContent, /\b121\b/);
+  ui.domain('OT');
+  assert.match(ui.get('domain-count').textContent, /Domain: OT/);
+  assert.equal(ui.get('result-count').textContent, '20 matches');
 });
 
 test('pagination exposes all 121 records in bounded pages with correct boundary controls', () => {

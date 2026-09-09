@@ -29,7 +29,18 @@ complete [MITRE data license](../sources/attack-19.2/raw/LICENSE.txt) and the
 contain copied ATT&CK content. The raw MITRE license and the MITRE text at the
 beginning of the public notice remain unchanged. The public notice also includes
 the complete project MIT license under `Project code license`, so both licenses
-accompany the eight-file static distribution.
+accompany the static distribution.
+
+MITRE ATLAS 2026.08 is separately sourced from `mitre-atlas/atlas-data` under
+Apache-2.0, Copyright 2021–2026 MITRE. Its original
+[upstream notice](../sources/atlas-2026.08/raw/LICENSE.txt) and the
+[complete Apache-2.0 license](../sources/atlas-2026.08/raw/APACHE-2.0.txt) are
+preserved. Generated catalogs and prompts transform the YAML into local research
+formats; the unmodified versioned YAML remains authoritative. The
+[public ATLAS notice](../demo/ATLAS_LICENSE.txt) accompanies every static build
+with reproduced ATLAS material. The source manifest records exact hashes and
+origins; see [ATLAS provenance](atlas.md). Linked case-study publications are
+references, not imported third-party articles or an additional license grant.
 
 Source descriptions, analytic guidance and procedure references remain
 attributed to their sources. A reference URL does not by itself mean the project

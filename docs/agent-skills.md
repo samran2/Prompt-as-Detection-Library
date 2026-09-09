@@ -54,7 +54,7 @@ only to the collaboration tools available in the current Codex session.
 No additional browser service or model provider is installed by this package.
 
 The import installs no session hooks, plugin marketplace, slash commands or
-global settings. The eight-file Pages allowlist and the deny-by-default OCI
+global settings. The explicit Pages allowlist and the deny-by-default OCI
 context exclude `.agents/`. Source checkouts and source archives include the
 skill package and its license. No additional runtime or npm dependency is added.
 

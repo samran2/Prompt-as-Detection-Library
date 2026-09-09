@@ -11,6 +11,12 @@ separate reviewed migration. “Apple/VirusTotal quality” is an aspiration for
 clarity, privacy, accessibility, evidence and operational discipline; it is not
 an affiliation or data-scale claim.
 
+ATLAS 2026.08 adds a separate 197-record AI corpus (114 techniques and 83
+subtechniques), not extra ATT&CK coverage. All AI prompts remain `generated`.
+Before including AI in stable v1.0, extend the evidence program with 394 real
+independent reviews and framework-aware, hash-bound review contracts. Existing
+ATT&CK scorecards and backend cells do not satisfy those AI gates.
+
 ## Preserved development baseline
 
 The existing generator maintains exact identifier parity across 378 parent
@@ -23,7 +29,7 @@ The shared composer covers 918 records × four modes × six targets (22,032
 combinations). The CLI retains bounded literal context, safe new-file export and
 content hashes. The browser retains full-catalog search, pagination, source
 details, local editing and export. The Pages build remains limited to its
-explicit eight-file allowlist; raw source bundles, QA tools and analyst context
+explicit ten-file allowlist; raw source bundles, QA tools and analyst context
 do not enter the static payload.
 
 These are structural and workflow properties. They do not establish human review,

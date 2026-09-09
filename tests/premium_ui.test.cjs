@@ -47,6 +47,25 @@ test('untrusted or unsupported URL values fall back without entering state', () 
   assert.equal(parsed.theme, 'system');
 });
 
+test('URL parsing normalizes OT aliases to ICS domain in shareable state', () => {
+  const parsed = core.parseUiState('?q=ICS+logic&domain=OperationalTechnology');
+  assert.equal(parsed.domain, 'ICS');
+  assert.equal(parsed.query, 'ICS logic');
+  assert.equal(parsed.domainSelection, 'OT');
+  assert.equal(
+    core.serializeUiState(parsed),
+    '?q=ICS+logic&domain=OT',
+  );
+
+  const parsedWithSpaces = core.parseUiState('?q=ICS+logic&domain=Operational+Technology');
+  assert.equal(parsedWithSpaces.domain, 'ICS');
+  assert.equal(parsedWithSpaces.domainSelection, 'OT');
+  assert.equal(
+    core.serializeUiState(parsedWithSpaces),
+    '?q=ICS+logic&domain=OT',
+  );
+});
+
 test('research export describes provenance, relationships and unvalidated state without overclaiming', () => {
   const exported = JSON.parse(core.exportResearchJSON([record], { mode: 'detect', target: 'Panther Python' }));
   assert.equal(exported.schema_version, 'pad-research-export-1');

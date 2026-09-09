@@ -7,7 +7,7 @@ const { createHash, randomUUID } = require('node:crypto');
 const core = require('../demo/core.js');
 const records = require('../demo/catalog.js');
 
-const FILTER_FLAGS = ['query', 'domain', 'tactic', 'platform'];
+const FILTER_FLAGS = ['query', 'domain', 'tactic', 'platform', 'framework'];
 const PROMPT_FLAGS = ['mode', 'target', 'context-file', 'output'];
 const COMMAND_FLAGS = {
   list: [...FILTER_FLAGS, 'json'],
@@ -15,15 +15,20 @@ const COMMAND_FLAGS = {
   export: [...FILTER_FLAGS, ...PROMPT_FLAGS],
 };
 const MAX_CONTEXT_BYTES = 16000;
-const HELP = `Independently rebuilt ATT&CK 19.2 prompt library (Node.js 22+)
+const HELP = `Independently rebuilt ATT&CK 19.2 and MITRE ATLAS prompt library (Node.js 22+)
 
 Usage:
   node scripts/library_cli.cjs list [filters] [--json]
   node scripts/library_cli.cjs prompt ID [prompt options] [--output NEW_FILE]
   node scripts/library_cli.cjs export [filters] [prompt options] --output NEW_FILE
 
-Filters: --query TEXT --domain NAME --tactic NAME --platform NAME
-  Domain: Enterprise, Mobile, ICS. Tactics and platforms use catalog spelling.
+Filters: --query TEXT --domain NAME --tactic NAME --platform NAME --framework NAME
+  Domain: Enterprise, Mobile, ICS, ATLAS. OT is a supported alias for ICS.
+  Framework: ATT&CK (default), ATLAS, all. Quote 'ATT&CK' in a shell.
+  --domain ATLAS selects the AI catalog unless --framework is supplied.
+  Default list/export contains only the 918 ATT&CK records.
+  prompt AML.T#### or AML.T####.### selects an ATLAS technique directly.
+  Tactics and platforms use catalog spelling.
   Use --platform __unspecified__ when the source lists no platform or None.
   Filters combine; list --json prints a metadata array, including an empty array.
   Query text is limited to 1,000 characters.
@@ -53,6 +58,13 @@ Use --help, -h, or COMMAND --help to show this text.
 
 class CLIError extends Error {}
 
+function catalogFor(options) {
+  const framework = options.framework || (options.domain === 'ATLAS' ? 'ATLAS' : 'ATT&CK');
+  if (framework === 'ATT&CK') return records;
+  const atlas = require('../demo/atlas-catalog.js');
+  return framework === 'ATLAS' ? atlas : [...records, ...atlas];
+}
+
 function parseArguments(argv) {
   if (argv.length === 1 && ['--help', '-h', 'help'].includes(argv[0])) return { help: true };
   const [command, ...tokens] = argv;
@@ -81,8 +93,8 @@ function parseArguments(argv) {
     options[name] = value;
   }
   if (command === 'prompt') {
-    if (positional.length !== 1 || !/^T\d{4}(?:\.\d{3})?$/.test(positional[0])) {
-      throw new CLIError('Supply one valid technique ID, such as T1059.001.');
+    if (positional.length !== 1 || !/^(?:T\d{4}|AML\.T\d{4})(?:\.\d{3})?$/.test(positional[0])) {
+      throw new CLIError('Supply one valid technique ID, such as T1059.001 or AML.T0051.');
     }
   } else if (positional.length) throw new CLIError('Unexpected positional argument; use --help.');
   if (command === 'export' && !options.output) throw new CLIError('Export requires --output with a new file path.');
@@ -92,10 +104,20 @@ function parseArguments(argv) {
     }
   }
   if (options.query?.length > 1000) throw new CLIError('Query exceeds the 1,000-character limit.');
+  if (options.domain !== undefined) options.domain = core.normalizeDomain(options.domain);
+  if (options.framework !== undefined && !['ATT&CK', 'ATLAS', 'all'].includes(options.framework)) {
+    throw new CLIError('Unsupported framework; use ATT&CK, ATLAS or all.');
+  }
+  if (options.domain && ((options.framework === 'ATLAS' && options.domain !== 'ATLAS') ||
+    (options.framework === 'ATT&CK' && options.domain === 'ATLAS'))) {
+    throw new CLIError('Framework and domain filters must agree.');
+  }
+  const catalog = catalogFor(options);
+  const canonicalDomains = ['Enterprise', 'Mobile', 'ICS', 'ATLAS'];
   for (const [name, values] of [
-    ['domain', records.map(record => record.domain)],
-    ['tactic', records.flatMap(record => record.tactics)],
-    ['platform', ['__unspecified__', ...records.flatMap(record => record.platforms)]],
+    ['domain', canonicalDomains],
+    ['tactic', catalog.flatMap(record => record.tactics)],
+    ['platform', ['__unspecified__', ...catalog.flatMap(record => record.platforms)]],
   ]) {
     if (Object.hasOwn(options, name) && !values.includes(options[name])) throw new CLIError('Unsupported filter value; use catalog spelling.');
   }
@@ -190,14 +212,16 @@ function main(argv = process.argv.slice(2)) {
   const parsed = parseArguments(argv);
   if (parsed.help) return HELP;
   const { command, id, options } = parsed;
-  const selected = core.filterTechniques(records, options);
+  const selected = core.filterTechniques(catalogFor(options), options);
   if (command === 'list') {
     const metadata = selected.map(record => ({ id: record.id, name: record.name,
-      domain: record.domain, tactics: record.tactics, platforms: record.platforms }));
+      domain: record.domain, tactics: record.tactics, platforms: record.platforms,
+      ...(record.framework === 'ATLAS' ? { framework: 'ATLAS', atlas_version: record.atlasVersion } : {}) }));
     if (options.json) return JSON.stringify(metadata, null, 2) + '\n';
     return metadata.map(record => `${record.id}\t${record.name}\t${record.domain}`).join('\n') + (metadata.length ? '\n' : '');
   }
-  const record = command === 'prompt' ? records.find(item => item.id === id) : undefined;
+  const record = command === 'prompt'
+    ? catalogFor({ framework: id.startsWith('AML.') ? 'ATLAS' : 'ATT&CK' }).find(item => item.id === id) : undefined;
   if (command === 'prompt' && !record) throw new CLIError('Unknown technique ID in this catalog.');
   const promptOptions = { mode: options.mode, target: options.target, context: readContext(options['context-file']) };
   let content;

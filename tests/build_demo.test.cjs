@@ -60,6 +60,19 @@ test('the catalog allowance does not relax other asset limits', t => {
   assert.throws(() => build(root), /Public file exceeds size limit: app\.js/);
   assert.equal(fs.existsSync(path.join(root, 'dist')), false);
 });
+test('the ATLAS catalog and license are allowlisted with bounded catalog size', t => {
+  assert.ok(PUBLIC_FILES.includes('atlas-catalog.js'));
+  assert.ok(PUBLIC_FILES.includes('ATLAS_LICENSE.txt'));
+  const root = fixture(t);
+  const bytes = Buffer.alloc(2 * 1024 * 1024 + 1, 32);
+  fs.writeFileSync(path.join(root, 'demo', 'atlas-catalog.js'), bytes);
+  build(root);
+  assert.deepEqual(fs.readFileSync(path.join(root, 'dist', 'atlas-catalog.js')), bytes);
+  const oversized = fixture(t);
+  fs.writeFileSync(path.join(oversized, 'demo', 'atlas-catalog.js'), Buffer.alloc(16 * 1024 * 1024 + 1, 32));
+  assert.throws(() => build(oversized), /Public file exceeds size limit: atlas-catalog\.js/);
+  assert.equal(fs.existsSync(path.join(oversized, 'dist')), false);
+});
 test('an oversized full catalog fails before creating an output directory', t => {
   const root = fixture(t);
   fs.writeFileSync(path.join(root, 'demo', 'catalog.js'), Buffer.alloc(16 * 1024 * 1024 + 1, 32));

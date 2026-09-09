@@ -4,6 +4,13 @@ import {page} from '../../../packages/core/src/research-catalog.mjs';
 const COLLECTIONS = new Set(['techniques', 'prompts', 'rules', 'validations', 'versions', 'relationships']);
 const STATUS = new Set(['generated', 'reviewed', 'lab-validated', 'field-confirmed', 'unassessed', 'not-applicable', 'passed', 'failed', 'pinned']);
 const DOMAINS = new Set(['Enterprise', 'Mobile', 'ICS']);
+const DOMAIN_ALIASES = Object.freeze({
+  OT: 'ICS',
+  'OPERATIONALTECHNOLOGY': 'ICS',
+  'OPERATIONAL-TECHNOLOGY': 'ICS',
+  'OPERATIONAL_TECHNOLOGY': 'ICS',
+  'OPERATIONAL TECHNOLOGY': 'ICS',
+});
 const KINDS = new Set(['technique', 'subtechnique']);
 const BACKENDS = new Set(['panther', 'sentinel', 'defender-xdr', 'splunk']);
 const RESOURCE_TYPES = new Set(['technique', 'prompt', 'rule', 'validation', 'version']);
@@ -18,6 +25,7 @@ const ALLOWED = Object.freeze({
   search: new Set(['pageSize', 'cursor', 'q', 'resourceType', 'domain']),
 });
 const TECHNIQUE_ID = /^T\d{4}(?:\.\d{3})?$/;
+const ATLAS_ID = /^AML\.T\d{4}(?:\.\d{3})?$/;
 const RESOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const BASE_HEADERS = Object.freeze({
   'Cache-Control': 'public, max-age=0, must-revalidate',
@@ -63,7 +71,7 @@ function fail(req, response, status, code, message, headers) {
   sendJson(req, response, status, {error: {code, message}}, headers);
 }
 
-function parseQuery(url, resource) {
+function parseQuery(url, resource, atlas = false) {
   const allowed = ALLOWED[resource];
   const values = Object.create(null);
   for (const key of url.searchParams.keys()) {
@@ -83,20 +91,27 @@ function parseQuery(url, resource) {
   if (values.cursor !== undefined && (values.cursor.length > 512 || !values.cursor)) {
     throw new RequestError(400, 'invalid_request', 'cursor is invalid.');
   }
+  if (values.domain !== undefined) {
+    const normalized = values.domain.trim().toUpperCase();
+    const canonical = DOMAINS.has(values.domain)
+      ? values.domain
+      : DOMAIN_ALIASES[normalized] || DOMAIN_ALIASES[normalized.replace(/[^A-Z0-9]/g, '')];
+    if (atlas ? values.domain !== 'ATLAS' : !DOMAINS.has(canonical)) throw new RequestError(400, 'invalid_request', 'domain is invalid.');
+    values.domain = atlas ? 'ATLAS' : canonical;
+  }
   for (const [key, value] of Object.entries(values)) {
     if (!['pageSize', 'cursor', 'q'].includes(key) && (!value || value.length > 128)) {
       throw new RequestError(400, 'invalid_request', 'A filter is invalid.');
     }
   }
   if (values.status !== undefined && !STATUS.has(values.status)) throw new RequestError(400, 'invalid_request', 'status is invalid.');
-  if (values.domain !== undefined && !DOMAINS.has(values.domain)) throw new RequestError(400, 'invalid_request', 'domain is invalid.');
   if (values.kind !== undefined && !KINDS.has(values.kind)) throw new RequestError(400, 'invalid_request', 'kind is invalid.');
   if (values.backend !== undefined && !BACKENDS.has(values.backend)) throw new RequestError(400, 'invalid_request', 'backend is invalid.');
   if (values.resourceType !== undefined && !SEARCH_TYPES.has(values.resourceType)) throw new RequestError(400, 'invalid_request', 'resourceType is invalid.');
   if (values.sourceType !== undefined && !RESOURCE_TYPES.has(values.sourceType)) throw new RequestError(400, 'invalid_request', 'sourceType is invalid.');
   if (values.targetType !== undefined && !RESOURCE_TYPES.has(values.targetType)) throw new RequestError(400, 'invalid_request', 'targetType is invalid.');
   for (const key of ['techniqueId', 'promptId']) {
-    if (values[key] !== undefined && !TECHNIQUE_ID.test(values[key])) throw new RequestError(400, 'invalid_request', `${key} is invalid.`);
+    if (values[key] !== undefined && !(atlas ? ATLAS_ID : TECHNIQUE_ID).test(values[key])) throw new RequestError(400, 'invalid_request', `${key} is invalid.`);
   }
   for (const key of ['ruleId', 'sourceId', 'targetId']) {
     if (values[key] !== undefined && !RESOURCE_ID.test(values[key])) throw new RequestError(400, 'invalid_request', `${key} is invalid.`);
@@ -118,23 +133,24 @@ function matches(resource, filters) {
   return true;
 }
 
-function searchDocuments(catalog) {
+function searchDocuments(catalog, prefix = '/v1') {
   const documents = [];
   for (const item of catalog.collections.techniques) documents.push({
     resourceType: 'technique', resourceId: item.id, title: `${item.id} — ${item.name}`,
-    domain: item.domain, href: `/v1/techniques/${encodeURIComponent(item.id)}`, contentHash: item.contentHash,
+    domain: item.domain, href: `${prefix}/techniques/${encodeURIComponent(item.id)}`, contentHash: item.contentHash,
     fields: {id: item.id, name: item.name, domain: item.domain, behavior: item.behavior,
+      ...(item.framework === 'ATLAS' ? {parentName: item.parentName || ''} : {}),
       tactics: item.tactics.join(' '), platforms: item.platforms.join(' '), telemetry: item.telemetry.join(' ')},
   });
   for (const item of catalog.collections.prompts) documents.push({
     resourceType: 'prompt', resourceId: item.id, title: `${item.id} detection prompt`,
-    domain: item.domain, href: `/v1/prompts/${encodeURIComponent(item.id)}`, contentHash: item.contentHash,
+    domain: item.domain, href: `${prefix}/prompts/${encodeURIComponent(item.id)}`, contentHash: item.contentHash,
     fields: {id: item.id, domain: item.domain, text: item.text},
   });
   for (const collection of ['rules', 'validations']) {
     for (const item of catalog.collections[collection]) documents.push({
       resourceType: collection.slice(0, -1), resourceId: item.id, title: item.name || item.id,
-      domain: item.domain || null, href: `/v1/${collection}/${encodeURIComponent(item.id)}`, contentHash: item.contentHash,
+      domain: item.domain || null, href: `${prefix}/${collection}/${encodeURIComponent(item.id)}`, contentHash: item.contentHash,
       fields: {id: item.id, name: item.name || '', domain: item.domain || '', backend: item.backend || ''},
     });
   }
@@ -155,9 +171,13 @@ function search(documents, query, filters) {
   }));
 }
 
-export function createResearchApiHandler({catalog}) {
+export function createResearchApiHandler({catalog, atlasCatalog}) {
   if (!catalog?.collections || !catalog?.indexes || typeof catalog.snapshotHash !== 'string') throw new TypeError('A research catalog is required');
   const documents = searchDocuments(catalog);
+  if (atlasCatalog !== undefined && (!atlasCatalog?.collections || !atlasCatalog?.indexes || typeof atlasCatalog.snapshotHash !== 'string')) {
+    throw new TypeError('An ATLAS research catalog is required');
+  }
+  const atlasDocuments = atlasCatalog ? searchDocuments(atlasCatalog, '/v1/atlas') : [];
   return function researchApiHandler(req, response) {
     try {
       if (!['GET', 'HEAD'].includes(req.method)) {
@@ -172,17 +192,22 @@ export function createResearchApiHandler({catalog}) {
         throw new RequestError(400, 'invalid_request', 'The request URI is invalid.');
       }
       const parts = url.pathname.split('/').filter(Boolean);
+      const atlas = parts[0] === 'v1' && parts[1] === 'atlas';
+      if (atlas) parts.splice(1, 1);
       if (parts[0] !== 'v1' || parts.length < 2 || parts.length > 3) throw new RequestError(404, 'not_found', 'The requested resource was not found.');
+      const selectedCatalog = atlas ? atlasCatalog : catalog;
+      if (!selectedCatalog) throw new RequestError(404, 'not_found', 'The requested resource was not found.');
       const resource = parts[1];
+      const cursorResource = atlas ? `atlas/${resource}` : resource;
       if (resource === 'search' && parts.length === 2) {
-        const {values, pageSize} = parseQuery(url, 'search');
+        const {values, pageSize} = parseQuery(url, 'search', atlas);
         if (values.q === undefined || !values.q.trim() || values.q.length > 256) throw new RequestError(400, 'invalid_request', 'q must contain 1 through 256 characters.');
         const filters = Object.fromEntries(Object.entries({q: values.q, resourceType: values.resourceType, domain: values.domain, pageSize})
           .filter(([, value]) => value !== undefined));
-        const found = search(documents, values.q, values);
+        const found = search(atlas ? atlasDocuments : documents, values.q, values);
         let result;
         try {
-          result = page(found, {resource: 'search', pageSize, cursor: values.cursor, filters, snapshotHash: catalog.snapshotHash});
+          result = page(found, {resource: cursorResource, pageSize, cursor: values.cursor, filters, snapshotHash: selectedCatalog.snapshotHash});
         } catch {
           throw new RequestError(400, 'invalid_cursor', 'The cursor is invalid for this query and dataset version.');
         }
@@ -198,20 +223,20 @@ export function createResearchApiHandler({catalog}) {
         } catch {
           throw new RequestError(400, 'invalid_request', 'The resource identifier is invalid.');
         }
-        const pattern = ['techniques', 'prompts'].includes(resource) ? TECHNIQUE_ID : RESOURCE_ID;
+        const pattern = ['techniques', 'prompts'].includes(resource) ? (atlas ? ATLAS_ID : TECHNIQUE_ID) : RESOURCE_ID;
         if (!pattern.test(id)) throw new RequestError(404, 'not_found', 'The requested resource was not found.');
-        const item = catalog.indexes[resource].get(id);
+        const item = selectedCatalog.indexes[resource].get(id);
         if (!item) throw new RequestError(404, 'not_found', 'The requested resource was not found.');
-        sendJson(req, response, 200, {data: item, meta: {snapshotHash: catalog.snapshotHash}});
+        sendJson(req, response, 200, {data: item, meta: {snapshotHash: selectedCatalog.snapshotHash}});
         return;
       }
-      const {values, pageSize} = parseQuery(url, resource);
+      const {values, pageSize} = parseQuery(url, resource, atlas);
       const filters = Object.fromEntries(Object.entries(values).filter(([key]) => key !== 'cursor'));
       filters.pageSize = pageSize;
-      const filtered = catalog.collections[resource].filter(item => matches(item, values));
+      const filtered = selectedCatalog.collections[resource].filter(item => matches(item, values));
       let result;
       try {
-        result = page(filtered, {resource, pageSize, cursor: values.cursor, filters, snapshotHash: catalog.snapshotHash});
+        result = page(filtered, {resource: cursorResource, pageSize, cursor: values.cursor, filters, snapshotHash: selectedCatalog.snapshotHash});
       } catch {
         throw new RequestError(400, 'invalid_cursor', 'The cursor is invalid for this query and dataset version.');
       }

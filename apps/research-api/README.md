@@ -10,6 +10,15 @@ The current adapter verifies the 918 prompt files against
 collections remain empty until qualifying rule and evidence records exist.
 An empty collection is not a product-support decision.
 
+MITRE ATLAS AI records are available separately under `/v1/atlas/`. The ATLAS
+adapter verifies the pinned JSON catalog and each prompt against
+`content/atlas/coverage.json`; its source manifest is
+`sources/atlas-2026.08/manifest.json`. Every ATLAS prompt has `generated` status.
+The source's `sourceMaturity` field describes source knowledge and does not
+establish independent prompt review or detection validation. ATLAS objects use
+`framework: "ATLAS"`, `atlasVersion` and `AML.T` identifiers; they do not claim
+an ATT&CK version or STIX identifier.
+
 ## Run locally
 
 From the repository root, with Node.js 22 or newer:
@@ -28,9 +37,32 @@ cursors tied to the selected filters and immutable dataset snapshot. Responses
 carry strong ETags, exact-byte `Content-Digest` values and item-level content
 hashes. Page size is capped at 100.
 
+Example ATLAS routes:
+
+```text
+/v1/atlas/techniques?pageSize=20
+/v1/atlas/techniques/AML.T0051
+/v1/atlas/prompts?techniqueId=AML.T0051
+/v1/atlas/search?q=prompt%20injection
+/v1/atlas/relationships?sourceId=AML.T0051
+/v1/atlas/versions
+```
+
+ATLAS search includes parent technique names. Cursors remain bound to their
+framework, resource, filters and source snapshot. Existing `/v1/techniques`,
+`/v1/prompts` and other unprefixed routes retain the ATT&CK-only contract;
+`domain=OT` remains an alias for the canonical `ICS` domain. The ATLAS domain
+filter accepts `ATLAS`. ATLAS rules and validations currently return empty
+collections. The local reference API is separate from the static Pages demo.
+
+The relationship collection describes technique-to-prompt and subtechnique-to-
+parent links. Source case-study and mitigation relationships are embedded in
+technique objects; the complete 1,318-edge ATLAS source graph is separately
+preserved in `content/atlas/relationships.json`, not exposed as API resources.
+
 ## OCI image
 
-The official Node base is version- and digest-pinned. Build from the repository
+The Distroless Node.js base is version- and digest-pinned. Build from the repository
 root so that only the explicit `COPY` inputs are available to the service:
 
 ```console
@@ -41,17 +73,19 @@ docker run --read-only --cap-drop=ALL --security-opt=no-new-privileges \
   prompt-as-detection-research-api:dev
 ```
 
-The image runs as the unprivileged `node` user. This reference process does not
+The image runs as unprivileged UID:GID `65532:65532`. It binds to `0.0.0.0`
+inside the container; the example publishes it only on the host loopback address.
+This reference process does not
 terminate TLS, authenticate callers, enforce a distributed rate limit or
 provide a production service-level objective. A public deployment must add
 those controls at a trusted gateway and must not enable write paths.
-The image carries both the project MIT license and the separate ATT&CK data
-license under `/srv/prompt-as-detection/licenses`.
+The image carries the project MIT license, separate ATT&CK data license, and
+ATLAS notice and Apache 2.0 terms under `/srv/prompt-as-detection/licenses`.
 
 ## Production adapter seam
 
-`createResearchCatalog` is storage-agnostic and the HTTP handler receives a
-completed immutable catalog. A future PostgreSQL adapter can populate the same
+`createResearchCatalog` and `createAtlasResearchCatalog` are storage-agnostic;
+the HTTP handler receives separate, completed immutable catalogs. A future PostgreSQL adapter can populate the same
 contract without changing the static workbench or CLI. Database migrations,
 TAXII/STIX exports, distributed caching and public operations are intentionally
 outside this first reference slice and must land with their own contracts and

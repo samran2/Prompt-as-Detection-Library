@@ -40,6 +40,9 @@ No guaranteed response, remediation or disclosure timeline is stated.
 
 - Raw ATT&CK bundles are pinned inputs, still treated as untrusted data. The
   generator verifies shape and source hashes and preserves explicit source gaps.
+- ATLAS uses separately pinned official versioned YAML and a hash-verified JSON
+  derivative. Its descriptions, case studies and mitigations are untrusted
+  literal data. Source threat maturity must not become detection validation.
 - Browser source, procedure and analyst text must remain literal through
   composition and DOM rendering. No `eval`, executable markup or automatic model
   calls are part of the product. Prompt wording alone is not a security boundary.
@@ -52,9 +55,9 @@ No guaranteed response, remediation or disclosure timeline is stated.
   intentionally create local files whose handling is the user's responsibility.
 - The preview server binds to loopback. Serve `demo/` or reviewed `dist/`, never
   the repository root. The site is not an authenticated internet service.
-- The public builder copies exactly eight allowed files, rejects symlinks and
+- The public builder copies exactly ten allowed files, rejects symlinks and
   invalid UTF-8/NUL text, and applies limited credential-pattern checks. Catalog
-  size is limited to 16 MiB and other assets to 2 MiB each. Source archives,
+  size is limited to 16 MiB per framework and other assets to 2 MiB each. Source archives,
   tests and private work never enter the static output.
 - The builder refuses an existing output. A write failure can leave a partial
   new `dist/`; inspect it and do not deploy a failed build.

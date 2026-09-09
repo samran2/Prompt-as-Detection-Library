@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { TextDecoder } = require('node:util');
 
-const PUBLIC_FILES = Object.freeze(['index.html', 'style.css', 'catalog.js', 'core.js', 'app.js', 'favicon.svg', 'THIRD_PARTY_LICENSE.txt', '.nojekyll']);
+const PUBLIC_FILES = Object.freeze(['index.html', 'style.css', 'catalog.js', 'atlas-catalog.js', 'core.js', 'app.js', 'favicon.svg', 'THIRD_PARTY_LICENSE.txt', 'ATLAS_LICENSE.txt', '.nojekyll']);
 const DEFAULT_FILE_LIMIT = 2 * 1024 * 1024;
 const CATALOG_FILE_LIMIT = 16 * 1024 * 1024;
 const signatures = [
@@ -26,7 +26,7 @@ function build(root = path.resolve(__dirname, '..')) {
     const stat = fs.lstatSync(file);
     if (stat.isSymbolicLink() || !stat.isFile()) throw new Error(`Expected regular file: ${name}`);
     // Full source descriptions and linked analytics need more room than UI assets.
-    const limit = name === 'catalog.js' ? CATALOG_FILE_LIMIT : DEFAULT_FILE_LIMIT;
+    const limit = ['catalog.js', 'atlas-catalog.js'].includes(name) ? CATALOG_FILE_LIMIT : DEFAULT_FILE_LIMIT;
     if (stat.size > limit) throw new Error(`Public file exceeds size limit: ${name}`);
     const bytes = fs.readFileSync(file);
     let text;

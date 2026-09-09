@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import {createServer} from 'node:http';
 import {pathToFileURL} from 'node:url';
-import {loadResearchCatalog} from './catalog-adapter.mjs';
+import {loadAtlasResearchCatalog, loadResearchCatalog} from './catalog-adapter.mjs';
 import {createResearchApiHandler} from './handler.mjs';
 
 const LOOPBACK = new Set(['127.0.0.1', '::1', 'localhost']);
@@ -18,15 +18,16 @@ function configuration(environment = process.env) {
 export async function startReferenceServer({environment = process.env, root} = {}) {
   const config = configuration(environment);
   const catalog = loadResearchCatalog(root === undefined ? {} : {root});
+  const atlasCatalog = loadAtlasResearchCatalog(root === undefined ? {} : {root});
   const server = createServer({maxHeaderSize: 16 * 1024, requestTimeout: 5_000, headersTimeout: 5_000},
-    createResearchApiHandler({catalog}));
+    createResearchApiHandler({catalog, atlasCatalog}));
   server.keepAliveTimeout = 5_000;
   server.maxRequestsPerSocket = 1_000;
   await new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(config.port, config.host, resolve);
   });
-  return {server, catalog, config};
+  return {server, catalog, atlasCatalog, config};
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -58,6 +58,11 @@ test('list includes every catalog ID and uses the shared combined filters', () =
     '--tactic', filters.tactic, '--platform', filters.platform, '--json']);
   succeeds(result);
   assert.deepEqual(JSON.parse(result.stdout).map(record => record.id), core.filterTechniques(records, filters).map(record => record.id));
+  for (const alias of ['OT', 'OperationalTechnology']) {
+    const aliased = cli(['list', '--domain', alias, '--json']);
+    succeeds(aliased);
+    assert.deepEqual(JSON.parse(aliased.stdout).map(record => record.id), core.filterTechniques(records, { domain: alias }).map(record => record.id));
+  }
   const empty = cli(['list', '--query', 'this-query-has-no-record-31a7', '--json']);
   succeeds(empty);
   assert.deepEqual(JSON.parse(empty.stdout), []);
