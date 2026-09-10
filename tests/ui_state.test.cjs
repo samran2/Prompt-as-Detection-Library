@@ -18,6 +18,7 @@ class Element {
     this.disabled = false;
     this._text = '';
     this._value = '';
+    this.style = { setProperty() {} };
   }
   get textContent() { return this._text + this.children.map(child => child.textContent).join(''); }
   set textContent(value) { this._text = String(value); this.children = []; }
@@ -63,6 +64,7 @@ class Element {
       : node.tagName.toLowerCase() === selector.toLowerCase();
     return this.children.flatMap(child => [...(matches(child) ? [child] : []), ...child.querySelectorAll(selector)]);
   }
+  querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   addEventListener(type, handler) {
     if (!this.listeners.has(type)) this.listeners.set(type, []);
     this.listeners.get(type).push(handler);
@@ -102,6 +104,7 @@ function parseDocument(html) {
   }
   document.getElementById = id => document.ids.get(id) || null;
   document.querySelectorAll = selector => root.querySelectorAll(selector);
+  document.querySelector = selector => root.querySelector(selector);
   document.activeElement = document.body;
   return document;
 }
@@ -142,7 +145,8 @@ function launch(catalog = records(), atlas = [], supplemental = {}) {
     window: { confirm: () => true }, navigator: { clipboard: { writeText: async () => {} } },
     setTimeout: () => {},
   });
-  const scripts = ['core.js', ...(supplemental.renderer ? ['defenses-ui.js'] : []), 'app.js'];
+  document.defaultView = { matchMedia: () => ({ matches: false }) };
+  const scripts = ['core.js', 'workbench-ui.js', ...(supplemental.renderer ? ['defenses-ui.js'] : []), 'app.js'];
   for (const name of scripts) vm.runInContext(fs.readFileSync(path.join(demo, name), 'utf8'), context, { filename: name });
   const get = id => { const node = document.getElementById(id); assert.ok(node, `Missing #${id} in demo/index.html`); return node; };
   return {
@@ -253,13 +257,13 @@ test('D3FEND exports are separate, exact UTF-8 bytes and exclude applied analyst
   assert.match(ui.get('defenses-action-status').textContent, /context.*not included/i);
 });
 
-test('D3FEND tab participates in keyboard navigation and leaves Review as the last tab', () => {
+test('Defenses participates in keyboard navigation and Flow is the last tab', () => {
   const ui = launch(records(), [], supplemental());
-  ui.get('tab-map').dispatch('keydown', { key: 'ArrowRight' });
+  ui.get('tab-source').dispatch('keydown', { key: 'ArrowRight' });
   assert.equal(ui.document.activeElement, ui.get('tab-defenses'));
   assert.equal(ui.get('tab-defenses').getAttribute('aria-selected'), 'true');
   ui.get('tab-defenses').dispatch('keydown', { key: 'End' });
-  assert.equal(ui.document.activeElement, ui.get('tab-review'));
+  assert.equal(ui.document.activeElement, ui.get('tab-flow'));
 });
 
 test('ATLAS AI selection shows its source context without implying ATT&CK or lab validation', () => {

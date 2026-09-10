@@ -9,12 +9,21 @@
   <title>Prompt-as-Detection · ATT&CK &amp; ATLAS AI library</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./workbench.css">
   <script defer src="./catalog.js"></script>
   <script defer src="./atlas-catalog.js"></script>
   <script defer src="./core.js"></script>
   <script defer src="./d3fend-catalog.js"></script>
   <script defer src="./defenses.js"></script>
   <script defer src="./defenses-ui.js"></script>
+  <script defer src="./car-catalog.js"></script>
+  <script defer src="./car.js"></script>
+  <script defer src="./attack-flow.js"></script>
+  <script defer src="./research-components.js"></script>
+  <script defer src="./workspace.js"></script>
+  <script defer src="./workspace-store.js"></script>
+  <script defer src="./workspace-ui.js"></script>
+  <script defer src="./workbench-ui.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body>
@@ -27,6 +36,7 @@
       </a>
       <nav aria-label="Library views">
         <a class="nav-item current" href="#workbench" aria-current="page"><span aria-hidden="true">▤</span> Library</a>
+        <button class="nav-item" id="workspace-open"><span aria-hidden="true">▱</span> Workspaces</button>
         <a class="nav-item" href="./research.html"><span aria-hidden="true">◇</span> Research tools</a>
         <button class="nav-item" id="about-open"><span aria-hidden="true">ⓘ</span> About the library</button>
       </nav>
@@ -34,7 +44,7 @@
         <span class="eyebrow">REFERENCE SNAPSHOT</span>
         <strong>ATT&amp;CK + ATLAS AI</strong>
         <p>All active techniques.<br>Every prompt is a draft.</p>
-        <span class="version">Workbench 0.4.0-dev.0</span>
+        <span class="version">Workbench 0.4.0-dev.1</span>
       </div>
     </aside>
 
@@ -50,18 +60,20 @@
       <header class="workspace-header">
         <div><p class="eyebrow">EXPLORE. ADAPT. DETECT.</p><h1>Detection workbench</h1></div>
         <div class="header-actions">
+          <button id="command-open" class="quiet-button" aria-label="Search techniques and commands">Search <kbd>⌘ / Ctrl K</kbd></button>
           <label class="theme-control" for="theme"><span>Appearance</span><select id="theme" aria-label="Appearance theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option><option value="contrast">High contrast</option></select></label>
           <span class="demo-badge"><span aria-hidden="true">◈</span> Full active library</span>
         </div>
       </header>
-      <div class="library-notice" aria-label="Library snapshot">
+      <details class="snapshot-details"><summary>Source snapshots · local-first · unvalidated drafts</summary><div class="library-notice" aria-label="Library snapshot">
         <div class="snapshot-primary"><span class="snapshot-label">Active coverage</span><strong id="library-count">Loading active library…</strong><span>Every record is a draft unless review evidence says otherwise.</span></div>
         <div class="snapshot-meta"><span class="snapshot-label">Pinned sources</span><strong id="source-versions">ATT&amp;CK 19.2 · ATLAS</strong><span>Enterprise · Mobile · ICS/OT · AI</span></div>
         <div class="snapshot-meta"><span class="snapshot-label">Privacy boundary</span><strong>Runs in this browser</strong><span>No account · no telemetry</span></div>
         <p id="coverage-summary"></p>
-      </div>
-      <div class="workspace">
-        <section class="catalog" aria-labelledby="library-heading">
+      </div></details>
+      <div class="desk-toolbar"><button id="mobile-open" class="text-button">Browse techniques</button><button id="compare-open" class="text-button">Compare <span id="compare-count" class="tab-count">0</span></button><details class="layout-settings"><summary>Layout</summary><label for="pane-resize">List width</label><input id="pane-resize" type="range" min="240" max="480" step="10" value="330" aria-controls="technique-catalog"><button id="pane-reset" class="text-button">Reset width</button></details></div>
+      <div class="workspace" id="desk" data-mobile-view="list">
+        <section class="catalog" id="technique-catalog" aria-labelledby="library-heading">
           <div class="catalog-controls">
             <div class="section-heading"><h2 id="library-heading">Technique library</h2><span id="result-count" class="count" role="status"></span></div>
             <label for="search" class="sr-only">Search techniques</label>
@@ -80,14 +92,15 @@
         </section>
 
         <section class="detail" aria-labelledby="technique-title">
+          <button id="mobile-back" class="text-button">← Back to techniques</button>
           <div id="no-selection" class="empty-state" hidden><h2>No technique selected</h2><p>Adjust or clear your filters to return to the active library.</p></div>
           <div id="selected-detail">
             <div class="detail-header">
               <p id="breadcrumb" class="breadcrumb"></p>
               <div class="title-row"><h2 id="technique-title" tabindex="-1">Loading technique…</h2><span id="technique-id" class="technique-id"></span></div>
               <p id="technique-kind" class="technique-kind"></p><p id="behavior" class="behavior"></p>
-              <div class="detail-utilities"><button id="show-source" class="text-button">Read complete source context →</button><button id="compare-add" class="compare-button" aria-describedby="compare-help">Add to comparison <span aria-hidden="true">＋</span></button></div>
-              <p id="compare-help" class="sr-only">Add up to two techniques, then open the Compare tab.</p>
+              <div class="detail-utilities"><button id="show-source" class="text-button">Explore evidence →</button><button id="favorite-toggle" class="text-button" aria-pressed="false">Add favorite</button><button id="compare-add" class="compare-button" aria-describedby="compare-help">Add to comparison <span aria-hidden="true">＋</span></button></div>
+              <p id="compare-help" class="sr-only">Add up to two techniques, then open Compare above the workbench.</p>
               <div id="platform-tags" class="tags"></div>
               <div class="trust-strip" aria-label="Content status and provenance">
                 <div><span class="trust-label">Validation</span><strong id="validation-level">Generated · not reviewed</strong></div>
@@ -96,17 +109,17 @@
               </div>
             </div>
             <div class="tabs" role="tablist" aria-label="Technique detail">
-              <button id="tab-prompt" role="tab" aria-selected="true" aria-controls="panel-prompt">Prompt</button><button id="tab-source" role="tab" aria-selected="false" aria-controls="panel-source" tabindex="-1">Source</button><button id="tab-map" role="tab" aria-selected="false" aria-controls="panel-map" tabindex="-1">Evidence map</button><button id="tab-defenses" role="tab" aria-selected="false" aria-controls="panel-defenses" tabindex="-1">D3FEND</button><button id="tab-compare" role="tab" aria-selected="false" aria-controls="panel-compare" tabindex="-1">Compare <span id="compare-count" class="tab-count">0</span></button><button id="tab-review" role="tab" aria-selected="false" aria-controls="panel-review" tabindex="-1">Review</button>
+              <button id="tab-prompt" role="tab" aria-selected="true" aria-controls="panel-prompt">Prompt</button><button id="tab-source" role="tab" aria-selected="false" aria-controls="panel-source" tabindex="-1">Evidence</button><button id="tab-defenses" role="tab" aria-selected="false" aria-controls="panel-defenses" tabindex="-1">Defenses</button><button id="tab-flow" role="tab" aria-selected="false" aria-controls="panel-flow" tabindex="-1">Flow</button>
             </div>
             <section id="panel-prompt" role="tabpanel" aria-labelledby="tab-prompt">
               <div class="configuration"><label>Mode<select id="mode"><option value="detect">Detect</option><option value="hunt">Hunt</option><option value="triage">Triage</option><option value="validate">Validate</option></select></label><label>Output target<select id="target"></select></label></div>
-              <details class="context-box"><summary>Adapt to your environment <span>Optional context</span></summary><label for="context">Telemetry and schema notes</label><textarea id="context" rows="3" maxlength="4000" placeholder="Example: Windows process events are available. Confirm field names before proposing logic." aria-describedby="context-help"></textarea><p id="context-help">Use synthetic text, never secrets. Apply updates this prompt and future templates/JSONL exports; other saved drafts are unchanged. Everything clears on reload.</p><button id="apply-context">Apply context to prompt</button></details>
+              <details class="context-box"><summary>Adapt to your environment <span>Optional context</span></summary><label for="context">Telemetry and schema notes</label><textarea id="context" rows="3" maxlength="4000" placeholder="Example: Windows process events are available. Confirm field names before proposing logic." aria-describedby="context-help"></textarea><p id="context-help">Use synthetic text, never secrets. Apply updates this prompt and future templates/JSONL exports; other drafts are unchanged. Export your workspace to keep your work, or explicitly enable local autosave.</p><button id="apply-context">Apply context to prompt</button></details>
               <div class="prompt-box"><div class="prompt-toolbar"><label for="prompt">EDITABLE TEXT PROMPT</label><span id="draft-state">Draft template</span></div><textarea id="prompt" rows="15" spellcheck="false" aria-describedby="draft-warning"></textarea><div class="prompt-meta"><span id="character-count"></span><button id="reset-prompt" class="text-button">Reset template</button></div></div>
               <p id="draft-warning" class="draft-warning"><span aria-hidden="true">ⓘ</span> Unvalidated draft · no model calls, rule execution, or verified detection coverage.</p>
-              <div class="actions"><button id="copy" class="primary">Copy prompt <span aria-hidden="true">⧉</span></button><button id="download">Download .txt <span aria-hidden="true">↓</span></button><button id="export-research">Export research JSON <span aria-hidden="true">↓</span></button><button id="share-view">Copy view link <span aria-hidden="true">⌁</span></button></div>
+              <div class="actions"><button id="copy" class="primary">Copy prompt <span aria-hidden="true">⧉</span></button><details class="export-menu"><summary>Export &amp; share</summary><div><button id="download">Download .txt <span aria-hidden="true">↓</span></button><button id="export-research">Export research JSON <span aria-hidden="true">↓</span></button><button id="share-view">Copy view link <span aria-hidden="true">⌁</span></button></div></details></div>
               <p id="action-status" class="action-status" role="status" aria-live="polite"></p>
             </section>
-            <section id="panel-map" class="info-panel" role="tabpanel" aria-labelledby="tab-map" tabindex="0" hidden>
+            <section id="panel-map" class="info-panel" aria-labelledby="relationship-title" tabindex="0">
               <p class="eyebrow">EVIDENCE BEFORE LOGIC</p><h3 id="relationship-title">Technique → telemetry → rule readiness</h3>
               <p>Explore what the pinned source connects to this technique. The map does not assert that telemetry exists in your environment or that a native rule has been validated.</p>
               <div id="relationship-figure" class="relationship-figure" role="figure" aria-labelledby="relationship-title" aria-describedby="relationship-caption">
@@ -126,7 +139,7 @@
               <p class="fine-print">Separate defensive research exports. Analyst context and prompt edits are not included. Source links open only when selected.</p>
               <p id="defenses-action-status" class="action-status" role="status" aria-live="polite"></p>
             </section>
-            <section id="panel-compare" class="info-panel compare-panel" role="tabpanel" aria-labelledby="tab-compare" hidden>
+            <section id="panel-compare" class="info-panel compare-panel">
               <p class="eyebrow">SIDE-BY-SIDE RESEARCH</p><h3>Compare techniques without losing your filters.</h3>
               <p id="compare-instructions">Use “Add to comparison” on one or two techniques. This view compares source metadata and evidence readiness—not detection quality.</p>
               <div id="compare-slots" class="compare-slots" aria-live="polite"></div>
@@ -135,13 +148,21 @@
               </div>
             </section>
             <section id="panel-source" class="info-panel" role="tabpanel" aria-labelledby="tab-source" hidden>
+              <section class="car-context" aria-labelledby="car-heading"><h3 id="car-heading">CAR source analytics</h3><div id="desk-car-results"></div></section>
               <p class="eyebrow">TRACEABLE CONTEXT</p><h3>Start with the evidence.</h3><p id="source-behavior" class="source-text"></p><a id="source-link" class="source-link" target="_blank" rel="noopener noreferrer">Read technique on MITRE <span aria-hidden="true">↗</span></a><h4>Source-derived telemetry suggestions</h4><ul id="telemetry"></ul><h4>Local baseline guidance</h4><p id="false-positives"></p>
               <div id="attack-source-context"><h4>Linked detection strategies and analytics</h4><div id="strategies"></div><h4>Documented procedure examples</h4><p id="procedure-count"></p><div id="procedure-examples"></div></div>
               <div id="atlas-source-context" hidden><h4>ATLAS threat maturity</h4><p id="atlas-source-maturity"></p><h4>Linked case studies</h4><div id="atlas-case-studies"></div><h4>Linked mitigations</h4><div id="atlas-mitigations"></div></div>
               <p class="fine-print">Descriptions and linked reference material come from the selected framework's pinned source. Prompt framing and local baseline guidance are independently written. Source text is displayed literally; linked live pages may have changed. Links open only when selected.</p>
             </section>
-            <section id="panel-review" class="info-panel" role="tabpanel" aria-labelledby="tab-review" tabindex="0" hidden>
+            <section id="panel-review" class="info-panel" tabindex="0">
               <p class="eyebrow">HUMAN REVIEW REQUIRED</p><h3>A starting point, not a verdict.</h3><p>This workbench composes text for the pinned ATT&amp;CK and ATLAS catalogs. Catalog coverage does not establish detection effectiveness. ATLAS source maturity describes known threats, not local rule validation.</p><ol class="review-list"><li><strong>Confirm the data.</strong><span>Check actual log sources, field names, timestamps, and collection gaps.</span></li><li><strong>Challenge the hypothesis.</strong><span>Use synthetic positive and negative cases. Account for normal administration.</span></li><li><strong>Test in isolation.</strong><span>Review generated code before any execution in a controlled environment.</span></li><li><strong>Document the result.</strong><span>Record evidence, limitations, reviewer, and test environment before promotion.</span></li></ol>
+            </section>
+            <section id="panel-flow" class="info-panel" role="tabpanel" aria-labelledby="tab-flow" hidden>
+              <p class="eyebrow">ORDERED RESEARCH HYPOTHESIS</p><h3>Build an Attack Flow</h3><p>Arrange ATT&amp;CK steps while exploring techniques. This is a hypothesis, not observed activity or an executable attack.</p>
+              <label for="desk-flow-title">Flow title</label><input id="desk-flow-title" value="Research hypothesis" maxlength="120">
+              <p id="desk-flow-support"></p><button id="desk-flow-add">Add selected technique</button>
+              <p id="desk-flow-empty">No steps yet. Add a technique to begin.</p><ol id="desk-flow-steps" class="flow-steps"></ol>
+              <div class="actions"><button id="desk-flow-export" disabled>Export Attack Flow</button><button id="desk-flow-clear" disabled>Clear flow</button></div><p id="desk-flow-status" role="status"></p>
             </section>
           </div>
         </section>
@@ -150,7 +171,21 @@
       </div>
     </main>
   </div>
-  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering 918 active Enterprise, Mobile, and ICS/OT records in MITRE ATT&amp;CK 19.2, plus 197 AI techniques and subtechniques in MITRE ATLAS 2026.08. ATT&amp;CK excludes revoked and deprecated records; ATLAS includes every technique record present in its pinned release.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft unless its record explicitly displays stronger review evidence; no model is called and no detection is certified or executed. ATLAS source threat maturity is not evidence of prompt validation.</p><p>Search, composition, comparison, edits, and downloads run in your browser. Context and drafts stay in this tab’s memory and clear on reload. Search, filters, mode, target, selection, comparison and appearance are represented in or restored from the page URL; appearance is also remembered locally when storage is available. The app sends no analyst context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Research JSON adds source relationships and explicit validation state. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&amp;CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATT&amp;CK and project licenses</a> · <a href="./ATLAS_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATLAS Apache-2.0 notice and license</a>.</p></dialog>
+  <dialog id="comparison-dialog" aria-labelledby="comparison-title"><div class="dialog-heading"><h2 id="comparison-title">Compare techniques</h2><button id="comparison-close" aria-label="Close comparison">×</button></div></dialog>
+  <dialog id="command-dialog" aria-labelledby="command-title"><div class="dialog-heading"><h2 id="command-title">Find a technique or action</h2><button id="command-close" aria-label="Close command search">×</button></div><label for="command-search">Search techniques and commands</label><input id="command-search" type="search" maxlength="200" autocomplete="off"><p class="fine-print">Type a name or ID. Tab through results; Escape returns to your work.</p><ul id="command-results" class="command-results"></ul></dialog>
+  <dialog id="workspace-dialog" aria-labelledby="workspace-title">
+    <div class="dialog-heading"><h2 id="workspace-title">Your workspaces</h2><button id="workspace-close" aria-label="Close workspaces">×</button></div>
+    <p>Keep research together without an account. Files and optional browser storage are unencrypted: do not include secrets or sensitive logs.</p>
+    <div class="workspace-fields"><label for="workspace-select">Open workspace</label><select id="workspace-select"></select><label for="workspace-name">Workspace name</label><input id="workspace-name" maxlength="120" value="Untitled workspace"></div>
+    <div class="actions"><button id="workspace-new">Copy as new workspace</button><button id="workspace-export">Download workspace</button></div>
+    <label for="workspace-file">Open a workspace file (maximum 5 MiB)</label><input id="workspace-file" type="file" accept=".json,.pad-workspace.json,application/json">
+    <section id="workspace-preview" hidden aria-labelledby="workspace-preview-title"><h3 id="workspace-preview-title">Review before opening</h3><div id="workspace-preview-text"></div><div class="actions"><button id="workspace-import-confirm">Open as new workspace</button><button id="workspace-import-cancel">Cancel import</button></div></section>
+    <div id="workspace-warnings" role="status"></div>
+    <section><h3>Save on this device</h3><label class="checkbox-label"><input id="workspace-autosave" type="checkbox">Enable local autosave</label><p id="workspace-storage-status" role="status">Autosave off. Download a workspace file before leaving.</p><button id="workspace-delete-local">Delete locally saved workspaces</button></section>
+    <section><h3>Favorites</h3><ul id="favorites-list"></ul></section>
+    <section><h3>Collections</h3><label for="collection-name">New collection name</label><input id="collection-name" maxlength="120"><button id="collection-create">Create collection</button><label for="collection-select">Collection</label><select id="collection-select"></select><button id="collection-add">Add selected technique</button><ul id="collection-items"></ul></section>
+  </dialog>
+  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering 918 active Enterprise, Mobile, and ICS/OT records in MITRE ATT&amp;CK 19.2, plus 197 AI techniques and subtechniques in MITRE ATLAS 2026.08. ATT&amp;CK excludes revoked and deprecated records; ATLAS includes every technique record present in its pinned release.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft unless its record explicitly displays stronger review evidence; no model is called and no detection is certified or executed. ATLAS source threat maturity is not evidence of prompt validation.</p><p>Search, composition, comparison, edits, and downloads run in your browser. Context and drafts stay in memory by default. Export a workspace file to keep them, or explicitly enable unencrypted local autosave. Browser storage can be cleared from Workspaces; downloaded files remain yours to manage. Search, filters, mode, target, selection, comparison and appearance are represented in or restored from the page URL; appearance is also remembered locally when storage is available. Workspace names, drafts, collections and context are never added to shared links. The app sends no analyst context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Research JSON adds source relationships and explicit validation state. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&amp;CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATT&amp;CK and project licenses</a> · <a href="./ATLAS_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATLAS Apache-2.0 notice and license</a>.</p></dialog>
   <noscript><p class="noscript">Enable JavaScript to search and compose prompts. No account or network API is required.</p></noscript>
 </body>
 </html>
