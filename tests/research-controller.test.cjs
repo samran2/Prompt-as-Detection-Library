@@ -6,6 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const controller = fs.readFileSync(path.join(__dirname, '../demo/research.js'), 'utf8');
+const components = fs.readFileSync(path.join(__dirname, '../demo/research-components.js'), 'utf8');
 const html = fs.readFileSync(path.join(__dirname, '../demo/research.html'), 'utf8');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 function deferred() {
@@ -76,6 +77,7 @@ function harness({ invalidCar = false } = {}) {
       importResults(text) { const pending = deferred(); imports.set(text, pending); return pending.promise; },
     },
   });
+  vm.runInContext(components, context, { filename: 'demo/research-components.js' });
   vm.runInContext(controller, context, { filename: 'demo/research.js' });
   function add(id = records[0].id) { $('flow-choice').value = id; $('flow-add').dispatch('click'); }
   async function preparePlan() {
@@ -164,4 +166,17 @@ test('oversized and invalid UTF-8 imports are rejected before reaching the lab p
   await app.importFile('invalid-encoding', new Uint8Array([0xc0, 0xaf]));
   assert.match(app.$('lab-status').textContent, /Import rejected/);
   assert.equal(app.imports.size, 0);
+});
+
+test('shared flow title and clear callbacks invalidate previously prepared lab evidence', async () => {
+  const app = harness(); await app.preparePlan();
+  app.$('flow-name').value = 'A revised hypothesis'; app.$('flow-name').dispatch('input');
+  assert.equal(app.$('lab-template').disabled, true);
+  assert.equal(app.$('lab-file').disabled, true);
+  assert.match(app.$('lab-status').textContent, /Create a new plan/);
+  await app.$('lab-plan').dispatch('click');
+  assert.equal(app.$('lab-file').disabled, false);
+  app.$('flow-clear').dispatch('click');
+  assert.equal(app.$('lab-file').disabled, true);
+  assert.equal(app.$('flow-steps').children.length, 0);
 });
