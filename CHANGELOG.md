@@ -5,6 +5,40 @@ This file records changes actually made. Planned work belongs in
 [verification](docs/verification.md). Dates and results from earlier
 conversations are not independent release evidence.
 
+## [0.4.0.dev3] - Clear, task-specific prompt answers
+
+- Replaced eight/nine required answer sections and repeated quality checklists
+  with one shared four-section contract across all 918 ATT&CK and 197 ATLAS prompts.
+- Focused output on the selected task, target and supplied environment. Hunt and
+  triage no longer demand a separate fixture matrix; validation keeps all four cases.
+- Added plain-language guidance, inline evidence, a short explanation target and
+  prioritized missing-input questions. Removed demands for invented named owners
+  or unsupported confidence ratings on every exclusion.
+- Preserved source text, domain safety, schema readiness and generated status.
+  These are authoring improvements, not measured gains in model response quality.
+
+## [0.4.0.dev2] - Prompt-quality reinforcement
+
+### Added
+
+- Added second-generation prompt output contract and explicit evidence traceability
+  requirements to all generated ATT&CK and ATLAS prompts.
+- Added confidence tagging guidance (`High`/`Medium`/`Low`) per analytical
+  conclusion and explicit `Not available with current evidence` handling for all
+  unsupported sections.
+- Tagged all generated prompts with `PAD-v0.4.0-dev2` profile metadata so exports
+  and imports carry a stable template lineage.
+- Fixed an ATLAS prompt section-numbering inconsistency and aligned section
+  structure for review workflows.
+
+### Changed
+
+- Updated repository development version metadata (`VERSION`, `package.json`,
+  README) to `0.4.0.dev2`.
+
+Verification claims are unchanged: no stable v1.0 publication or operational
+validation is claimed.
+
 ## [0.4.0.dev1] - Premium Workbench development snapshot
 
 ### Added

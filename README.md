@@ -5,10 +5,13 @@ prompts. Browse **1,115 techniques and subtechniques**: 918 from ATT&CK 19.2 and
 197 from ATLAS 2026.08. Inspect their source guidance and export drafts from a
 browser workbench or local CLI.
 
-The current `0.4.0.dev1` development snapshot adds a unified technique desk and
-portable private workspaces to the research foundation. It is not stable v1.0.
-Pinned source content and detection prompt bytes are preserved. No draft is
+The current `0.4.0.dev3` development snapshot gives every prompt a concise,
+task-specific answer format: summary, selected deliverable, checks and next step.
+It is not stable v1.0.
+Pinned source content is preserved; generated prompt text is revised. No draft is
 described as operationally validated without evidence.
+See [how to get a useful answer](docs/prompt-clarity.md) for target selection,
+environment inputs and the limits of these checks.
 
 ## Try it in your browser
 
@@ -195,7 +198,7 @@ records are excluded from active prompts; source gaps and unlinked analytics
 remain explicit in the [coverage evidence](library/coverage.json).
 
 This is an **independent rebuild** from official pinned MITRE data, development
-version `0.4.0.dev1` (npm `0.4.0-dev.1`). The original v0.2.0 archive remains
+version `0.4.0.dev3` (npm `0.4.0-dev.3`). The original v0.2.0 archive remains
 unavailable; this project does not claim to restore its implementation or formats.
 Read the [source provenance](docs/source-provenance.md) for the exact commit,
 source hashes, attribution and inclusion policy.

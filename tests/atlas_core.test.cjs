@@ -56,7 +56,7 @@ test('every AI mode and target emits source-faithful generated drafts with liter
     assert.match(prompt, /not.*local.*validation|not.*validation evidence/i);
     assert.match(prompt, /schema/i);
     assert.match(prompt, /non-executable pseudocode/i);
-    assert.match(prompt, /inert synthetic/i);
+    if (mode === 'detect' || mode === 'validate') assert.match(prompt, /inert synthetic/i);
     assert.match(prompt, /privacy|sensitive.*data/i);
     assert.match(prompt, /benign lookalike/i);
     assert.doesNotMatch(prompt, /ATT&CK 19\.2|selected DET\/AN|undefined/);
@@ -94,12 +94,12 @@ test('AI research export preserves source relationships and mixed-framework prov
   assert.equal(mixed.reference, undefined);
 });
 
-test('all existing ATT&CK prompt mode/target bytes and default exports remain unchanged', () => {
+test('all ATT&CK prompt combinations and default exports match the reviewed v3 template snapshot', () => {
   const hash = createHash('sha256');
   for (const record of attack) for (const mode of Object.keys(core.MODES)) for (const target of core.TARGETS) {
     hash.update(core.composePrompt(record, { mode, target }));
   }
-  assert.equal(hash.digest('hex'), '18562ba30c248bbf242713ccf9c31e1d78ea7adf966216298ebfe0ad6196c897');
-  assert.equal(createHash('sha256').update(core.exportJSONL(attack)).digest('hex'), '78ac9ec7cc401b6fffaf4755607933c9364ebfb37c9a428eb601cd9f74b1f97e');
-  assert.equal(createHash('sha256').update(core.exportResearchJSON(attack)).digest('hex'), 'ee58ce206eb511129628df207f3390b7bf4d98c39844e94ecc72ac1b1d811397');
+  assert.equal(hash.digest('hex'), '817a98499ffdf0fc0421dee52572fc222effef1fcee43611899036a447746da4');
+  assert.equal(createHash('sha256').update(core.exportJSONL(attack)).digest('hex'), 'e3ba6fe689f4df9b66b2170b6a025d39573dc0b9ee16a657f6ebc24b29e9cbca');
+  assert.equal(createHash('sha256').update(core.exportResearchJSON(attack)).digest('hex'), '7010a4bbaf60b9aad3e772dc42790cd1d0f731ae97f222d283bff5d19ea31c49');
 });

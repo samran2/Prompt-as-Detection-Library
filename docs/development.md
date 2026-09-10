@@ -2,7 +2,7 @@
 
 ## Development baseline
 
-The working target is `0.4.0.dev1` Premium Workbench (npm `0.4.0-dev.1`),
+The working target is `0.4.0.dev3` Premium Workbench (npm `0.4.0-dev.3`),
 building on the research-and-contract foundation and independent rebuild.
 The pinned ATT&CK release remains 19.2, and the existing CLI and static browser
 workbench remain supported.
@@ -54,13 +54,14 @@ committed.
 
 Development versions use two equivalent spellings:
 
-- `VERSION` and Python-facing prose: `0.4.0.dev1`
-- npm metadata and browser-safe SemVer: `0.4.0-dev.1`
+- `VERSION` and Python-facing prose: `0.4.0.dev3`
+- npm metadata and browser-safe SemVer: `0.4.0-dev.3`
 
 Keep application package metadata, lockfiles, UI/CLI display and changelog aligned.
 Do not rewrite pinned source/content manifests or historical evidence merely to
-match a UI version bump. `19.2`, `2026.08` and `0.4.0.dev1` describe different
-source/application versions. This UI change preserves generated prompt bytes. See
+match a UI version bump. `19.2`, `2026.08` and `0.4.0.dev3` describe different
+source/application versions. The v3 prompt profile intentionally changes generated
+prompt bytes and their hashes while retaining pinned sources. See
 [versioning](versioning.md).
 
 ## Deterministic library generation
