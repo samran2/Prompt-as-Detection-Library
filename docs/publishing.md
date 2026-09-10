@@ -4,11 +4,11 @@
 
 The approved public repository is
 [samran2/Prompt-as-Detection-Library](https://github.com/samran2/Prompt-as-Detection-Library),
-and the `0.3.0.dev3` static workbench has been published as a development demo.
+and the static workbench is published as a development demo.
 Observed commit, workflow and hosted-demo results belong in
 [verification](verification.md), not in evergreen instructions.
 
-The `0.4.0.dev0` work is an unreleased foundation. There is no stable v1.0
+The project remains in development. There is no stable v1.0
 release, package publication or claim that all prompts or native rules have been
 human- or lab-validated. Local success never authorizes a push, deployment, tag
 or release on its own.
@@ -48,7 +48,7 @@ terms and item-level SPDX/origin metadata for contributed rule material.
 For an explicitly authorized Pages update:
 
 1. verify the exact commit and wait for all required repository checks;
-2. build and inspect a fresh fourteen-file static payload;
+2. build and inspect a fresh payload against the public-file allowlist;
 3. confirm GitHub Pages uses the Actions source, HTTPS and the protected
    `github-pages` environment;
 4. manually dispatch **Publish library workbench to GitHub Pages** from the
@@ -68,7 +68,7 @@ The manual **Library archive preview** workflow creates a short-lived candidate
 ZIP and checksum from committed `HEAD` after repository checks. It must retain
 read-only repository permission and must not create a tag, GitHub Release or
 package. The source archive contains reviewed repository files and pinned source
-data; it is intentionally different from the public fourteen-file website payload.
+data; it is intentionally different from the allowlisted website payload.
 
 Treat preview artifacts as disposable evidence inputs. A release candidate must
 still pass the complete process in [release process](release-process.md), bind
