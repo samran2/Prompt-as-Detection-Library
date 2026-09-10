@@ -40,6 +40,14 @@ workspaces relative to `c4865827cfc99aecd99ee454e544a6121554047f`.
   the application content-version label, not evidence status.
 - Root and isolated QA dependency audits found zero known vulnerabilities.
 
+The first PR Linux browser run exposed a test synchronization error after all
+356 hosted Node tests passed: it treated the cleared file input as completion
+of an asynchronous rejection. Three deterministic delayed-read reproductions
+confirmed the race. The test now waits for the rejection's terminal status;
+the analogous deletion test waits for committed deletion. Existing assertions
+remain and production code is unchanged. Hosted acceptance requires a fresh
+successful run, not a retry that conceals a failed assertion.
+
 This is a development software acceptance record, not human prompt review,
 native-rule lab validation, field performance evidence, independent WCAG
 certification or stable v1.0 readiness. Hosted CI and Pages outcomes must be

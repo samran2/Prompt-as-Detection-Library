@@ -149,7 +149,9 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
       assert.equal(await page.locator('#workspace-preview').isVisible(), false);
       assert.deepEqual(await snapshot(), before);
       await uploadWorkspace({ ...exportedWorkspace, validationLevel: 'field-confirmed' });
-      await page.waitForFunction(() => document.getElementById('workspace-file').value === '');
+      // Clearing the file input starts the async read; it does not finish it.
+      // Wait for rejection before inspecting memory or beginning another action.
+      await page.waitForFunction(() => document.getElementById('workspace-storage-status').textContent.startsWith('Import rejected.'));
       assert.equal(await page.locator('#workspace-preview').isVisible(), false);
       assert.match(await page.locator('#workspace-storage-status').textContent(), /Import rejected/);
       assert.deepEqual(await snapshot(), before, 'Rejected fields cannot mutate current memory');
@@ -213,7 +215,9 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
     await check('premium deleting local workspaces removes stored copies without discarding memory', async () => {
       await workspace(); const before = await snapshot();
       page.once('dialog', dialog => dialog.accept()); await page.locator('#workspace-delete-local').click();
-      await page.waitForFunction(() => !document.getElementById('workspace-autosave').checked);
+      // Consent is cleared synchronously, but deletion runs in the async queue.
+      await page.waitForFunction(() => document.getElementById('workspace-storage-status').textContent.startsWith('Local workspace data deleted.'));
+      assert.equal(await page.locator('#workspace-autosave').isChecked(), false);
       assert.deepEqual((await snapshot()).drafts, before.drafts, 'Deleting storage must not silently discard current in-memory edits');
       await closeWorkspace(); await page.reload(); await page.locator('#app-content').waitFor(); await workspace();
       assert.equal(await page.locator('#workspace-autosave').isChecked(), false);
