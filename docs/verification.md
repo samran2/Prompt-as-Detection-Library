@@ -1,5 +1,37 @@
 # Verification records
 
+## Prompt clarity v3 — hosted verification 2026-09-10 UTC
+
+Development version `0.4.0.dev3` was merged through
+[PR #18](https://github.com/samran2/Prompt-as-Detection-Library/pull/18) as
+[`2fb30a089ed54a6834f308724c327edc5fccdfa6`](https://github.com/samran2/Prompt-as-Detection-Library/commit/2fb30a089ed54a6834f308724c327edc5fccdfa6).
+The merged tree exactly matches reviewed candidate
+`ee44cd8944fc88c79263a1028121f5260688562e`. All five PR workflows passed;
+the merged revision also passed Repository CI, CodeQL, supply-chain security,
+container security, fuzz smoke and Scorecard. Run identities and results are in
+[the publication evidence](prompt-clarity-publication.json).
+
+[Pages run 34465703130](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34465703130)
+was deliberately dispatched for the merged revision and succeeded.
+All 28 served assets returned HTTPS 200 and exactly matched the local build's
+SHA-256 values. The remaining allowlisted file, `.nojekyll`, is a publication
+marker rather than served application content.
+
+An isolated live Chrome session confirmed the version label, OT T0800 link,
+v3 prompt profile, Triage/Sentinel selection, ICS safety text, exact TXT download
+and no horizontal overflow at 320 px. Desktop/mobile screenshots were inspected.
+No console warnings/errors or unexpected external requests were observed.
+This bounded hosted smoke is separate from the local 69-check browser suite;
+it is not model-response evaluation, independent accessibility certification or
+detection validation. Prompt statuses remain generated.
+
+At publication, GitHub reported no effective main-branch rules and
+`protected: false`; no settings were weakened or changed. The update used a
+public PR, passing checks and the existing interim sole-maintainer procedure.
+The Pages workflow succeeded with non-blocking Node 20 deprecation annotations
+for pinned deployment/artifact actions; dependency upgrades remain separate work.
+No stable tag, GitHub Release, package or container was published.
+
 ## Prompt clarity v3 — local verification 2026-09-10
 
 Application `0.4.0.dev3`, prompt profile `PAD-v0.4.0-dev3`.
