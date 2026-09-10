@@ -53,7 +53,7 @@ async function withApi(fn) {
     version: {
       id: 'attack-19.2',
       attackVersion: '19.2',
-      libraryVersion: '0.4.0-dev.0',
+      libraryVersion: '0.4.0-dev.1',
       status: 'pinned',
       sourceCommit: '6cda5ad8462c79e14fbb872f4e09059b18e0cfc4',
     },

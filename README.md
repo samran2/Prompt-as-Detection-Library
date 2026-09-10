@@ -5,10 +5,10 @@ prompts. Browse **1,115 techniques and subtechniques**: 918 from ATT&CK 19.2 and
 197 from ATLAS 2026.08. Inspect their source guidance and export drafts from a
 browser workbench or local CLI.
 
-The current `0.4.0.dev0` line is a research-foundation development version, not stable v1.0.
-It adds versioned evidence contracts, a truthful review registry, a read-only API
-contract, governance and supply-chain gates while preserving the pinned ATT&CK
-19.2 library. No draft is described as operationally validated without evidence.
+The current `0.4.0.dev1` development snapshot adds a unified technique desk and
+portable private workspaces to the research foundation. It is not stable v1.0.
+Pinned source content and detection prompt bytes are preserved. No draft is
+described as operationally validated without evidence.
 
 ## Try it in your browser
 
@@ -27,9 +27,13 @@ the demo does not run a model or execute detection rules.
 
 [Quick start](#run-it-locally) · [ATT&CK provenance](docs/source-provenance.md) · [ATLAS AI](docs/atlas.md) · [D3FEND defenses](docs/d3fend.md) · [Validation program](docs/validation-program.md) · [Roadmap](ROADMAP.md)
 
-[![Full-library workbench showing source guidance and an editable detection prompt](docs/screenshots/desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
+[Workbench guide](docs/premium-workbench.md) · [Workspace format](docs/workspace-format.md) · [Privacy and local storage](docs/privacy.md)
 
-*Actual workbench screenshot from local browser verification.*
+[![Premium workbench showing the OT technique desk and an editable detection prompt](docs/screenshots/premium-desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
+
+*Development workbench. [Workspaces](docs/screenshots/premium-workspace.png) ·
+[Mobile view](docs/screenshots/premium-mobile.png). Test and hosted outcomes are
+recorded in the [verification record](docs/verification.md).*
 
 ## What you can do
 
@@ -39,6 +43,9 @@ the demo does not run a model or execute detection rules.
   telemetry references, tuning variables and documented procedure examples.
   ATLAS adds linked case studies, mitigations and source threat maturity, without
   presenting them as tested detections.
+- **Stay with one technique.** Prompt, Evidence, Defenses and Flow share the
+  selected record. Evidence groups source guidance, the relationship map and CAR;
+  comparison opens separately without replacing the editing view.
 - **Choose the task and format.** Use Detect, Hunt, Triage or Validate with
   Platform-neutral, Panther Python, Sentinel KQL, Defender XDR, Splunk SPL or Sigma output.
 - **Compare evidence.** Keep a shareable search URL, compare two techniques and
@@ -47,7 +54,12 @@ the demo does not run a model or execute detection rules.
   filtered templates as JSONL or current-record research JSON. The CLI adds prompt
   and export checksums.
 - **Choose your display.** Use the system, light, dark or high-contrast theme with
-  keyboard-visible focus and reduced-motion support.
+  keyboard-visible focus and reduced-motion support. Adjust the list width, use
+  mobile list/detail navigation, or open command search for techniques and actions.
+- **Carry your research.** Name workspaces, favorite techniques and build named
+  collections. Export drafts with their original templates and context to a
+  portable JSON file; preview an import before opening it as a new workspace.
+  Optional, consent-based local autosave uses unencrypted browser storage.
 - **Explore defensive context.** Open D3FEND for source-linked countermeasures,
   artifact relationships and a separate defensive research brief. The pinned
   1.6.0 supplement maps 311 Enterprise and 58 ICS/OT records; missing Mobile,
@@ -61,9 +73,12 @@ the demo does not run a model or execute detection rules.
   before any source upgrade. [Research tools](docs/research-tools.md).
 
 No account, API key, model service or runtime package installation is required.
-Browser context and edits stay in memory and clear on reload; downloads create
-local files. Copy and TXT preserve editor text; filtered JSONL exports fresh
-templates without editor changes.
+Browser context and edits stay in memory by default and clear on reload unless
+you export a file or enable local autosave. IndexedDB storage is unencrypted and
+shared by pages on the same origin, not isolated by a GitHub Pages project path.
+Avoid sensitive data on shared browser profiles. Copy and TXT preserve editor
+text; filtered JSONL exports fresh templates without editor changes. Workspace
+files deliberately include analyst context: inspect them before sharing.
 
 Prompts are **unvalidated drafts**. Output targets describe the requested format;
 they are not verified integrations. No model calls or detection queries execute.
@@ -100,8 +115,8 @@ threat maturity, never the validation status of our prompts.
 
 ## Run it locally
 
-Download or clone the repository, then open `demo/index.html` in a modern browser.
-For local HTTP preview and the best clipboard support, use Python 3.11 or later:
+Download or clone the repository. For a consistent local preview with clipboard,
+workspace cryptography and optional browser storage, use Python 3.11 or later:
 
 ```sh
 python3 -m http.server 8766 --bind 127.0.0.1 --directory demo
@@ -109,6 +124,8 @@ python3 -m http.server 8766 --bind 127.0.0.1 --directory demo
 
 Open [localhost:8766](http://127.0.0.1:8766/). The preview serves only the browser
 assets; keep the repository root and private working files outside the site.
+Directly opening `demo/index.html` is a basic browsing option, but browser support
+for secure-context features and file-origin storage varies; prefer loopback HTTP.
 
 ### Local CLI
 
@@ -178,7 +195,7 @@ records are excluded from active prompts; source gaps and unlinked analytics
 remain explicit in the [coverage evidence](library/coverage.json).
 
 This is an **independent rebuild** from official pinned MITRE data, development
-version `0.4.0.dev0` (npm `0.4.0-dev.0`). The original v0.2.0 archive remains
+version `0.4.0.dev1` (npm `0.4.0-dev.1`). The original v0.2.0 archive remains
 unavailable; this project does not claim to restore its implementation or formats.
 Read the [source provenance](docs/source-provenance.md) for the exact commit,
 source hashes, attribution and inclusion policy.
@@ -186,7 +203,7 @@ source hashes, attribution and inclusion policy.
 The earlier dev3 [prompt-quality review](docs/prompt-quality-review.md) covers
 improved drafting instructions, not validated detections. Historical hosted
 results remain in the [verification record](docs/verification.md); they do not
-prove later changes or satisfy the `0.4.0.dev0` evidence gates.
+prove later changes or satisfy the development line's evidence gates.
 
 ## Verify and build
 
@@ -194,6 +211,8 @@ prove later changes or satisfy the `0.4.0.dev0` evidence gates.
 npm run library:verify
 npm run atlas:verify
 npm run d3fend:verify
+npm run car:verify
+npm run research:check
 npm run reviews:verify
 npm run evals:verify
 npm run check
@@ -205,8 +224,10 @@ npm run build
 without rewriting them. `library:build` intentionally regenerates the pinned
 library. `atlas:verify` independently checks the pinned AI source and generated
 files. `d3fend:verify` independently verifies the defensive supplement. The static
-build verifies all three before copying exactly fourteen allowed
-files to a new `dist/`; preserve an existing build before rebuilding.
+build verifies the pinned supplements and research modules before copying only
+the explicit public-file allowlist to a new `dist/`; preserve an existing build
+before rebuilding. Workspace files, stored analyst data and QA tools are never
+build inputs.
 
 The browser, CLI and text generator share `demo/core.js`. Raw source bundles,
 complete procedure records, tests and private work stay outside the static build.
@@ -217,6 +238,8 @@ See [verification](docs/verification.md) for actual checks and their limits.
 | Guide | What it covers |
 | --- | --- |
 | [Architecture](docs/architecture.md) | Shared composition, data flow and the static file boundary. |
+| [Premium workbench](docs/premium-workbench.md) | Unified technique desk, commands, private workspaces and recovery. |
+| [Privacy](docs/privacy.md) | Memory-only defaults, optional plaintext storage and explicit deletion. |
 | [ATLAS AI](docs/atlas.md) | AI threat coverage, source maturity, local usage and separate licensing. |
 | [Data contracts](docs/data-contracts.md) | Versioned schemas and cross-record evidence invariants. |
 | [Research API](docs/api.md) | Read-only `/v1` contract and current implementation boundary. |

@@ -5,7 +5,42 @@ This file records changes actually made. Planned work belongs in
 [verification](docs/verification.md). Dates and results from earlier
 conversations are not independent release evidence.
 
-## [0.4.0.dev0] - Unreleased trust foundation
+## [0.4.0.dev1] - Premium Workbench development snapshot
+
+### Added
+
+- Added named private workspaces with favorites, collections, original template
+  hashes, per-draft context, applied/unapplied context, flow and view state.
+- Added bounded 5 MiB JSON export/import with strict preview, new import identity,
+  integrity checks and unresolved/source-drift warnings that preserve saved text.
+- Added optional, consent-based unencrypted IndexedDB autosave, expected-revision
+  conflict detection and clear epochs that invalidate stale storage handles.
+- Added command search, adjustable list width, mobile list/detail navigation and
+  grouped exports. Existing themes, literal text rendering and draft warnings remain.
+
+### Changed
+
+- Unified Prompt, Evidence, Defenses and Flow around the selected technique;
+  comparison opens separately. CAR and Flow share components with Research tools.
+- Kept manual robustness and lab-envelope sessions separate from saved workspaces;
+  they remain in memory with explicit exports and never advance validation status.
+- Preserved pinned ATT&CK, ATLAS, D3FEND, CAR and Attack Flow source content,
+  detection prompt bytes, the shared composer and existing CLI contracts.
+
+### Security and privacy
+
+- Reject oversized, malformed, ambiguous or extra workspace fields before state
+  replacement; imported templates are not silently rebased onto current sources.
+- Stop autosave on stale writes, cleared storage or storage failure while retaining
+  memory state for export or a new copy. Disabling autosave does not delete old
+  saves; explicit deletion is separate and does not erase downloaded files.
+- Document that browser storage is plaintext and origin-scoped: GitHub Pages
+  project paths do not isolate same-origin applications from stored workspaces.
+
+Verification and hosted deployment outcomes are tracked separately; this entry
+does not claim completed browser, accessibility or release acceptance.
+
+## [0.4.0.dev0] - Research and trust foundation
 
 ### Added
 
