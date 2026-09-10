@@ -1,5 +1,36 @@
 # Verification records
 
+## Premium Workbench — hosted verification 2026-09-10 UTC
+
+The `0.4.0.dev1` application revision
+[`1b228938a1f41ea9bd985a470155f5c9a66176d7`](https://github.com/samran2/Prompt-as-Detection-Library/commit/1b228938a1f41ea9bd985a470155f5c9a66176d7)
+was merged through [PR #16](https://github.com/samran2/Prompt-as-Detection-Library/pull/16)
+after all five final PR workflows passed. Its tree exactly matches the reviewed
+local tree `6eab2da64d01eaf5bde5decb1282602401337ab6`.
+
+The merged revision passed
+[Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34459984631),
+[CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34459984251),
+[supply-chain security](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34459984284),
+[container security](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34459984286),
+[fuzz smoke](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34459984254)
+and [Scorecard](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34459984259).
+
+[Pages run 34460101776](https://github.com/samran2/Prompt-as-Detection-Library/actions/runs/34460101776)
+was deliberately dispatched on the merged revision and completed successfully.
+All **28 served content assets** returned HTTPS success and matched the reviewed
+build's bytes and SHA-256 values. The twenty-ninth file, `.nojekyll`, is a
+publishing marker. Exact evidence is in
+[premium-publication.json](premium-publication.json).
+
+A fresh live browser showed `Workbench 0.4.0-dev.1`, the four expected tabs and
+the OT technique T0800 through the preserved `domain=OT` link. Workspaces opened
+with the plaintext warning, autosave unchecked and memory-only status. Closing
+returned focus to the opener; no browser warning/error was observed. No user
+storage was enabled or erased. This bounded hosted smoke is separate from the
+full local three-engine and CI regression suites described below. It is not
+independent accessibility certification or detection-effectiveness evidence.
+
 ## Premium Workbench — local verification 2026-09-10
 
 Candidate `0.4.0.dev1` adds the unified technique desk and portable private

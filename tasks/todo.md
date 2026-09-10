@@ -26,4 +26,4 @@ evidence is recorded in docs/verification.md; hosted acceptance is separate.
 - [x] Full regression, source-fidelity and clean public build checks recorded
 - [x] Independent correctness/security findings resolved and review recorded
 - [x] Final private-artifact inventory and documentation checked
-- [ ] Reviewed candidate publication, CI and hosted Pages verification recorded
+- [x] Reviewed candidate publication, CI and hosted Pages verification recorded
