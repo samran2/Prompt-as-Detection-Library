@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-module.exports = async function researchChecks({ page, base, check, output }) {
+module.exports = async function researchChecks({ page, base, check, output, screenshot = options => page.screenshot(options) }) {
   const downloaded = async selector => {
     const pending = page.waitForEvent('download');
     await page.locator(selector).click();
@@ -12,7 +12,7 @@ module.exports = async function researchChecks({ page, base, check, output }) {
   await page.goto(new URL('research.html', base).href);
   await page.locator('#research-content').waitFor();
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.screenshot({ path: path.join(output, 'research-overview.png') });
+  await screenshot({ path: path.join(output, 'research-overview.png') });
   await check('research tools load offline with exact domain coverage and Navigator exports', async () => {
     for (const [domain, count] of [['Enterprise', 697], ['Mobile', 124], ['ICS', 97]]) {
       await page.locator('#coverage-domain').selectOption(domain);
@@ -84,7 +84,7 @@ module.exports = async function researchChecks({ page, base, check, output }) {
     await page.setViewportSize({ width, height: 1000 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.locator('#coverage').scrollIntoViewIfNeeded();
-    await page.screenshot({ path: path.join(output, `research-${width}.png`), fullPage: true });
+    await screenshot({ path: path.join(output, `research-${width}.png`), fullPage: true });
   });
   await check('research high contrast and local-file loading remain usable', async () => {
     await page.locator('#research-theme').selectOption('contrast');
