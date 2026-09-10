@@ -8,6 +8,7 @@
   const core = globalThis.PAD;
   $('reload-app').addEventListener('click', () => window.location?.reload());
   const runtimeReady = Array.isArray(catalog) && catalog.length > 0 && core &&
+    typeof globalThis.PAD_WORKBENCH_UI?.create === 'function' &&
     ['filterTechniques', 'composePrompt', 'exportJSONL', 'parseUiState', 'serializeUiState'].every(name => typeof core[name] === 'function');
   if (!runtimeReady) {
     $('app-status').className = 'status-screen error-state';
@@ -28,9 +29,17 @@
   const state = {
     domain: restored.domain, domainSelection: restored.domainSelection || restored.domain,
     selected: recordIndex.get(restored.technique) || null,
-    visible: [], page: 0, drafts: new Map(), templates: new Map(), context: '', key: '',
-    compare: restored.compare.filter(id => recordIndex.has(id)), theme: initialTheme,
+    visible: [], page: 0, drafts: new Map(), templates: new Map(), templateContexts: new Map(), context: '', key: '',
+    compare: restored.compare.filter(id => recordIndex.has(id)), theme: initialTheme, unresolvedTechnique: '',
   };
+  let workspaceUI = null;
+  let deskUI = null;
+  let restoringWorkspace = false;
+  let unresolvedFlow = null;
+  let flowView = null;
+  let carView = null;
+  const sources = { attack: '19.2', atlas: '2026.08', d3fend: '1.6.0', car: '1b922fe1527d956e222a99473472e594f10f610b', attackFlow: '2.0.0' };
+  const changed = () => { if (!restoringWorkspace) workspaceUI?.changed(); };
   const options = () => ({ mode: $('mode').value, target: $('target').value, context: state.context });
   const draftKey = () => `${state.selected.id}|${$('mode').value}|${$('target').value}`;
   const notify = message => { $('action-status').textContent = message; };
@@ -59,6 +68,7 @@
     });
     const next = `${window.location.pathname}${search}${window.location.hash || ''}`;
     window.history.replaceState(null, '', next);
+    changed();
   }
   function applyTheme(theme) {
     state.theme = core.THEMES.includes(theme) ? theme : 'system';
@@ -228,17 +238,26 @@
   }
   function loadPrompt() {
     state.key = draftKey();
-    if (!state.templates.has(state.key)) state.templates.set(state.key, core.composePrompt(state.selected, options()));
+    if (!state.templates.has(state.key)) {
+      state.templates.set(state.key, core.composePrompt(state.selected, options()));
+      state.templateContexts.set(state.key, state.context);
+    }
     $('prompt').value = state.drafts.get(state.key) ?? state.templates.get(state.key);
     updateEditorStatus();
     notify('');
   }
   function selectRecord(record, userInitiated = false) {
+    if (userInitiated) state.unresolvedTechnique = '';
     remember();
     state.selected = record;
     $('selected-detail').hidden = !record;
     $('no-selection').hidden = Boolean(record);
     defensesView?.render(record);
+    carView?.show(record);
+    flowView?.setSelected(record);
+    workspaceUI?.selectionChanged(record);
+    $('desk-flow-support').textContent = unresolvedFlow ? 'This workspace contains unresolved Flow steps. They are retained in workspace exports; clear the flow explicitly to start a new hypothesis.' : isAtlas(record || {}) ? 'ATLAS is not supported by this ATT&CK Flow exporter. Existing ATT&CK steps are retained.' : 'Add this technique without leaving your research.';
+    if (unresolvedFlow) $('desk-flow-add').disabled = true;
     if (!record) { state.key = ''; $('prompt').value = ''; updateEditorStatus(); renderComparison(); syncUrl(); return; }
     $('technique-title').textContent = record.name;
     $('technique-id').textContent = record.id;
@@ -263,10 +282,7 @@
     loadPrompt();
     renderComparison();
     syncUrl();
-    if (userInitiated && window.matchMedia?.('(max-width: 690px)')?.matches) {
-      $('technique-title').focus();
-      $('technique-title').scrollIntoView?.({ behavior: 'auto', block: 'start' });
-    }
+    deskUI?.selected(userInitiated);
   }
   function populateFilters() {
     const selectedDomain = resolveDomain(state.domain);
@@ -291,6 +307,7 @@
     $('active-filter-text').textContent = values.join(' · ');
   }
   function filter(revealSelection = false) {
+    if (!restoringWorkspace) state.unresolvedTechnique = '';
     state.visible = core.filterTechniques(catalog, { domain: state.domain, query: $('search').value, tactic: $('tactic').value, platform: $('platform').value });
     renderActiveFilters();
     const selectedIndex = revealSelection && state.selected ? state.visible.findIndex(record => record.id === state.selected.id) : -1;
@@ -324,7 +341,7 @@
     if (!state.selected) return;
     if ($('draft-state').textContent === 'Edited in this tab' && !window.confirm('Replace the edited prompt with a fresh template? Download it first if you want to keep it.')) return;
     if (applyContext) state.context = $('context').value;
-    state.drafts.delete(draftKey()); state.templates.delete(draftKey()); loadPrompt(); notify('Template updated using the applied context. Other drafts are unchanged.');
+    state.drafts.delete(draftKey()); state.templates.delete(draftKey()); state.templateContexts.delete(draftKey()); loadPrompt(); changed(); notify('Template updated using the applied context. Other drafts are unchanged.');
   }
   function download(text, filename, mime) {
     const url = URL.createObjectURL(new Blob([text], { type: mime }));
@@ -363,7 +380,8 @@
     syncUrl();
   });
   $('theme').addEventListener('change', () => applyTheme($('theme').value));
-  $('prompt').addEventListener('input', () => { remember(); updateEditorStatus(); });
+  $('prompt').addEventListener('input', () => { remember(); updateEditorStatus(); changed(); });
+  $('context').addEventListener('input', changed);
   $('apply-context').addEventListener('click', () => regenerate(true));
   $('reset-prompt').addEventListener('click', () => regenerate());
   $('copy').addEventListener('click', async () => {
@@ -388,8 +406,10 @@
   });
   const tabs = [...document.querySelectorAll('[role="tab"]')];
   function activateTab(tab, focus = false) {
+    if (!tab) return;
     tabs.forEach(button => { const selected = button === tab; button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1; $(button.getAttribute('aria-controls')).hidden = !selected; });
     if (focus) tab.focus();
+    changed();
   }
   $('show-source').addEventListener('click', () => activateTab($('tab-source'), true));
   $('compare-add').addEventListener('click', () => {
@@ -397,7 +417,7 @@
     if (state.compare.includes(state.selected.id)) state.compare = state.compare.filter(id => id !== state.selected.id);
     else if (state.compare.length < 2) state.compare.push(state.selected.id);
     renderComparison(); syncUrl();
-    if (state.compare.length === 2) activateTab($('tab-compare'), true);
+    if (state.compare.length === 2) deskUI?.openCompare();
     else notify(state.compare.length ? 'One technique saved. Select another technique to compare.' : 'Technique removed from comparison.');
   });
   tabs.forEach((tab, index) => {
@@ -413,9 +433,74 @@
   });
   $('about-open').addEventListener('click', () => $('about-dialog').showModal());
   $('about-close').addEventListener('click', () => $('about-dialog').close());
-  document.addEventListener('keydown', event => {
-    if (event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) && !$('about-dialog').open) { event.preventDefault(); $('search').focus(); }
-  });
+  $('about-dialog').addEventListener('close', () => $('about-open').focus());
+  const tabIds = { prompt: 'tab-prompt', evidence: 'tab-source', defenses: 'tab-defenses', flow: 'tab-flow' };
+  const navigate = id => {
+    const record = recordIndex.get(id);
+    if (!record) return;
+    // Command navigation deliberately clears incompatible filters; drafts stay in memory.
+    state.domain = ''; state.domainSelection = ''; $('search').value = '';
+    document.querySelectorAll('[data-domain]').forEach(b => b.setAttribute('aria-pressed', String(!b.dataset.domain)));
+    state.selected = record; populateFilters(); filter(true); selectRecord(record, true);
+  };
+  deskUI = globalThis.PAD_WORKBENCH_UI.create({ document, catalog, navigate, onChange: changed, actions: { tab: name => activateTab($(tabIds[name]), true) } });
+  try {
+    carView = globalThis.PAD_RESEARCH_UI.createCar({ document, root: $('desk-car-results'), library: globalThis.PAD_CAR.createLibrary(globalThis.PAD_CAR_CATALOG) });
+    flowView = globalThis.PAD_RESEARCH_UI.createFlow({ document, catalog: attackCatalog,
+      list: $('desk-flow-steps'), empty: $('desk-flow-empty'), addButton: $('desk-flow-add'),
+      exportButton: $('desk-flow-export'), clearButton: $('desk-flow-clear'), status: $('desk-flow-status'), title: $('desk-flow-title'),
+      onChange: snapshot => { if (unresolvedFlow && !restoringWorkspace) unresolvedFlow.title = snapshot.title; changed(); },
+      onExport: snapshot => download(JSON.stringify(globalThis.PAD_ATTACK_FLOW.createFlow(snapshot.steps.map(id => recordIndex.get(id)), { title: snapshot.title }), null, 2) + '\n', 'attack-flow-hypothesis.json', 'application/json'),
+    });
+  } catch { $('desk-car-results').textContent = 'Supplemental research tools are unavailable. The prompt library remains available.'; }
+  $('desk-flow-clear').addEventListener('click', event => {
+    if (!unresolvedFlow) return;
+    if (!window.confirm('Clear the unresolved Flow steps? Download your workspace first to keep them.')) {
+      event.stopImmediatePropagation(); return;
+    }
+    unresolvedFlow = null; $('desk-flow-support').textContent = 'Start a new ATT&CK hypothesis.';
+  }, true);
+  async function captureWorkspace() {
+    remember();
+    const drafts = [...state.templates].map(([key, template]) => {
+      const [techniqueId, mode, target] = key.split('|');
+      return { techniqueId, mode, target, text: state.drafts.get(key) ?? template, template, context: state.templateContexts.get(key) || '' };
+    });
+    const snapshot = {
+      drafts, context: state.context, contextInput: $('context').value,
+      flow: unresolvedFlow ? structuredClone(unresolvedFlow) : flowView?.snapshot() || { title: 'Research hypothesis', steps: [] },
+      view: { query: $('search').value, domain: state.domainSelection, tactic: $('tactic').value, platform: $('platform').value,
+        mode: $('mode').value, target: $('target').value, technique: state.unresolvedTechnique || state.selected?.id || '', compare: [...state.compare], theme: state.theme,
+        tab: Object.keys(tabIds).find(name => $(tabIds[name]).getAttribute('aria-selected') === 'true') || 'prompt',
+        ...deskUI.snapshot() },
+    };
+    // Copy every mutable field before awaiting hashes so one snapshot cannot mix edits.
+    await Promise.all(drafts.map(async draft => { draft.templateSha256 = await globalThis.PAD_WORKSPACE.hash(draft.template); }));
+    return snapshot;
+  }
+  function restoreWorkspace(workspace) {
+    restoringWorkspace = true;
+    try {
+      state.key = ''; state.drafts.clear(); state.templates.clear(); state.templateContexts.clear();
+      for (const draft of workspace.drafts) {
+        const key = `${draft.techniqueId}|${draft.mode}|${draft.target}`;
+        state.drafts.set(key, draft.text); state.templates.set(key, draft.template); state.templateContexts.set(key, draft.context);
+      }
+      state.context = workspace.context; $('context').value = workspace.contextInput;
+      const view = workspace.view;
+      state.domainSelection = view.domain; state.domain = resolveDomain(view.domain);
+      $('search').value = view.query; $('mode').value = view.mode; $('target').value = view.target;
+      state.selected = recordIndex.get(view.technique) || null;
+      state.unresolvedTechnique = view.technique && !state.selected ? view.technique : '';
+      state.compare = [...view.compare];
+      document.querySelectorAll('[data-domain]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.domain === view.domain)));
+      populateFilters(); restoreSelect('tactic', view.tactic); restoreSelect('platform', view.platform);
+      unresolvedFlow = workspace.flow.steps.some(id => !recordIndex.has(id) || isAtlas(recordIndex.get(id))) ? structuredClone(workspace.flow) : null;
+      flowView?.restore(unresolvedFlow ? { title: workspace.flow.title, steps: [] } : workspace.flow);
+      if (unresolvedFlow) $('desk-flow-clear').disabled = false;
+      filter(true); applyTheme(view.theme); activateTab($(tabIds[view.tab])); deskUI.restore(view);
+    } finally { restoringWorkspace = false; }
+  }
   document.querySelectorAll('[data-domain]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.domain === state.domainSelection)));
   populateFilters();
   const restoreSelect = (id, value) => {
@@ -428,4 +513,10 @@
   $('app-status').hidden = true;
   $('app-content').hidden = false;
   $('workbench').setAttribute('aria-busy', 'false');
+  deskUI.selected(Boolean(restored.technique));
+  try {
+    workspaceUI = globalThis.PAD_WORKSPACE_UI.create({ document, catalog, core, sources, capture: captureWorkspace, restore: restoreWorkspace, navigate });
+    workspaceUI.selectionChanged(state.selected);
+    workspaceUI.ready?.catch(() => { $('workspace-storage-status').textContent = 'Local storage is unavailable. Download your workspace to keep your work.'; });
+  } catch { $('workspace-storage-status').textContent = 'Workspace tools are unavailable. Download individual prompts before leaving.'; }
 })();

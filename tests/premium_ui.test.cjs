@@ -154,7 +154,7 @@ test('incoherent maturity flags fail closed instead of displaying validation cla
 test('premium workbench exposes theme, compare, evidence map and research export semantics', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'demo', 'index.html'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '..', 'demo', 'style.css'), 'utf8');
-  for (const id of ['app-status', 'app-status-title', 'app-status-detail', 'reload-app', 'app-content', 'theme', 'active-filters', 'active-filter-text', 'clear-active-filters', 'compare-add', 'tab-map', 'panel-map', 'relationship-figure', 'relationship-text', 'tab-compare', 'panel-compare', 'comparison-table', 'export-research', 'validation-level', 'provenance-summary']) {
+  for (const id of ['app-status', 'app-status-title', 'app-status-detail', 'reload-app', 'app-content', 'theme', 'active-filters', 'active-filter-text', 'clear-active-filters', 'compare-add', 'tab-source', 'panel-map', 'relationship-figure', 'relationship-text', 'compare-open', 'comparison-dialog', 'panel-compare', 'comparison-table', 'export-research', 'validation-level', 'provenance-summary']) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `Missing #${id}`);
   }
   assert.match(html, /aria-busy="true"/);

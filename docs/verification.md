@@ -1,5 +1,58 @@
 # Verification records
 
+## Premium Workbench — local verification 2026-09-10
+
+Candidate `0.4.0.dev1` adds the unified technique desk and portable private
+workspaces relative to `c4865827cfc99aecd99ee454e544a6121554047f`.
+
+- **359 Node tests passed**, zero failures or skips: the ordinary 356-test suite
+  plus three explicitly enabled native IndexedDB tests. Node 24.13.0 ran the
+  loopback API and isolated browser tests with the required local permissions.
+- **16 Python tests passed**. JavaScript syntax, Ruff lint/format, pinned skill
+  integrity and foundation credential/artifact-pattern checks passed. Pattern
+  checks are not a comprehensive secret audit.
+- **69 checks per browser passed** on Chromium 152.0.7977.83, Firefox 153.0 and
+  WebKit 26.5, including existing research workflows, 320–1440 px layouts,
+  keyboard focus, command search, mobile return context, draft preservation,
+  preview/cancellation, stale-source imports, consent/reload, blocked storage,
+  quota failure and cross-tab conflicts. Each run recorded zero unexpected
+  external requests and zero main-page console warnings/errors.
+- WebKit on macOS used Option+Tab to reach links, matching the host's native
+  full-keyboard-navigation setting. WebKit screenshots were omitted because
+  Playwright's screenshot implementation injects an inline stylesheet rejected
+  by the unchanged CSP; console assertions were not filtered or weakened.
+  [Desktop](screenshots/premium-desktop.png),
+  [workspace](screenshots/premium-workspace.png) and
+  [mobile](screenshots/premium-mobile.png) viewport screenshots were captured in
+  Chromium and visually inspected.
+- Independent scoped correctness/security reviews found and verified fixes for
+  prototype validation, asynchronous file selection and focus restoration.
+  No confirmed release-blocking findings remained in the reviewed modules.
+  Workspace size/shape limits, template integrity, original-text preservation,
+  CAS writes, aborted transactions and deletion epochs have regression coverage.
+  Listing all stored snapshots at the storage maximum remains a scalability
+  follow-up; this is not a full repository-wide security scan.
+- Fresh allowlisted static build and all source/review verifiers passed:
+  918 ATT&CK prompts / 18,885 procedure relationships, 197 ATLAS prompts,
+  D3FEND relationships for 369 records, and 102 CAR analytics. The public build
+  contains 29 files, including the `.nojekyll` marker. Pinned sources, catalogs,
+  composer and detection prompt bytes have no diff; registry changes only advance
+  the application content-version label, not evidence status.
+- Root and isolated QA dependency audits found zero known vulnerabilities.
+
+The first PR Linux browser run exposed a test synchronization error after all
+356 hosted Node tests passed: it treated the cleared file input as completion
+of an asynchronous rejection. Three deterministic delayed-read reproductions
+confirmed the race. The test now waits for the rejection's terminal status;
+the analogous deletion test waits for committed deletion. Existing assertions
+remain and production code is unchanged. Hosted acceptance requires a fresh
+successful run, not a retry that conceals a failed assertion.
+
+This is a development software acceptance record, not human prompt review,
+native-rule lab validation, field performance evidence, independent WCAG
+certification or stable v1.0 readiness. Hosted CI and Pages outcomes must be
+verified separately after deliberate publication.
+
 ## Research tools — hosted verification 2026-09-09 UTC
 
 The application revision

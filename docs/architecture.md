@@ -2,7 +2,7 @@
 
 ## Independent rebuild
 
-Version `0.4.0.dev0` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
+Version `0.4.0.dev1` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
 It also includes the separately versioned MITRE ATLAS 2026.08 AI knowledge base.
 The original v0.2.0 application remains unavailable. This architecture describes
 the new Node CLI, static browser workbench and readable prompt library; it does
@@ -24,7 +24,12 @@ not claim Python CLI compatibility or restore the original response evaluator.
 | `library/procedures.jsonl` | All 18,885 qualifying procedure relationships, not only the examples embedded in the browser catalog. |
 | `library/coverage.json` | Source, catalog and text identifier sets, exclusions, linkage counts and hashes. |
 | `scripts/library_cli.cjs` | Local list, prompt, export and defenses commands with validated options and exclusive file writes. |
-| `demo/app.js`, `index.html`, `style.css` | Search/filter/pagination, source detail, in-memory drafts, explicit context application, copy and downloads. |
+| `demo/app.js`, `index.html`, `style.css`, `workbench.css` | Selected-technique desk, shared composition, draft/context capture and explicit exports. |
+| `demo/workbench-ui.js` | Command search, separate comparison dialog, adjustable list width and mobile navigation. |
+| `demo/workspace.js`, `packages/schemas/workspace.schema.json` | Strict portable workspace v1 contract, original-template hashes and non-mutating drift inspection. |
+| `demo/workspace-store.js` | Optional atomic IndexedDB persistence with expected revisions and clear epochs. |
+| `demo/workspace-ui.js` | Consent, import preview/new identity, workspace lifecycle and snapshot bridge; no second composer. |
+| `demo/research-components.js` | Shared CAR and Flow rendering for the main desk and Research tools page. |
 | `scripts/build_demo.cjs` | Explicit static public allowlist and bounded, validated byte copying. |
 | `demo/research.html`, `demo/research.js` | Separate local research entry point; Navigator coverage, exact CAR lookup, linear Flow authoring, manual assessments and offline lab exchange. |
 | `sources/car-1b922fe/`, `scripts/build_car_catalog.cjs` | Immutable CAR raw sources and deterministic notice-bearing projection; no native code execution. |
@@ -39,8 +44,12 @@ not claim Python CLI compatibility or restore the original response evaluator.
 Research exchange remains separate from the review registry; see
 [ADR-0007](../governance/decisions/0007-offline-research-exchange.md) and the
 [research tools guide](research-tools.md). Manual assessments and imported lab
-hash references cannot promote prompts. The public entry point has no network,
-storage or command execution, and local STIX comparison is a separate CLI.
+hash references cannot promote prompts. Manual assessments and lab envelopes stay
+in their separate memory-only research session, not the workspace contract. The
+main desk adds explicit optional local storage under
+[ADR-0008](../governance/decisions/0008-portable-private-workspaces.md); neither
+entry point introduces remote data calls or command execution. Local STIX
+comparison remains a separate CLI.
 
 Active scope includes every non-revoked, non-deprecated attack-pattern in all
 three domains. Parent techniques and subtechniques are both prompt records.
@@ -80,7 +89,11 @@ inserted as literal data, never evaluated or interpolated a second time.
 
 Applying browser context rebuilds the selected prompt and affects future
 compositions/exports. Other remembered editor drafts remain intact; draft keys
-include technique, mode and target. Reload clears all in-memory state. Text
+include technique, mode and target. Workspace snapshots retain original template
+text/hash and the context used for that template, plus separate current applied
+and unapplied context. Import checks integrity and reports current-source drift
+without replacing saved templates or editor text. Memory-only state clears on
+reload; user-exported files or opt-in local saves provide explicit recovery. Text
 copy/download preserves editor content. Browser JSONL contains freshly composed
 filtered templates, excluding editor changes. CLI JSONL adds prompt SHA-256
 values and reports a whole-file SHA-256 on stdout; it does not create a sidecar.
@@ -95,15 +108,19 @@ temporary exports rather than the `/tmp` symlink.
 
 Runtime requires no packages or network service. Browser values enter the DOM
 through text/value APIs, and the page has a restrictive CSP. There is no cloud
-model integration, query execution, telemetry or persistent analyst storage.
+model integration, query execution or telemetry. Analyst persistence is off by
+default; consent enables unencrypted IndexedDB, with a consent preference in
+localStorage. The preference is not analyst content. Existing appearance settings
+may also use localStorage. Disabling autosave is not deletion.
 Source-link clicks are explicit navigation. Hosting still receives ordinary
 page requests.
 
-Only `index.html`, `style.css`, `catalog.js`, `atlas-catalog.js`,
-`d3fend-catalog.js`, `core.js`, `defenses.js`, `defenses-ui.js`, `app.js`,
-`favicon.svg`, `THIRD_PARTY_LICENSE.txt`, `ATLAS_LICENSE.txt`,
-`D3FEND_LICENSE.txt` and `.nojekyll` enter `dist/`. The notices retain ATT&CK,
-ATLAS and D3FEND terms and project MIT attribution/license. Each catalog has a
+Only the explicit `PUBLIC_FILES` allowlist in `scripts/build_demo.cjs` enters
+`dist/`: static workbench/research assets and applicable full source notices.
+Workspace exports, IndexedDB records, raw sources and QA tooling are not public
+assets. The notices retain ATT&CK, ATLAS, D3FEND and CAR terms and project MIT
+attribution/license; Attack Flow exports carry their extension license. The
+three large ATT&CK/ATLAS/D3FEND catalogs each have a
 16 MiB limit and every other file a 2 MiB limit. The builder rejects unexpected demo
 files, symlinks, malformed UTF-8, NULs and selected credential signatures, captures
 validated bytes, then writes a new output exclusively. It never packages raw
@@ -113,6 +130,20 @@ a partial new output, which must not be deployed.
 
 ## Decisions and tradeoffs
 
+Portable workspace files are capped at 5 MiB. Strict structural inspection and
+original-template hash checks precede state replacement; an imported file opens
+under a new workspace ID after preview. Hashes detect inconsistency, not author
+identity. Unknown techniques and sources remain explicit and are never silently
+rebased. Plaintext files and storage require user awareness and careful sharing.
+
+IndexedDB save transactions compare expected revisions atomically. The store's
+clear epoch invalidates handles opened before a clear, preventing stale tabs from
+repopulating erased records. A conflict stops autosave and preserves in-memory
+edits for file export or a new copy. Storage errors never count as successful saves.
+Origin-scoped browser storage is not isolated by the repository path: other
+same-origin Pages applications or compromised same-origin code can access it.
+The database name separates application records, not security principals.
+
 Keeping UMD/CommonJS and a single composition implementation supports a plain
 browser and Node without a runtime framework. Committing raw source and readable
 generated texts makes the data traceable and usable offline; reproducible
@@ -121,7 +152,7 @@ examples per record to bound browser payload size, while the repository preserve
 all qualifying relationships. Pagination limits DOM work to 50 results at a time.
 
 Dataset upgrades, original-archive recovery, model services, executable response
-validation and persistent user data are separate changes requiring their own
+validation and remote or encrypted multi-user storage are separate changes requiring their own
 compatibility and trust-boundary decisions. Original project code uses the
 owner-approved [MIT License](../LICENSE), while reproduced ATT&CK source content
 retains separate MITRE terms; see the [licensing record](licensing.md).

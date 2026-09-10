@@ -1,5 +1,5 @@
 // Optional QA dependency is isolated under qa/. No runtime dependency is shipped.
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '../qa/node_modules/playwright');
+const playwright = require(process.env.PLAYWRIGHT_MODULE || '../qa/node_modules/playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -28,13 +28,25 @@ function contrastRatio(first, second) {
   const base = process.env.DEMO_URL || 'http://127.0.0.1:8766/';
   const parsed = new URL(base);
   assert.ok(parsed.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(parsed.hostname), 'QA target must be loopback HTTP');
-  const output = path.resolve(__dirname, '../work/browser-demo');
+  const engine = process.env.BROWSER_ENGINE || 'chromium';
+  assert.ok(['chromium', 'firefox', 'webkit'].includes(engine), 'Unsupported browser engine');
+  const output = path.resolve(__dirname, `../work/browser-demo${engine === 'chromium' ? '' : '-' + engine}`);
   fs.mkdirSync(output, { recursive: true });
-  const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) });
+  const browser = await playwright[engine].launch({ headless: true, ...(engine === 'chromium' && process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) });
   const results = []; const failures = []; const external = [];
   async function check(name, fn) { await fn(); results.push(name); console.log(`PASS ${name}`); }
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
   const page = await context.newPage();
+  // WebKit screenshot internals inject an inline stylesheet blocked by the app's
+  // unchanged CSP. Keep functional console checks strict; capture other engines.
+  const screenshot = async options => { if (engine !== 'webkit') await page.screenshot(options); };
+  page.on('dialog', dialog => {
+    if (dialog.type() === 'beforeunload') return dialog.accept();
+    if (page.listenerCount('dialog') === 1) return dialog.dismiss();
+  });
+  const openExports = async () => {
+    if (!await page.locator('.export-menu').evaluate(node => node.open)) await page.locator('.export-menu > summary').click();
+  };
   page.on('pageerror', error => failures.push(error.message));
   page.on('console', message => { if (['error', 'warning'].includes(message.type())) failures.push(message.text()); });
   await context.route('**/*', route => {
@@ -132,6 +144,7 @@ function contrastRatio(first, second) {
     });
     await check('text download preserves the exact edited draft', async () => {
       const expected = await page.locator('#prompt').inputValue();
+      await openExports();
       const pending = page.waitForEvent('download'); await page.locator('#download').click(); const download = await pending;
       assert.match(download.suggestedFilename(), /^T\d{4}(\.\d{3})?-hunt-draft\.txt$/);
       assert.equal(fs.readFileSync(await download.path(), 'utf8'), expected);
@@ -186,7 +199,7 @@ function contrastRatio(first, second) {
       assert.match(await page.locator('#provenance-summary').textContent(), /MITRE ATLAS 2026\.08/);
       assert.equal(await page.locator('#atlas-case-studies details').count(), record.caseStudies.length);
       assert.equal(await page.locator('#atlas-mitigations details').count(), record.mitigations.length);
-      await page.locator('#tab-map').click();
+      await page.locator('#tab-source').click();
       assert.match(await page.locator('#relationship-text').textContent(), /ATLAS source relationships/);
       assert.match(await page.locator('#relationship-text').textContent(), /unvalidated draft target/);
       await page.locator('#tab-prompt').click();
@@ -205,6 +218,7 @@ function contrastRatio(first, second) {
     await check('ATLAS TXT download preserves exact UTF-8 editor bytes', async () => {
       const expected = (await page.locator('#prompt').inputValue()) + '\nAnalyst edit: ääkköset and AI context.';
       await page.locator('#prompt').fill(expected);
+      await openExports();
       const pending = page.waitForEvent('download');
       await page.locator('#download').click();
       const download = await pending;
@@ -250,12 +264,14 @@ function contrastRatio(first, second) {
       assert.equal(await page.locator('#panel-compare').isVisible(), true);
       assert.match(await page.locator('#comparison-body').textContent(), /MITRE ATLAS 2026\.08/);
       assert.match(await page.locator('#comparison-body').textContent(), /MITRE ATT&CK 19\.2/);
+      await page.keyboard.press('Escape');
       await page.locator('#clear-active-filters').click();
       await page.locator('[data-domain="ATLAS"]').click();
       await page.locator('#search').fill('AML.T0051.001');
       await page.locator('#tab-prompt').click();
       // No clipboard content is inspected: denial exercises the documented address-bar fallback.
       await page.evaluate(() => { navigator.clipboard.writeText = async () => { throw new Error('Test denial'); }; });
+      await openExports();
       await page.locator('#share-view').click();
       assert.match(await page.locator('#action-status').textContent(), /Copy the current address/);
       const shared = page.url();
@@ -271,19 +287,20 @@ function contrastRatio(first, second) {
       assert.equal(await page.locator('#context').inputValue(), '');
       assert.equal((await page.locator('#prompt').inputValue()).includes('ATLAS_TEST_SECRET'), false);
       assert.equal((await page.locator('#prompt').inputValue()).includes('Analyst edit:'), false);
-      await page.locator('#tab-compare').click();
+      await page.locator('#compare-open').click();
       assert.equal(await page.locator('#compare-count').textContent(), '2');
       assert.match(await page.locator('#comparison-body').textContent(), /MITRE ATLAS.*MITRE ATT&CK/s);
-      await page.locator('#tab-prompt').click();
+      await page.keyboard.press('Escape'); await page.locator('#tab-prompt').click();
     });
     for (const width of [320, 1440]) await check(`ATLAS detail and mixed-framework comparison fit ${width}px`, async () => {
       await page.setViewportSize({ width, height: 1000 });
+      if (!await page.locator('#selected-detail').isVisible()) await page.locator('#techniques button').first().click();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      await page.screenshot({ path: path.join(output, `atlas-${width}.png`), fullPage: true });
-      await page.locator('#tab-compare').click();
+      await screenshot({ path: path.join(output, `atlas-${width}.png`), fullPage: true });
+      await page.locator('#compare-open').click();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      await page.screenshot({ path: path.join(output, `atlas-comparison-${width}.png`), fullPage: true });
-      await page.locator('#tab-prompt').click();
+      await screenshot({ path: path.join(output, `atlas-comparison-${width}.png`), fullPage: true });
+      await page.keyboard.press('Escape'); await page.locator('#tab-prompt').click();
     });
     await check('D3FEND renders pinned countermeasures, source paths and explicit inferred scope', async () => {
       await page.goto(base);
@@ -332,6 +349,7 @@ function contrastRatio(first, second) {
     });
     for (const width of [320, 1440]) await check(`D3FEND cards and exact source paths fit ${width}px`, async () => {
       await page.setViewportSize({ width, height: 1000 });
+      if (!await page.locator('#selected-detail').isVisible()) await page.locator('#techniques button').first().click();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       const tree = await page.locator('#panel-defenses').ariaSnapshot();
       assert.match(tree, /heading "Explore related countermeasures\." \[level=3\]/);
@@ -341,9 +359,9 @@ function contrastRatio(first, second) {
         assert.ok(box && box.width >= 44 && box.height >= 44, 'D3FEND touch targets must be at least 44px square');
       }
       await page.locator('h1').scrollIntoViewIfNeeded();
-      await page.screenshot({ path: path.join(output, `d3fend-${width}.png`), fullPage: true });
+      await screenshot({ path: path.join(output, `d3fend-${width}.png`), fullPage: true });
       await page.locator('#panel-defenses h3').scrollIntoViewIfNeeded();
-      await page.screenshot({ path: path.join(output, `d3fend-detail-${width}.png`) });
+      await screenshot({ path: path.join(output, `d3fend-detail-${width}.png`) });
     });
     await check('D3FEND exposes unmapped Mobile and ATLAS records without inheriting other relationships', async () => {
       for (const id of ['T1404', 'AML.T0051']) {
@@ -404,9 +422,9 @@ function contrastRatio(first, second) {
     await check('detail tabs support arrow-key navigation', async () => {
       await page.locator('#tab-prompt').focus(); await page.keyboard.press('ArrowRight');
       assert.equal(await page.locator('#panel-source').isVisible(), true);
-      await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('ArrowRight');
       assert.equal(await page.locator('#panel-defenses').isVisible(), true);
-      await page.keyboard.press('End'); assert.equal(await page.locator('#panel-review').isVisible(), true);
+      await page.keyboard.press('End'); assert.equal(await page.locator('#panel-flow').isVisible(), true);
       await page.keyboard.press('Home'); assert.equal(await page.locator('#panel-prompt').isVisible(), true);
     });
     await check('about dialog closes with Escape and restores focus', async () => {
@@ -416,7 +434,9 @@ function contrastRatio(first, second) {
     });
     await check('skip link and primary controls expose visible keyboard focus', async () => {
       await page.goto(base);
-      await page.keyboard.press('Tab');
+      // macOS WebKit's default keyboard preference skips links with Tab;
+      // Option+Tab traverses every interactive element without changing the OS.
+      await page.keyboard.press(engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab');
       assert.equal(await page.evaluate(() => document.activeElement.className), 'skip');
       const skipBox = await page.locator('.skip').boundingBox();
       assert.ok(skipBox && skipBox.y >= 0);
@@ -465,18 +485,24 @@ function contrastRatio(first, second) {
     for (const width of [320, 768, 1024, 1440]) await check(`no horizontal overflow at ${width}px`, async () => {
       await page.setViewportSize({ width, height: 1000 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      if (!await page.locator('#selected-detail').isVisible()) await page.locator('#techniques button').first().click();
       assert.equal(await page.locator('#copy').isVisible(), true);
-      await page.screenshot({ path: path.join(output, `demo-${width}.png`), fullPage: true });
+      await screenshot({ path: path.join(output, `demo-${width}.png`), fullPage: true });
     });
     await check('compact layouts keep key touch targets at least 44px square', async () => {
       await page.setViewportSize({ width: 320, height: 1000 });
-      for (const selector of ['#theme', '.domains button', '.page-controls button', '#compare-add', '.actions button:visible']) {
+      await page.locator('#mobile-back').click();
+      for (const selector of ['#theme', '.domains button', '.page-controls button']) {
         for (const box of await page.locator(selector).evaluateAll(nodes => nodes.filter(node => !node.disabled).map(node => {
           const rect = node.getBoundingClientRect(); return { width: rect.width, height: rect.height };
         }))) {
           assert.ok(box.width >= 44 && box.height >= 44, `${selector} touch target is ${box.width}×${box.height}`);
         }
       }
+      await page.locator('#techniques button').first().click();
+      for (const selector of ['#compare-add', '.actions button:visible']) for (const box of await page.locator(selector).evaluateAll(nodes => nodes.filter(node => !node.disabled).map(node => {
+        const rect = node.getBoundingClientRect(); return { width: rect.width, height: rect.height };
+      }))) assert.ok(box.width >= 44 && box.height >= 44, `${selector} touch target is ${box.width}×${box.height}`);
     });
     await check('200% text scaling remains within the viewport', async () => {
       // Test-only accessibility preference emulation, restored immediately afterward.
@@ -491,12 +517,17 @@ function contrastRatio(first, second) {
       assert.match(await page.locator('#prompt').inputValue(), /DRAFT/);
       await page.locator('[data-domain="ATLAS"]').click();
       await page.locator('#search').fill('AML.T0051.001');
+      await page.locator('#techniques button').first().click();
       assert.equal(await page.locator('#technique-id').textContent(), 'AML.T0051.001');
       assert.match(await page.locator('#prompt').inputValue(), /MITRE ATLAS 2026\.08/);
     });
-    await require('./research_browser_checks.cjs')({ page, base, check, output });
+    await require('./research_browser_checks.cjs')({ page, base, check, output, screenshot });
+    await require('./premium_browser_checks.cjs')({ page, base, check, output });
     await check('no browser console errors or external requests', async () => { assert.deepEqual(failures, []); assert.deepEqual(external, []); });
-    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:project.version, catalogRecords:combinedCatalog.length, attackRecords:catalog.length, atlasRecords:atlasCatalog.length, browser: browser.version(), node: process.version, basePath:parsed.pathname, checks: results, failures, externalRequests: external, limitations: ['No screen-reader audit or complete WCAG certification.', 'Clipboard denial tested; actual platform clipboard success is not asserted.', 'Hosted GitHub Pages and original application were not tested.'] }, null, 2) + '\n');
+    const limitations = ['No screen-reader audit or complete WCAG certification.', 'Clipboard denial tested; actual platform clipboard success is not asserted.', 'Hosted GitHub Pages and original application were not tested.'];
+    if (engine === 'webkit') limitations.push('WebKit screenshots omitted: locked Playwright screenshot preparation injects an inline style rejected by the application CSP. Functional checks and unfiltered console checks remain enabled; Chromium and Firefox provide visual evidence.');
+    if (engine === 'webkit' && process.platform === 'darwin') limitations.push('macOS WebKit skip-link keyboard traversal uses Option+Tab because the default platform Tab preference excludes links.');
+    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:project.version, catalogRecords:combinedCatalog.length, attackRecords:catalog.length, atlasRecords:atlasCatalog.length, engine, browser: browser.version(), node: process.version, basePath:parsed.pathname, checks: results, failures, externalRequests: external, limitations }, null, 2) + '\n');
     console.log(`${results.length} browser checks passed.`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

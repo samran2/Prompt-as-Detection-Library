@@ -2,8 +2,8 @@
 
 ## Development baseline
 
-The working target is the `0.4.0.dev0` trust-and-contract foundation (npm
-`0.4.0-dev.0`). It builds on the published `0.3.0.dev3` independent rebuild.
+The working target is `0.4.0.dev1` Premium Workbench (npm `0.4.0-dev.1`),
+building on the research-and-contract foundation and independent rebuild.
 The pinned ATT&CK release remains 19.2, and the existing CLI and static browser
 workbench remain supported.
 ATLAS AI is separately pinned at content version `2026.08` / format `6.0.0`.
@@ -54,12 +54,13 @@ committed.
 
 Development versions use two equivalent spellings:
 
-- `VERSION` and Python-facing prose: `0.4.0.dev0`
-- npm metadata and browser-safe SemVer: `0.4.0-dev.0`
+- `VERSION` and Python-facing prose: `0.4.0.dev1`
+- npm metadata and browser-safe SemVer: `0.4.0-dev.1`
 
-Keep the root and QA package metadata, lockfiles, UI/CLI display, generated
-reports and changelog aligned. Do not replace the ATT&CK content version with the
-application version: `19.2` and `0.4.0.dev0` describe different things. See
+Keep application package metadata, lockfiles, UI/CLI display and changelog aligned.
+Do not rewrite pinned source/content manifests or historical evidence merely to
+match a UI version bump. `19.2`, `2026.08` and `0.4.0.dev1` describe different
+source/application versions. This UI change preserves generated prompt bytes. See
 [versioning](versioning.md).
 
 ## Deterministic library generation
@@ -153,8 +154,9 @@ python3 -m http.server 8766 --bind 127.0.0.1 --directory demo
 ```
 
 Open `http://127.0.0.1:8766/`. Direct `file:` use also works, with browser
-clipboard limitations. Context and edits remain local and in memory; exports are
-explicit user actions.
+clipboard/storage limitations. Prefer loopback HTTP for repeatable browser
+storage and cryptographic APIs. Context and edits remain in memory by default;
+exports and unencrypted IndexedDB autosave require explicit user action.
 
 Optional real-browser QA has a separate locked development boundary:
 
@@ -175,6 +177,48 @@ high-contrast modes; persistent URL state; comparison; relationship views; and
 all export paths. Record console and unexpected-network results. Automated
 checks do not establish WCAG 2.2 AA: complete independent manual VoiceOver and
 NVDA reviews before v1.0.
+
+### Workspace development and failure paths
+
+`demo/workspace.js` owns the portable contract and integrity/drift inspection;
+`demo/workspace-store.js` owns atomic IndexedDB writes; `demo/workspace-ui.js`
+owns consent, preview, workspace lifecycle and the application snapshot bridge.
+`demo/workbench-ui.js` owns layout/commands and `demo/research-components.js`
+shares CAR/Flow views without duplicating the composer. Read
+[workspace format](workspace-format.md) and [ADR-0008](../governance/decisions/0008-portable-private-workspaces.md).
+
+Focused checks, before the complete regression suite:
+
+```sh
+node --test tests/workspace.test.cjs tests/workspace_store.test.cjs tests/workspace_ui.test.cjs
+node --test tests/premium-workbench.test.cjs tests/premium_contract.test.cjs tests/research_components.test.cjs
+npm run research:check
+```
+
+The optional `scripts/premium_browser_checks.cjs` exports checks consumed by
+the smoke harness; it is not a standalone test runner. Use isolated browser
+profiles and synthetic workspaces, never the user's saved browser data. Verify
+reload with and without consent; import cancellation/new identity; changed or
+unknown sources; hash failure; concurrent edits and clear-epoch conflicts;
+quota/unavailable storage; file recovery; and no unexpected network requests.
+Do not turn a missing browser or skipped failure path into a passing claim.
+
+With the locked QA package and its browsers installed, select each engine using
+`BROWSER_ENGINE=chromium`, `BROWSER_ENGINE=firefox` or `BROWSER_ENGINE=webkit`
+when running `node scripts/browser_smoke.cjs`. `DEMO_URL` must be loopback HTTP;
+`PLAYWRIGHT_BROWSERS_PATH` may point to the installed browser cache. The report
+records the engine/version and any screenshot or platform keyboard limitations.
+Run native storage checks explicitly with `WORKSPACE_BROWSER_TEST=1 node --test
+tests/workspace_store.test.cjs`; all three engines must be available. The ordinary
+Node suite tests storage with deterministic transaction doubles; it does not
+silently label absent native-browser checks as successful.
+
+Never use the URL for workspace text. Disabling autosave preserves existing
+saves; explicit clear deletes saved records, invalidates old handles and retains
+the current memory workspace. A conflict must not silently pick a winner or
+re-enable autosave: preserve edits and offer export or a new workspace copy.
+Same-origin GitHub Pages applications can access each other's browser storage;
+a project-specific database name is namespacing, not an isolation boundary.
 
 Measure Core Web Vitals using a documented environment and sufficient field or
 representative lab samples. The targets are p75 LCP ≤ 2.5 s, INP ≤ 200 ms and

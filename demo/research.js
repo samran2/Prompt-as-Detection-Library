@@ -4,7 +4,6 @@
   const $ = id => document.getElementById(id);
   const MAX_IMPORT_BYTES = 256 * 1024;
   const catalog = globalThis.PAD_CATALOG;
-  const steps = [];
   let plan = null;
   let planRevision = 0;
   let importRevision = 0;
@@ -27,7 +26,7 @@
       $(id).disabled = true;
       try { await handler(); }
       catch (error) { report(statusId, `Could not complete action: ${error.message}`); }
-      finally { $(id).disabled = id === 'lab-template' ? !plan : id === 'flow-export' ? steps.length < 2 : false; }
+      finally { $(id).disabled = id === 'lab-template' ? !plan : false; }
     });
   };
   const selected = id => {
@@ -40,7 +39,7 @@
     if (event.target.value === 'system') delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = event.target.value;
   });
-  const missing = ['PAD_NAVIGATOR', 'PAD_CAR', 'PAD_CAR_CATALOG', 'PAD_ATTACK_FLOW', 'PAD_ROBUSTNESS', 'PAD_LAB', 'PAD'].filter(key => !globalThis[key]);
+  const missing = ['PAD_NAVIGATOR', 'PAD_CAR', 'PAD_CAR_CATALOG', 'PAD_ATTACK_FLOW', 'PAD_ROBUSTNESS', 'PAD_LAB', 'PAD_RESEARCH_UI', 'PAD'].filter(key => !globalThis[key]);
   if (!Array.isArray(catalog) || missing.length) {
     report('research-status', 'Research modules are unavailable. Reload or open a complete local build. The technique library is still available.');
     return;
@@ -76,29 +75,8 @@
   let car;
   try { car = PAD_CAR.createLibrary(PAD_CAR_CATALOG); }
   catch { report('research-status', 'CAR source data is invalid. Reload or open a complete local build.'); return; }
-  function renderCar() {
-    const record = selected('car-technique');
-    const result = car.lookup(record.id);
-    const region = $('car-results'); region.replaceChildren();
-    region.append(make('p', `${result.analytics.length} exact CAR mappings for ${record.id}. ${result.warning}`));
-    for (const analytic of result.analytics) {
-      const details = make('details'); details.append(make('summary', `${analytic.id} · ${analytic.title}`));
-      details.append(make('h3', 'Hypothesis'), make('p', analytic.hypothesis));
-      details.append(make('h3', 'Source telemetry'), make('p', analytic.telemetry.join('\n') || 'Not specified by source.'));
-      for (const implementation of analytic.pseudocode) {
-        details.append(make('h3', implementation.description || implementation.type || 'Source pseudocode'));
-        details.append(make('pre', implementation.code, 'research-code'));
-      }
-      const link = make('a', 'Read pinned CAR source ↗');
-      const url = new URL(analytic.sourceUrl);
-      if (url.protocol === 'https:' && url.hostname === 'github.com' && !url.username && !url.password && !url.port) {
-        link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer'; details.append(link);
-      }
-      details.append(make('p', `Source SHA-256: ${analytic.sourceSha256}`, 'fine-print'));
-      region.append(details);
-    }
-    const notice = make('details'); notice.append(make('summary', 'Source license and notice'), make('pre', `${result.sourceNotice}\n${result.sourceLicense}`, 'research-code')); region.append(notice);
-  }
+  const carView = PAD_RESEARCH_UI.createCar({document, root: $('car-results'), library: car});
+  function renderCar() { carView.show(selected('car-technique')); }
   action('car-find', 'research-status', renderCar);
 
   function invalidatePlan() {
@@ -107,50 +85,13 @@
     $('lab-result').hidden = true; $('lab-result').textContent = '';
     report('lab-status', 'Selection or plan details changed. Create a new plan before importing evidence.');
   }
-  function choices() {
-    const query = $('flow-search').value.trim().toLowerCase();
-    const matches = catalog.filter(record => `${record.id} ${record.name}`.toLowerCase().includes(query)).slice(0, 50);
-    $('flow-choice').replaceChildren(...matches.map(record => {
-      const option = make('option', `${record.id} · ${record.name}`); option.value = record.id; return option;
-    }));
-    $('flow-add').disabled = matches.length === 0 || steps.length >= 20;
-  }
-  function renderSteps() {
-    $('flow-steps').replaceChildren();
-    steps.forEach((record, index) => {
-      const row = make('li', undefined, 'flow-step');
-      row.append(make('strong', `${record.id} · ${record.name}`));
-      const controls = make('div', undefined, 'step-controls');
-      for (const [text, delta] of [['Move up', -1], ['Move down', 1], ['Remove', 0]]) {
-        const button = make('button', text); button.setAttribute('aria-label', `${text}: step ${index + 1}, ${record.id}`);
-        button.disabled = delta === -1 && index === 0 || delta === 1 && index === steps.length - 1;
-        button.addEventListener('click', () => {
-          if (delta === 0) steps.splice(index, 1);
-          else [steps[index], steps[index + delta]] = [steps[index + delta], steps[index]];
-          invalidatePlan(); renderSteps();
-          const nextIndex = Math.max(0, Math.min(index + delta, steps.length - 1));
-          const nextRow = $('flow-steps').children[nextIndex];
-          (nextRow?.querySelector('button:not(:disabled)') || $('flow-add')).focus();
-        });
-        controls.append(button);
-      }
-      row.append(controls); $('flow-steps').append(row);
-    });
-    $('flow-empty').hidden = steps.length > 0;
-    $('flow-export').disabled = steps.length < 2; $('flow-clear').disabled = steps.length === 0;
-    choices(); report('flow-status', `${steps.length} of 20 hypothesis steps.`);
-  }
-  $('flow-search').addEventListener('input', choices);
-  $('flow-add').addEventListener('click', () => {
-    if (steps.length >= 20) return;
-    const record = catalog.find(item => item.id === $('flow-choice').value);
-    if (!record) return;
-    steps.push(record); invalidatePlan(); renderSteps();
-  });
-  $('flow-clear').addEventListener('click', () => { steps.length = 0; invalidatePlan(); renderSteps(); });
-  action('flow-export', 'flow-status', () => {
-    download('attack-flow-hypothesis.json', PAD_ATTACK_FLOW.createFlow(steps, { title: $('flow-name').value }));
-    report('flow-status', 'Attack Flow hypothesis downloaded. No activity observed or executed.');
+  const flowRecords = snapshot => snapshot.steps.map(id => catalog.find(record => record.id === id));
+  const flow = PAD_RESEARCH_UI.createFlow({document, catalog,
+    list: $('flow-steps'), empty: $('flow-empty'), addButton: $('flow-add'),
+    exportButton: $('flow-export'), clearButton: $('flow-clear'),
+    search: $('flow-search'), choice: $('flow-choice'), status: $('flow-status'), title: $('flow-name'),
+    onChange: invalidatePlan,
+    onExport: snapshot => download('attack-flow-hypothesis.json', PAD_ATTACK_FLOW.createFlow(flowRecords(snapshot), {title: snapshot.title})),
   });
 
   for (const [id, entries] of [['assessment-level', PAD_ROBUSTNESS.LEVELS], ['assessment-origin', PAD_ROBUSTNESS.ORIGINS]]) {
@@ -165,7 +106,7 @@
   for (const id of ['lab-title-input', 'lab-authorization']) $(id).addEventListener('input', invalidatePlan);
   action('lab-plan', 'lab-status', async () => {
     const revision = planRevision;
-    const next = await PAD_LAB.createPlan([...steps], { title: $('lab-title-input').value, authorizationReference: $('lab-authorization').value });
+    const next = await PAD_LAB.createPlan(flowRecords(flow.snapshot()), { title: $('lab-title-input').value, authorizationReference: $('lab-authorization').value });
     if (revision !== planRevision) throw new Error('Plan inputs changed while preparing the export. Please retry.');
     plan = next; download('offline-lab-plan.json', plan);
     $('lab-template').disabled = false; $('lab-file').disabled = false;
@@ -196,7 +137,7 @@
   });
 
   try {
-    renderCoverage(); choices(); renderCar();
+    renderCoverage(); flow.render(); renderCar();
     $('research-content').hidden = false;
     report('research-status', 'Ready. All inputs stay in this browser and clear on reload. Exported files are your responsibility.');
   } catch {
