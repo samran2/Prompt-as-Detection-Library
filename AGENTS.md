@@ -3,7 +3,7 @@
 ## Status and scope
 
 - This is the independently rebuilt complete active ATT&CK 19.2 prompt library,
-  being developed as `0.4.0.dev1` (npm `0.4.0-dev.1`). The original `0.2.0`
+  being developed as `0.4.0.dev3` (npm `0.4.0-dev.3`). The original `0.2.0`
   source archive remains unavailable: never claim original implementation or
   byte preservation. All active techniques are complete. The owner requested
   publication to the public `samran2/Prompt-as-Detection-Library` repository and

@@ -1,5 +1,41 @@
 # Verification records
 
+## Prompt clarity v3 — local verification 2026-09-10
+
+Application `0.4.0.dev3`, prompt profile `PAD-v0.4.0-dev3`.
+This record describes local working-tree checks, not a hosted deployment.
+
+- Regenerated and verified 918 ATT&CK and 197 ATLAS TXT prompts. The complete
+  pinned source descriptions and references remain literal; source versions did
+  not change. Review records and static scorecards were rebound to new hashes
+  without promoting any validation status.
+- Added four clarity tests. Three failed against the preceding template and
+  passed after implementation; the literal-context regression already passed.
+  The format test covers all 26,760 record/mode/target combinations.
+- Full Node suite: 360 passed, zero failures/skips. The first sandboxed attempt
+  could not open loopback test listeners; the complete rerun with local-server
+  permission passed. Snapshot hashes were deliberately updated for changed text.
+- Python foundation suite: 16 passed. Foundation file/credential-pattern checks
+  and JavaScript syntax checks passed. These are not a comprehensive security audit.
+- Clean static build and all library, ATLAS, D3FEND, CAR, review and eval
+  verification steps passed. Previous dist was preserved in ignored local work.
+- Browser smoke: 69 passed using Chrome 152.0.7977.83 in an isolated profile,
+  loopback-only preview. Drafts, mode/target selection, exports and workspaces
+  passed; no console errors or unexpected external requests. Viewports included
+  320, 768, 1024 and 1440 px. The default bundled Chromium was unavailable;
+  installed Chrome was used explicitly. Firefox/WebKit were not rerun.
+- A separate agent reviewed the composer and clarity tests. It found no blocking
+  template regression. Follow-ups applied: shortest-complete-answer wording and
+  explicit UI/docs that platform filtering does not configure prompt scope.
+  This is an agent code review, not independent human review of 1,115 prompts.
+
+Default prompt input totals changed from 17,189,451 to 16,690,203 JavaScript
+string characters (about 2.9% shorter), including unchanged source text.
+The main change is the requested answer structure: four sections instead of
+eight/nine, one task-specific deliverable and inline citations. Input character
+counts do not measure model quality, output length, token savings or detection
+performance. No model-response A/B test or laboratory validation was performed.
+
 ## Premium Workbench — hosted verification 2026-09-10 UTC
 
 The `0.4.0.dev1` application revision

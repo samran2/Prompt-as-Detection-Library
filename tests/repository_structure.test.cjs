@@ -34,8 +34,8 @@ test('the world-class foundation exposes the intended repository boundaries', ()
 test('all public package versions agree on the development release', () => {
   const canonical = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
   const npmVersion = readJson('package.json').version;
-  assert.equal(canonical, '0.4.0.dev1');
-  assert.equal(npmVersion, '0.4.0-dev.1');
+  assert.equal(canonical, '0.4.0.dev3');
+  assert.equal(npmVersion, '0.4.0-dev.3');
   for (const relative of [
     'apps/workbench/package.json', 'apps/research-api/package.json',
     'packages/core/package.json', 'packages/clients/package.json', 'qa/package.json',
