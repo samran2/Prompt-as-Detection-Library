@@ -25,7 +25,11 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
     child.on('console', message => { if (['error', 'warning'].includes(message.type())) failures.push(message.text()); });
   });
   const page = await context.newPage();
-  const goto = async (target = base, child = page) => { await child.goto(target); await child.locator('#app-content').waitFor(); };
+  const goto = async (target = base, child = page) => {
+    await child.goto(target); await child.locator('#app-content').waitFor();
+    // Do not emit a redundant change/autosave when opening an already-quick workspace.
+    if (await child.locator('#composer-mode').inputValue() !== 'quick') await child.locator('#composer-mode').selectOption('quick');
+  };
   const tab = async name => { await page.locator(`#tab-${name}`).click(); };
   const downloadJSON = async (selector, child = page) => {
     const pending = child.waitForEvent('download'); await child.locator(selector).click();
@@ -128,7 +132,7 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
       await tab('flow'); await page.locator('#desk-flow-title').fill('Synthetic portable flow');
       await page.locator('#desk-flow-add').click(); await page.locator('#search').fill('T1053.005'); await page.locator('#desk-flow-add').click();
       exportedWorkspace = await snapshot();
-      assert.equal(exportedWorkspace.schemaVersion, 1);
+      assert.equal(exportedWorkspace.schemaVersion, 2);
       assert.equal(exportedWorkspace.context, appliedContext); assert.equal(exportedWorkspace.contextInput, pendingContext);
       assert.ok(exportedWorkspace.favorites.includes('T1059.001'));
       assert.ok(exportedWorkspace.collections.some(item => item.name === 'Synthetic investigations' && item.techniqueIds.includes('T1059.001')));
@@ -216,7 +220,7 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
       await workspace(); const before = await snapshot();
       page.once('dialog', dialog => dialog.accept()); await page.locator('#workspace-delete-local').click();
       // Consent is cleared synchronously, but deletion runs in the async queue.
-      await page.waitForFunction(() => document.getElementById('workspace-storage-status').textContent.startsWith('Local workspace data deleted.'));
+      await page.waitForFunction(() => document.getElementById('workspace-storage-status').textContent.startsWith('Version 2 local workspace data deleted.'));
       assert.equal(await page.locator('#workspace-autosave').isChecked(), false);
       assert.deepEqual((await snapshot()).drafts, before.drafts, 'Deleting storage must not silently discard current in-memory edits');
       await closeWorkspace(); await page.reload(); await page.locator('#app-content').waitFor(); await workspace();

@@ -6,7 +6,10 @@
 })(globalThis, function () {
   'use strict';
 
-  const DB_NAME = 'pad-workspaces-v1';
+  // The old app does not know v2 snapshots. Isolate writers rather than relying
+  // on a schema check that an already-open v1 tab cannot enforce.
+  const DB_NAME = 'pad-workspaces-v2';
+  const LEGACY_DB_NAME = 'pad-workspaces-v1';
   const STORES = ['workspaces', 'metadata'];
   const MAX_BYTES = 5 * 1024 * 1024;
   const MAX_WORKSPACES = 100;
@@ -108,37 +111,58 @@
     return {close, transaction};
   }
 
-  async function open(indexedDB) {
-    const db = await new Promise((resolve, reject) => {
-      let request; let settled = false;
+  async function database(indexedDB, name, create) {
+    return new Promise((resolve, reject) => {
+      let request; let settled = false; let absent = false;
       const fail = code => { settled = true; reject(new StorageFault(code)); };
       try {
         if (indexedDB === undefined) indexedDB = globalThis.indexedDB;
         requireCondition(indexedDB && typeof indexedDB.open === 'function', 'STORAGE');
-        request = indexedDB.open(DB_NAME, 1);
+        request = create ? indexedDB.open(name, 1) : indexedDB.open(name);
       } catch { fail('STORAGE'); return; }
       request.onupgradeneeded = () => {
+        if (!create) {
+          // Abort the creation transaction: discovery must not create an empty
+          // legacy database or touch stores owned by the older app.
+          absent = true;
+          try { request.transaction.abort(); } catch { fail('STORAGE'); }
+          return;
+        }
         try {
           const database = request.result;
           database.createObjectStore('workspaces', {keyPath: 'id'});
           database.createObjectStore('metadata', {keyPath: 'key'}).put({key: 'control', epoch: 1, counter: 0});
         } catch { try { request.transaction.abort(); } catch {} fail('STORAGE'); }
       };
-      request.onerror = () => fail('STORAGE');
+      request.onerror = () => { if (absent && !settled) { settled = true; resolve(null); } else fail('STORAGE'); };
       request.onblocked = () => fail('BLOCKED');
       request.onsuccess = () => { if (settled) request.result.close(); else { settled = true; resolve(request.result); } };
     });
+  }
+
+  function list(client, epoch) {
+    return client.transaction('readonly', epoch, ({rows, watch, done}) => watch(rows.getAll(undefined, MAX_WORKSPACES + 1), values => {
+      requireCondition(values.length <= MAX_WORKSPACES, 'STORAGE');
+      done(values.map(value => record(value)).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+    }));
+  }
+
+  async function readLegacy(indexedDB) {
+    const db = await database(indexedDB, LEGACY_DB_NAME, false);
+    if (!db) return [];
+    const client = connection(db);
+    try { return await list(client, null); }
+    finally { client.close(); }
+  }
+
+  async function open(indexedDB) {
+    const db = await database(indexedDB, DB_NAME, true);
     const client = connection(db);
     let epoch;
     try { epoch = await client.transaction('readonly', null, ({state, done}) => done(state.epoch)); }
     catch (error) { client.close(); throw error; }
     return Object.freeze({
-      list() {
-        return client.transaction('readonly', epoch, ({rows, watch, done}) => watch(rows.getAll(undefined, MAX_WORKSPACES + 1), values => {
-          requireCondition(values.length <= MAX_WORKSPACES, 'STORAGE');
-          done(values.map(value => record(value)).sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
-        }));
-      },
+      list() { return list(client, epoch); },
       async read(id) {
         requireCondition(validId(id));
         return client.transaction('readonly', epoch, ({rows, watch, done}) => watch(rows.get(id), value => done(record(value, id))));
@@ -183,5 +207,5 @@
     });
   }
 
-  return Object.freeze({open});
+  return Object.freeze({open,readLegacy});
 });

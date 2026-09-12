@@ -18,9 +18,9 @@ moved.
 
 Before v1.0, development identifiers use both ecosystem spellings:
 
-- `0.4.0.dev0` in `VERSION` and Python-facing text;
-- `0.4.0-dev.0` in npm metadata and SemVer-facing UI; and
-- `v0.4.0-dev.0` only if an explicitly authorized prerelease tag is created.
+- `0.4.0.dev4` in `VERSION` and Python-facing text;
+- `0.4.0-dev.4` in npm metadata and SemVer-facing UI; and
+- `v0.4.0-dev.4` only if an explicitly authorized prerelease tag is created.
 
 Development builds must not be published as stable or described as v1.0 release
 candidates unless they have passed the release-candidate gates.
@@ -58,13 +58,25 @@ these gates.
 Each exported object records the relevant versions and a content SHA-256. A
 collection manifest records the application version and source/content snapshot.
 
+For dev4, application features advance while no-profile prompt text retains
+`PAD-v0.4.0-dev3`. The optional environment profile has its own schema version 1
+and content hash; workspace exports advance to schema version 2. The old/new
+comparison pins the published dev3 composer independently of current application
+metadata. Changing an implementation hash alone does not prove changed prompt
+bytes or improved model results. Preserve historical reports as historical.
+
 ## Compatibility policy
 
 The existing Node CLI, static browser workflows and export meanings remain
 compatible through the `0.x` foundation unless a change is explicitly documented
-with a migration. Additive fields are preferred. Readers must ignore unknown
-optional fields; writers must not silently reinterpret an existing required
-field.
+with a migration. Additive fields are preferred in interfaces that explicitly
+permit them. Strict import contracts, including workspace and environment files,
+reject unknown fields; changing them requires an explicit schema version and
+reader path. Writers must not silently reinterpret an existing required field.
+
+Workspace v2 imports valid v1 data after preview into a new identity, preserving
+original content and original v1 storage. It does not make v2 files readable by
+dev3 or provide a lossy downgrade. Keep the original v1 export/save for rollback.
 
 After v1.0, incompatible CLI, JSON Schema, export or `/v1` API changes require a
 major version or a versioned replacement endpoint with a documented deprecation
@@ -75,8 +87,8 @@ guidance.
 
 Before proposing a version change:
 
-- update `VERSION`, package and lock metadata, UI/CLI labels, generated reports
-  and the changelog together;
+- update `VERSION`, package and lock metadata, UI/CLI labels and the changelog
+  together; update current generated reports only when their own inputs change;
 - verify the chosen spelling in each ecosystem;
 - identify changed public contracts and provide migrations where required;
 - keep ATT&CK, schema, rubric and fixture versions explicit;

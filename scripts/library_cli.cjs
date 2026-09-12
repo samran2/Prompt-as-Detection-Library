@@ -5,10 +5,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHash, randomUUID } = require('node:crypto');
 const core = require('../demo/core.js');
+const environmentProfiles = require('../demo/environment.js');
 const records = require('../demo/catalog.js');
 
 const FILTER_FLAGS = ['query', 'domain', 'tactic', 'platform', 'framework'];
-const PROMPT_FLAGS = ['mode', 'target', 'context-file', 'output'];
+const PROMPT_FLAGS = ['mode', 'target', 'context-file', 'profile-file', 'output'];
 const COMMAND_FLAGS = {
   list: [...FILTER_FLAGS, 'json'],
   prompt: PROMPT_FLAGS,
@@ -39,11 +40,14 @@ Filters: --query TEXT --domain NAME --tactic NAME --platform NAME --framework NA
 
 Prompt options:
   --mode ${Object.keys(core.MODES).join('|')} (default: detect)
-  --target NAME (default: Platform-neutral)
+  --target NAME (default: profile target when supplied, otherwise Platform-neutral)
   Targets: ${core.TARGETS.join(', ')}
   --context-file FILE (literal UTF-8, at most 4,000 JavaScript characters;
     at most 16,000 bytes read, no terminal controls, symbolic links or
     non-regular files)
+  --profile-file FILE (versioned .pad-environment.json, at most 128 KiB UTF-8;
+    no symbolic links or non-regular files; an explicit --target must agree)
+  Profiles and free context are separate untrusted inputs, never validation.
 
 Output:
   Prompt text goes to stdout unless --output names a new file.
@@ -102,7 +106,7 @@ function parseArguments(argv) {
     }
   } else if (positional.length) throw new CLIError('Unexpected positional argument; use --help.');
   if (command === 'export' && !options.output) throw new CLIError('Export requires --output with a new file path.');
-  for (const name of ['context-file', 'output']) {
+  for (const name of ['context-file', 'profile-file', 'output']) {
     if (Object.hasOwn(options, name) && (!options[name].trim() || options[name] === '-')) {
       throw new CLIError('File options require a nonempty file path.');
     }
@@ -130,41 +134,53 @@ function parseArguments(argv) {
   return { command, id: positional[0], options };
 }
 
-function readContext(filename) {
-  if (filename === undefined) return '';
+function readBoundedUTF8(filename, label, maxBytes) {
   let descriptor;
   try {
-    if (!fs.lstatSync(filename).isFile()) throw new CLIError('Context must be a regular file, not a symbolic link.');
+    if (!fs.lstatSync(filename).isFile()) throw new CLIError(`${label} must be a regular file, not a symbolic link.`);
     descriptor = fs.openSync(filename, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
     const stat = fs.fstatSync(descriptor);
-    if (!stat.isFile()) throw new CLIError('Context must be a regular file.');
-    if (stat.size > MAX_CONTEXT_BYTES) throw new CLIError('Context exceeds the 16,000-byte limit.');
+    if (!stat.isFile()) throw new CLIError(`${label} must be a regular file.`);
+    if (stat.size > maxBytes) throw new CLIError(`${label} exceeds the byte size limit.`);
     // A bounded read also handles a file growing after its initial size check.
-    const buffer = Buffer.alloc(MAX_CONTEXT_BYTES + 1);
+    const buffer = Buffer.alloc(maxBytes + 1);
     let length = 0;
     while (length < buffer.length) {
       const count = fs.readSync(descriptor, buffer, length, buffer.length - length, null);
       if (count === 0) break;
       length += count;
     }
-    if (length > MAX_CONTEXT_BYTES) throw new CLIError('Context exceeds the 16,000-byte limit.');
-    let context;
+    if (length > maxBytes) throw new CLIError(`${label} exceeds the byte size limit.`);
+    let text;
     try {
-      context = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(buffer.subarray(0, length));
+      text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(buffer.subarray(0, length));
     } catch {
-      throw new CLIError('Context must contain valid UTF-8 text.');
+      throw new CLIError(`${label} must contain valid UTF-8 text.`);
     }
-    if (context.length > 4000) throw new CLIError('Context exceeds the 4,000-character limit.');
-    if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(context)) {
-      throw new CLIError('Context contains terminal control characters.');
+    if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(text)) {
+      throw new CLIError(`${label} contains terminal control characters.`);
     }
-    return context;
+    return text;
   } catch (error) {
     if (error instanceof CLIError) throw error;
-    throw new CLIError('Context could not be read; use an accessible regular UTF-8 file.');
+    throw new CLIError(`${label} could not be read; use an accessible regular UTF-8 file.`);
   } finally {
     if (descriptor !== undefined) fs.closeSync(descriptor);
   }
+}
+
+function readContext(filename) {
+  if (filename === undefined) return '';
+  const context = readBoundedUTF8(filename, 'Context', MAX_CONTEXT_BYTES);
+  if (context.length > 4000) throw new CLIError('Context exceeds the 4,000-character limit.');
+  return context;
+}
+
+function readProfile(filename) {
+  if (filename === undefined) return null;
+  const text = readBoundedUTF8(filename, 'Environment profile', environmentProfiles.LIMITS.bytes);
+  try { return environmentProfiles.parse(text); }
+  catch { throw new CLIError('Environment profile is invalid; use a supported bounded .pad-environment.json file.'); }
 }
 
 function outputParent(filename) {
@@ -232,7 +248,11 @@ function main(argv = process.argv.slice(2)) {
     const defenses = require('../demo/defenses.js').createLibrary(require('../demo/d3fend-catalog.js'));
     content = options.json ? defenses.exportJSON(record) : defenses.composeBrief(record);
   } else {
-    const promptOptions = { mode: options.mode, target: options.target, context: readContext(options['context-file']) };
+    const environment = readProfile(options['profile-file']);
+    if (environment && options.target !== undefined && options.target !== environment.target) {
+      throw new CLIError('Output target and environment profile target must agree.');
+    }
+    const promptOptions = { mode: options.mode, target: options.target, context: readContext(options['context-file']), environment };
     if (command === 'prompt') content = core.composePrompt(record, promptOptions);
     else {
       // Composition and provenance belong to the shared core. Node adds only hash

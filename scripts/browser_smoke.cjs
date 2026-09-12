@@ -26,6 +26,9 @@ function contrastRatio(first, second) {
 
 (async () => {
   const base = process.env.DEMO_URL || 'http://127.0.0.1:8766/';
+  // Existing expert-workflow regressions use the supported direct-link quick view.
+  // The separate environment smoke covers the new guided homepage default.
+  const defaultView = new URL(`?technique=${catalog[0].id}`, base).href;
   const parsed = new URL(base);
   assert.ok(parsed.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(parsed.hostname), 'QA target must be loopback HTTP');
   const engine = process.env.BROWSER_ENGINE || 'chromium';
@@ -55,7 +58,7 @@ function contrastRatio(first, second) {
     external.push(url); return route.abort();
   });
   try {
-    await page.goto(base); await page.locator('#prompt').waitFor();
+    await page.goto(defaultView); await page.locator('#prompt').waitFor();
     await check('complete active library loads with bounded first-page rendering', async () => {
       assert.equal(catalog.length, 918);
       assert.equal(atlasCatalog.length, 197);
@@ -160,7 +163,7 @@ function contrastRatio(first, second) {
       await page.locator('#search').fill('');
     });
     await check('ATLAS AI filtering and parent/subtechnique search reach pinned records', async () => {
-      await page.goto(base);
+      await page.goto(defaultView);
       await page.locator('[data-domain="ATLAS"]').click();
       await page.locator('#target').selectOption('Platform-neutral');
       assert.equal(await page.locator('#techniques button').count(), 50);
@@ -303,7 +306,7 @@ function contrastRatio(first, second) {
       await page.keyboard.press('Escape'); await page.locator('#tab-prompt').click();
     });
     await check('D3FEND renders pinned countermeasures, source paths and explicit inferred scope', async () => {
-      await page.goto(base);
+      await page.goto(defaultView);
       await page.locator('#search').fill('T0800');
       const record = catalog.find(item => item.id === 'T0800');
       const expected = defenses.lookup(record.id);
@@ -433,7 +436,7 @@ function contrastRatio(first, second) {
       assert.equal(await page.evaluate(() => document.activeElement.id), 'about-open');
     });
     await check('skip link and primary controls expose visible keyboard focus', async () => {
-      await page.goto(base);
+      await page.goto(defaultView);
       // macOS WebKit's default keyboard preference skips links with Tab;
       // Option+Tab traverses every interactive element without changing the OS.
       await page.keyboard.press(engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab');
@@ -480,7 +483,7 @@ function contrastRatio(first, second) {
       await page.locator('#theme').selectOption('system');
       await page.emulateMedia({ reducedMotion: 'no-preference' });
     });
-    await page.goto(base);
+    await page.goto(defaultView);
     await check('draft context clears on reload', async () => { assert.equal(await page.locator('#context').inputValue(), ''); assert.equal((await page.locator('#prompt').inputValue()).includes('demoInjected'), false); });
     for (const width of [320, 768, 1024, 1440]) await check(`no horizontal overflow at ${width}px`, async () => {
       await page.setViewportSize({ width, height: 1000 });

@@ -9,16 +9,16 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const pause = () => new Promise(resolve => setImmediate(resolve));
 function deferred() { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; }
 
-function harness({ consent = true, saved = [], enabled = false, realContract = false } = {}) {
+function harness({ consent = true, saved = [], legacySaved = [], enabled = false, realContract = false } = {}) {
   const nodes = new Map(), downloads = [], timers = new Map(), events = new Map();
-  const storage = new Map(enabled ? [['pad-workspaces-enabled', 'yes']] : []);
+  const storage = new Map(enabled ? [['pad-workspaces-enabled-v2', 'yes']] : []);
   const persisted = new Map(saved.map(value => [value.id, { id: value.id, revision: 40, value: clone(value) }]));
-  let nextTimer = 0, counter = 40, opens = 0, saves = 0, clears = 0, closed = false;
+  let nextTimer = 0, counter = 40, opens = 0, saves = 0, clears = 0, legacyReads = 0, closed = false;
   let saveError = null, captureHook = null, saveHook = null;
   const sources = { attack: '19.2', atlas: '2026.08', d3fend: '1.6.0', car: '1b922fe', attackFlow: '2.0.0' };
   const core = require('../demo/core.js');
-  const snapshot = { drafts: [], context: '', contextInput: '', flow: { title: 'Hypothesis', steps: [] },
-    view: { query: '', domain: '', tactic: '', platform: '', mode: 'detect', target: core.TARGETS[0], technique: 'T1059.001', compare: [], theme: 'system', tab: 'prompt', paneWidth: 330, listScroll: 0, mobileView: 'list' } };
+  const snapshot = { drafts: [], profiles: [], activeEnvironment: null, context: '', contextInput: '', flow: { title: 'Hypothesis', steps: [] },
+    view: { query: '', domain: '', tactic: '', platform: '', mode: 'detect', target: core.TARGETS[0], technique: 'T1059.001', compare: [], theme: 'system', tab: 'prompt', paneWidth: 330, listScroll: 0, mobileView: 'list', composer: 'guided', guideStep: 1 } };
   const restored = [];
   class Element {
     constructor(tag = 'div') { this.tag = tag; this.value = ''; this.textContent = ''; this.hidden = false; this.disabled = false; this.checked = false; this.children = []; this.handlers = new Map(); this.attributes = new Map(); this.files = []; }
@@ -34,7 +34,7 @@ function harness({ consent = true, saved = [], enabled = false, realContract = f
     remove() {}
     click() { if (this.tag === 'a') downloads.push({ filename: this.download, blob: blobs.get(this.href) }); else return this.dispatch('click'); }
   }
-  const ids = ['workspace-open','workspace-dialog','workspace-close','workspace-name','workspace-select','workspace-new','workspace-export','workspace-file','workspace-preview','workspace-preview-text','workspace-import-confirm','workspace-import-cancel','workspace-autosave','workspace-storage-status','workspace-delete-local','favorite-toggle','favorites-list','collection-name','collection-create','collection-select','collection-add','collection-items','workspace-warnings'];
+  const ids = ['workspace-open','workspace-dialog','workspace-close','workspace-name','workspace-select','workspace-new','workspace-export','workspace-file','workspace-preview','workspace-preview-text','workspace-import-confirm','workspace-import-cancel','workspace-import-legacy','workspace-autosave','workspace-storage-status','workspace-delete-local','favorite-toggle','favorites-list','collection-name','collection-create','collection-select','collection-add','collection-items','workspace-warnings'];
   for (const id of ids) nodes.set(id, new Element());
   Object.defineProperty(nodes.get('workspace-file'), 'value', {
     get() { return this.fileValue || ''; },
@@ -42,7 +42,8 @@ function harness({ consent = true, saved = [], enabled = false, realContract = f
   });
   const $ = id => { assert.ok(nodes.has(id), id); return nodes.get(id); };
   let api = {
-    create(name, sources) { return { schemaVersion: 1, id: crypto.randomUUID(), name, sources: clone(sources), ...clone(snapshot), favorites: [], collections: [] }; },
+    create(name, sources) { return { schemaVersion: 2, id: crypto.randomUUID(), name, sources: clone(sources), ...clone(snapshot), favorites: [], collections: [] }; },
+    migrate(value) { return {...clone(value),schemaVersion:2,id:crypto.randomUUID(),profiles:[],activeEnvironment:null,view:{...value.view,composer:'quick',guideStep:1},drafts:value.drafts.map(item=>({...item,environment:null,environmentSha256:null}))}; },
     validate(value) { if (!value || typeof value.name !== 'string' || !value.name.trim() || value.name.length > 120 || !Array.isArray(value.favorites)) throw new Error('Rejected'); return clone(value); },
     parse(text) { return this.validate(JSON.parse(text)); },
     serialize(value) { return JSON.stringify(this.validate(value)); },
@@ -58,7 +59,7 @@ function harness({ consent = true, saved = [], enabled = false, realContract = f
     setTimeout(fn) { const id = ++nextTimer; timers.set(id, fn); return id; }, clearTimeout: id => timers.delete(id),
   };
   const document = { defaultView: window, getElementById: $, createElement: tag => new Element(tag), body: new Element('body') };
-  const store = { async open() { opens++; closed = false; return {
+  const store = { async readLegacy() { legacyReads++; return legacySaved.map(value=>({id:value.id,revision:40,value:clone(value)})); }, async open() { opens++; closed = false; return {
     async list() { return clone([...persisted.values()]); },
     async save(value, expectedRevision) { saves++; if (saveHook) await saveHook(); if (saveError) throw Object.assign(new Error('Untrusted details'), { code: saveError }); const old = persisted.get(value.id); if ((old?.revision || 0) !== expectedRevision) throw Object.assign(new Error('Conflict'), { code: 'CONFLICT' }); const record = { id: value.id, revision: ++counter, value: clone(value) }; persisted.set(value.id, record); return clone(record); },
     async clear() { clears++; persisted.clear(); closed = true; }, close() { closed = true; },
@@ -67,6 +68,7 @@ function harness({ consent = true, saved = [], enabled = false, realContract = f
   if (realContract) {
     // Production contract and controller share one browser realm. Keep that
     // boundary here instead of weakening strict plain-object validation.
+    vm.runInContext(fs.readFileSync(require.resolve('../demo/environment.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(require.resolve('../demo/core.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(require.resolve('../demo/workspace.js'), 'utf8'), context);
     api = context.PAD_WORKSPACE;
@@ -79,7 +81,7 @@ function harness({ consent = true, saved = [], enabled = false, realContract = f
   async function runTimers() { const pending = [...timers.values()]; timers.clear(); for (const callback of pending) callback(); for (let i = 0; i < 5; i++) await pause(); }
   async function exported() { const count = downloads.length; await $('workspace-export').dispatch('click'); assert.equal(downloads.length, count + 1, $('workspace-storage-status').textContent); return JSON.parse(await downloads.at(-1).blob.text()); }
   function importFile(value) { const bytes = new TextEncoder().encode(typeof value === 'string' ? value : JSON.stringify(value)); $('workspace-file').files = [{ size: bytes.length, arrayBuffer: async () => bytes.buffer }]; return $('workspace-file').dispatch('change'); }
-  return { $, ui, api, snapshot, persisted, restored, storage, events, downloads, runTimers, exported, importFile, stats: () => ({ opens, saves, clears, closed }), captureWith(fn) { captureHook = fn; }, saveWith(fn) { saveHook = fn; }, failSave(code) { saveError = code; } };
+  return { $, ui, api, snapshot, persisted, restored, storage, events, downloads, runTimers, exported, importFile, stats: () => ({ opens, saves, clears, closed, legacyReads }), captureWith(fn) { captureHook = fn; }, saveWith(fn) { saveHook = fn; }, failSave(code) { saveError = code; } };
 }
 
 async function enable(h) { h.$('workspace-autosave').checked = true; await h.$('workspace-autosave').dispatch('change'); }
@@ -117,7 +119,7 @@ test('declined consent does not open storage and export does not count as a pers
   assert.equal(declined.stats().opens, 0); assert.equal(declined.$('workspace-autosave').checked, false);
   const h = harness(); await h.ui.ready; const exported = await h.exported(); await enable(h);
   assert.equal(h.persisted.get(exported.id).value.name, exported.name);
-  assert.equal(h.storage.get('pad-workspaces-enabled'), 'yes');
+  assert.equal(h.storage.get('pad-workspaces-enabled-v2'), 'yes');
   assert.match(h.$('workspace-storage-status').textContent, /Saved locally/);
 });
 
@@ -158,7 +160,7 @@ test('conflicting autosave stops persistence and preserves local content for exp
   const old = await h.exported(); h.persisted.get(old.id).revision++;
   h.snapshot.context = 'Keep my conflicting edit'; h.ui.changed(); await h.runTimers();
   assert.match(h.$('workspace-storage-status').textContent, /Autosave stopped/);
-  assert.equal(h.$('workspace-autosave').checked, false); assert.equal(h.storage.has('pad-workspaces-enabled'), false);
+  assert.equal(h.$('workspace-autosave').checked, false); assert.equal(h.storage.has('pad-workspaces-enabled-v2'), false);
   assert.equal((await h.exported()).context, 'Keep my conflicting edit');
   const opens = h.stats().opens; await enable(h); assert.equal(h.stats().opens, opens);
   await h.$('workspace-new').dispatch('click'); const copy = await h.exported();
@@ -219,4 +221,39 @@ test('real portable contract accepts controller favorites, collections and impor
   await h.importFile(exported); await h.$('workspace-import-confirm').dispatch('click');
   const copy = await h.exported(); assert.notEqual(copy.id, exported.id);
   assert.deepEqual(copy.collections, exported.collections);
+});
+
+test('v1 file migration waits for preview acceptance and preserves original bytes and private text', async () => {
+  const h=harness({realContract:true}); await h.ui.ready;
+  const original=await h.exported(), old=clone(original);
+  old.schemaVersion=1; delete old.profiles; delete old.activeEnvironment; delete old.view.composer; delete old.view.guideStep;
+  old.context='  ${HOME} <script>literal older context</script>  '; old.contextInput='Unapplied older text';
+  const bytes=JSON.stringify(old);
+  await h.importFile(bytes);
+  assert.match(h.$('workspace-preview-text').textContent,/version 1|v1/i); assert.equal(h.restored.length,0);
+  await h.$('workspace-import-cancel').dispatch('click'); assert.deepEqual(await h.exported(),original);
+  await h.importFile(bytes); await h.$('workspace-import-confirm').dispatch('click');
+  const migrated=await h.exported();
+  assert.equal(migrated.schemaVersion,2); assert.notEqual(migrated.id,old.id); assert.equal(migrated.view.composer,'quick');
+  assert.equal(migrated.context,old.context); assert.equal(migrated.contextInput,old.contextInput); assert.equal(JSON.stringify(old),bytes);
+});
+
+test('legacy local discovery is explicit and opens only a preview before copying into isolated v2 storage', async () => {
+  const seed=harness(); await seed.ui.ready; const old=await seed.exported(); old.schemaVersion=1;
+  delete old.profiles; delete old.activeEnvironment; delete old.view.composer; delete old.view.guideStep;
+  const serialized=JSON.stringify(old), h=harness({legacySaved:[old]}); await h.ui.ready;
+  h.storage.set('pad-workspaces-enabled','yes');
+  assert.equal(h.stats().legacyReads,0); assert.equal(h.stats().opens,0);
+  await h.$('workspace-import-legacy').dispatch('click');
+  assert.equal(h.stats().legacyReads,1); assert.equal(h.stats().opens,0); assert.equal(h.restored.length,0);
+  h.$('workspace-select').value='legacy:'+old.id; await h.$('workspace-select').dispatch('change');
+  assert.equal(h.$('workspace-preview').hidden,false); assert.equal(h.restored.length,0);
+  await h.$('workspace-import-cancel').dispatch('click');
+  h.$('workspace-select').value='legacy:'+old.id; await h.$('workspace-select').dispatch('change');
+  await h.$('workspace-import-confirm').dispatch('click');
+  const imported=await h.exported(); assert.equal(imported.schemaVersion,2); assert.notEqual(imported.id,old.id);
+  await enable(h); assert.equal(h.persisted.has(old.id),false); assert.equal(h.persisted.has(imported.id),true);
+  await h.$('workspace-delete-local').dispatch('click');
+  assert.match(h.$('workspace-storage-status').textContent,/older|legacy|v1/i);
+  assert.equal(h.storage.get('pad-workspaces-enabled'),'yes'); assert.equal(JSON.stringify(old),serialized);
 });

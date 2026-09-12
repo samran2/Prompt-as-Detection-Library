@@ -2,7 +2,7 @@
 
 ## Development baseline
 
-The working target is `0.4.0.dev3` Premium Workbench (npm `0.4.0-dev.3`),
+The working target is `0.4.0.dev4` Premium Workbench (npm `0.4.0-dev.4`),
 building on the research-and-contract foundation and independent rebuild.
 The pinned ATT&CK release remains 19.2, and the existing CLI and static browser
 workbench remain supported.
@@ -54,14 +54,16 @@ committed.
 
 Development versions use two equivalent spellings:
 
-- `VERSION` and Python-facing prose: `0.4.0.dev3`
-- npm metadata and browser-safe SemVer: `0.4.0-dev.3`
+- `VERSION` and Python-facing prose: `0.4.0.dev4`
+- npm metadata and browser-safe SemVer: `0.4.0-dev.4`
 
 Keep application package metadata, lockfiles, UI/CLI display and changelog aligned.
 Do not rewrite pinned source/content manifests or historical evidence merely to
-match a UI version bump. `19.2`, `2026.08` and `0.4.0.dev3` describe different
-source/application versions. The v3 prompt profile intentionally changes generated
-prompt bytes and their hashes while retaining pinned sources. See
+match a UI version bump. `19.2`, `2026.08` and `0.4.0.dev4` describe different
+source/application versions. Unprofiled prompt content retains
+`PAD-v0.4.0-dev3`; adding optional environment composition does not authorize a
+bulk rewrite of unchanged text prompts. Generator implementation hashes may
+change without changing source or prompt bytes. See
 [versioning](versioning.md).
 
 ## Deterministic library generation
@@ -120,6 +122,26 @@ A model evaluation is supplementary evidence. Record provider, exact model ID,
 settings, date, prompt hash and response hash. Keep provider keys in the process
 environment, never in manifests or results; do not submit analyst context or
 private logs. Fixture-only evaluation must remain the CI default.
+
+### Offline-first prompt comparison
+
+`scripts/compare_prompts.cjs` and `packages/core/prompt-comparison.cjs` prepare a
+fixed 40-case comparison against the pinned published dev3 composer. This is
+separate from the lexical `evals:verify` scorecards and never advances maturity.
+
+```sh
+npm run comparison:check
+npm run comparison:prepare
+node --test tests/prompt_comparison.test.cjs
+```
+
+Preparation without `--output` prints only a summary: no files, model calls or
+cost. A new explicitly chosen directory can receive prepared inputs; reporting
+also stays offline. Only a deliberate `run` command may use OpenAI, and it
+requires an exact model, pricing snapshot and positive budget. This development
+update uses request doubles only, not the configured key for paid execution.
+See [prompt comparison](prompt-comparison.md) for the actual CLI contract,
+public/synthetic input boundary, journal recovery and provider-retention limits.
 
 ## Native rule and fixture workflow
 
@@ -186,7 +208,9 @@ NVDA reviews before v1.0.
 owns consent, preview, workspace lifecycle and the application snapshot bridge.
 `demo/workbench-ui.js` owns layout/commands and `demo/research-components.js`
 shares CAR/Flow views without duplicating the composer. Read
-[workspace format](workspace-format.md) and [ADR-0008](../governance/decisions/0008-portable-private-workspaces.md).
+[workspace format](workspace-format.md),
+[ADR-0008](../governance/decisions/0008-portable-private-workspaces.md) and
+[ADR-0009](../governance/decisions/0009-environment-snapshots-and-offline-comparison.md).
 
 Focused checks, before the complete regression suite:
 
@@ -221,6 +245,31 @@ re-enable autosave: preserve edits and offer export or a new workspace copy.
 Same-origin GitHub Pages applications can access each other's browser storage;
 a project-specific database name is namespacing, not an isolation boundary.
 
+Workspace v2 isolates persistence in `pad-workspaces-v2` with its own consent
+flag. Discover older v1 saves only on explicit request, validate/preview them and
+open a new identity; never write to the older database. Verify mixed-version
+tabs as well as same-version conflicts. A dev3 rollback uses the untouched v1
+save/export and cannot import a v2 file.
+
+### Environment profile checks
+
+`demo/environment.js` owns strict environment validation, canonical hash and
+literal rendering. `demo/environment-ui.js` owns editing and guided presentation;
+shared `demo/core.js` remains the composer. Profiles saved in the workspace,
+the applied snapshot and draft snapshots have separate lifecycles. Test profile
+editing/deletion while a prior revision is still applied or used in a draft.
+
+```sh
+npm run environments:check
+node --test tests/environment.test.cjs tests/cli_environment.test.cjs tests/environment_integration.test.cjs tests/environment_ui.test.cjs
+```
+
+Include malformed/duplicate fields, 128 KiB file limits, literal unsafe-looking
+text, wrong targets, unknown facts, imported examples and cancelled previews.
+Verify guided/quick transitions with keyboard and at narrow widths, preserving
+the existing workspace, source links, editor text and copy/export behavior.
+The [environment guide](environment-profiles.md) documents end-user steps.
+
 Measure Core Web Vitals using a documented environment and sufficient field or
 representative lab samples. The targets are p75 LCP ≤ 2.5 s, INP ≤ 200 ms and
 CLS ≤ 0.1. A single local trace does not prove the p75 gate.
@@ -246,8 +295,16 @@ instead of the `/tmp` symlink when checking canonical temporary paths.
 Each row includes the SHA-256 of its UTF-8 prompt. Standard output reports the
 record count and SHA-256 of the complete JSONL byte stream, including newlines.
 Browser JSONL exports every filtered record; TXT copy/download uses the current
-editor text exactly. No command makes model calls, uploads content or executes a
+editor text exactly. No library CLI command makes model calls, uploads content or executes a
 generated detection.
+
+`prompt` and `export` optionally accept `--profile-file` with a validated
+`.pad-environment.json` file. Omitted `--target` uses the profile target; a
+conflicting explicit target is rejected. Existing no-profile output remains
+compatible. Profile details and `--context-file` are separate untrusted sections,
+not precedence overrides. Profiles are bounded to 128 KiB UTF-8 and safe regular
+file reads; use `library:help` for the authoritative options. These commands
+remain offline even when an API key is present in the environment.
 
 ## Python foundation checks
 

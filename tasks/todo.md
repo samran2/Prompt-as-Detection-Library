@@ -27,3 +27,22 @@ evidence is recorded in docs/verification.md; hosted acceptance is separate.
 - [x] Independent correctness/security findings resolved and review recorded
 - [x] Final private-artifact inventory and documentation checked
 - [x] Reviewed candidate publication, CI and hosted Pages verification recorded
+
+## Environment workflows and comparison acceptance — 0.4.0.dev4
+
+Implementation in progress; previous completed checklists remain historical.
+No paid API run is authorized for this release. Candidate checks, review and
+publication must have fresh evidence before the corresponding item is checked.
+
+- [x] Approved dev4 scope, interfaces, privacy boundary and migration documented
+- [ ] Profile contract, import/export, revisioned snapshots and CLI parity accepted
+- [ ] V1 import/new identity, v2 storage isolation and rollback verified
+- [ ] Guided/quick creation, explicit profile application and draft retention verified
+- [ ] Forty pinned comparison cases, offline reports and blinded review verified
+- [ ] Mocked API failure, limit, budget and uncertain-resume tests accepted
+- [ ] Existing and new Node/Python regression checks recorded
+- [ ] Chromium, Firefox and WebKit responsive/keyboard checks recorded
+- [ ] Source fidelity, static allowlist and private artifact exclusions verified
+- [ ] Independent correctness/security review findings resolved
+- [ ] Reviewed GitHub update, CI and hosted Pages verification recorded
+- [ ] Updated ZIP/checksum and screenshots delivered

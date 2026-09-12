@@ -5,11 +5,12 @@ prompts. Browse **1,115 techniques and subtechniques**: 918 from ATT&CK 19.2 and
 197 from ATLAS 2026.08. Inspect their source guidance and export drafts from a
 browser workbench or local CLI.
 
-The current `0.4.0.dev3` development snapshot gives every prompt a concise,
-task-specific answer format: summary, selected deliverable, checks and next step.
-It is not stable v1.0.
-Pinned source content is preserved; generated prompt text is revised. No draft is
-described as operationally validated without evidence.
+The current `0.4.0.dev4` development snapshot adds saved environment profiles,
+guided prompt creation and a separate, offline-first prompt comparison tool.
+Its concise answer format remains: summary, selected deliverable, checks and next
+step. It is not stable v1.0. Pinned sources remain unchanged; no-profile text
+prompts retain their dev3 content identity. Application and content versions are separate.
+No draft is described as operationally validated without evidence.
 See [how to get a useful answer](docs/prompt-clarity.md) for target selection,
 environment inputs and the limits of these checks.
 
@@ -30,7 +31,7 @@ the demo does not run a model or execute detection rules.
 
 [Quick start](#run-it-locally) · [ATT&CK provenance](docs/source-provenance.md) · [ATLAS AI](docs/atlas.md) · [D3FEND defenses](docs/d3fend.md) · [Validation program](docs/validation-program.md) · [Roadmap](ROADMAP.md)
 
-[Workbench guide](docs/premium-workbench.md) · [Workspace format](docs/workspace-format.md) · [Privacy and local storage](docs/privacy.md)
+[Workbench guide](docs/premium-workbench.md) · [Environment profiles](docs/environment-profiles.md) · [Workspace format](docs/workspace-format.md) · [Privacy and local storage](docs/privacy.md)
 
 [![Premium workbench showing the OT technique desk and an editable detection prompt](docs/screenshots/premium-desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
 
@@ -51,6 +52,12 @@ recorded in the [verification record](docs/verification.md).*
   comparison opens separately without replacing the editing view.
 - **Choose the task and format.** Use Detect, Hunt, Triage or Validate with
   Platform-neutral, Panther Python, Sentinel KQL, Defender XDR, Splunk SPL or Sigma output.
+- **Describe your real environment once.** Save named profiles with the target,
+  actual data sources, tables, field mappings and known gaps. Empty details remain
+  unknown. Profile files and workspace snapshots stay local unless you share them.
+- **Build a focused prompt.** Follow four short steps from the technique and task
+  through environment details to a reviewable summary. Switch to Quick at any
+  time; applying a profile is explicit and does not silently overwrite drafts.
 - **Compare evidence.** Keep a shareable search URL, compare two techniques and
   inspect the technique → telemetry → ATT&CK analytic → native-rule readiness map.
 - **Keep drafts reviewable.** Edit browser text, copy or download TXT, and export
@@ -84,7 +91,9 @@ text; filtered JSONL exports fresh templates without editor changes. Workspace
 files deliberately include analyst context: inspect them before sharing.
 
 Prompts are **unvalidated drafts**. Output targets describe the requested format;
-they are not verified integrations. No model calls or detection queries execute.
+they are not verified integrations. The browser and library CLI make no model
+calls and execute no detection queries. The separate comparison tool has an
+explicit, budgeted API-run command; no paid model runs are part of this update.
 Source coverage and passing checks do not establish detection effectiveness.
 
 ## Evidence status
@@ -140,15 +149,32 @@ node scripts/library_cli.cjs list
 node scripts/library_cli.cjs prompt T1059.001
 node scripts/library_cli.cjs list --domain ATLAS
 node scripts/library_cli.cjs prompt AML.T0051
+node scripts/library_cli.cjs prompt T1059.001 --profile-file ./training.pad-environment.json
 node scripts/library_cli.cjs defenses T0800
 node scripts/library_cli.cjs export --output ./detection-prompts.jsonl
 ```
 
 The export example creates `detection-prompts.jsonl` in the current directory;
 it must not already exist. CLI help covers selectors, modes, targets and
-literal context files. See the [development guide](docs/development.md) for details.
+literal context files. The profile example requires a profile exported from the
+workbench; omit that option to keep the original workflow. An explicitly supplied
+target that conflicts with the profile is rejected. See the
+[environment guide](docs/environment-profiles.md) and [development guide](docs/development.md).
 Default list/export commands retain the 918-record ATT&CK contract. Select
 `--framework ATLAS` for AI only or `--framework all` for both frameworks.
+
+### Compare prompt versions without running a model
+
+```sh
+npm run comparison:prepare
+```
+
+This prints a summary of the fixed 40-case comparison with `0.4.0.dev3`; it does
+not make API calls or write results. Cases cover Enterprise, Mobile, ICS/OT and
+ATLAS using public or synthetic facts. The [comparison guide](docs/prompt-comparison.md)
+explains private file preparation, mocked verification, blinded human review and
+the separately opted-in API runner. No measured improvement in model answers is
+claimed until real responses and the relevant reviews exist.
 
 ### Experimental local research API
 
@@ -198,7 +224,7 @@ records are excluded from active prompts; source gaps and unlinked analytics
 remain explicit in the [coverage evidence](library/coverage.json).
 
 This is an **independent rebuild** from official pinned MITRE data, development
-version `0.4.0.dev3` (npm `0.4.0-dev.3`). The original v0.2.0 archive remains
+version `0.4.0.dev4` (npm `0.4.0-dev.4`). The original v0.2.0 archive remains
 unavailable; this project does not claim to restore its implementation or formats.
 Read the [source provenance](docs/source-provenance.md) for the exact commit,
 source hashes, attribution and inclusion policy.
@@ -242,6 +268,8 @@ See [verification](docs/verification.md) for actual checks and their limits.
 | --- | --- |
 | [Architecture](docs/architecture.md) | Shared composition, data flow and the static file boundary. |
 | [Premium workbench](docs/premium-workbench.md) | Unified technique desk, commands, private workspaces and recovery. |
+| [Environment profiles](docs/environment-profiles.md) | Saved environment facts, guided and quick creation, profile files and draft preservation. |
+| [Prompt comparison](docs/prompt-comparison.md) | Fixed old/new cases, offline reports, explicit API budgets and evidence limits. |
 | [Privacy](docs/privacy.md) | Memory-only defaults, optional plaintext storage and explicit deletion. |
 | [ATLAS AI](docs/atlas.md) | AI threat coverage, source maturity, local usage and separate licensing. |
 | [Data contracts](docs/data-contracts.md) | Versioned schemas and cross-record evidence invariants. |

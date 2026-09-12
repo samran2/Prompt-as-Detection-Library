@@ -105,7 +105,7 @@ test('storage opens only explicitly and saves detached records after transaction
   const idb = fakeIndexedDB();
   assert.equal(idb.opens.length, 0);
   const handle = await store.open(idb);
-  assert.deepEqual(idb.opens, [{name: 'pad-workspaces-v1', version: 1}]);
+  assert.deepEqual(idb.opens, [{name: 'pad-workspaces-v2', version: 1}]);
   assert.deepEqual(await handle.list(), []);
   assert.equal(await handle.read('missing'), null);
   const input = workspace();
@@ -230,6 +230,25 @@ test('clear commits before a queued stale save can create new data', async () =>
   assert.deepEqual(await fresh.list(), []);
 });
 
+test('explicit legacy reading uses only read transactions and exposes no legacy mutation handle', async () => {
+  const idb=fakeIndexedDB(); const handle=await store.open(idb); const saved=await handle.save(workspace(),0);
+  const commits=idb.commits;
+  const records=await store.readLegacy(idb);
+  assert.deepEqual(records,[saved]); assert.equal(idb.commits,commits);
+  assert.deepEqual(idb.opens.at(-1),{name:'pad-workspaces-v1',version:undefined});
+  records[0].value.title='Mutated caller'; assert.equal((await handle.read(saved.id)).value.title,saved.value.title);
+});
+
+test('legacy discovery aborts creation when the old database does not exist', async () => {
+  let created=0,aborted=0;
+  const idb={open(name,version) {
+    assert.equal(name,'pad-workspaces-v1'); assert.equal(version,undefined);
+    const request={result:{createObjectStore(){created++;},close(){}},transaction:{abort(){aborted++;setImmediate(()=>request.onerror?.());}}};
+    setImmediate(()=>request.onupgradeneeded?.({oldVersion:0})); return request;
+  }};
+  assert.deepEqual(await store.readLegacy(idb),[]); assert.equal(created,0); assert.equal(aborted,1);
+});
+
 // Optional real-engine checks reuse the repository's locked QA dependency and
 // installed browsers. No dependency install, external page request or user profile.
 if (process.env.WORKSPACE_BROWSER_TEST === '1') {
@@ -249,6 +268,27 @@ if (process.env.WORKSPACE_BROWSER_TEST === '1') {
         await page.evaluate(async () => { window.handle = await PAD_WORKSPACE_STORE.open(); });
       }
       const saved = await first.evaluate(() => handle.save({id: 'native-1', title: 'Synthetic native workspace'}, 0));
+      const legacyIsolation = await first.evaluate(async () => {
+        const missing = await PAD_WORKSPACE_STORE.readLegacy();
+        const names = typeof indexedDB.databases === 'function' ? (await indexedDB.databases()).map(value => value.name) : [];
+        await new Promise((resolve, reject) => {
+          const request = indexedDB.open('pad-workspaces-v1', 1);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            db.createObjectStore('workspaces', {keyPath:'id'}).put({id:'native-1',revision:1,value:{id:'native-1',title:'Older app record'}});
+            db.createObjectStore('metadata', {keyPath:'key'}).put({key:'control',epoch:1,counter:1});
+          };
+          request.onerror = () => reject(new Error('Synthetic legacy setup failed'));
+          request.onsuccess = () => { request.result.close(); resolve(); };
+        });
+        const legacy = await PAD_WORKSPACE_STORE.readLegacy();
+        const current = await handle.read('native-1');
+        return {missing,names,legacyTitle:legacy[0].value.title,currentTitle:current.value.title};
+      });
+      assert.deepEqual(legacyIsolation.missing, []);
+      assert.equal(legacyIsolation.names.includes('pad-workspaces-v1'), false);
+      assert.equal(legacyIsolation.legacyTitle, 'Older app record');
+      assert.equal(legacyIsolation.currentTitle, 'Synthetic native workspace');
       const writes = await Promise.all([first, second].map((page, index) => page.evaluate(async ({revision, index}) => {
         try { const value = await handle.save({id: 'native-1', title: `Writer ${index}`}, revision); return {ok: true, revision: value.revision}; }
         catch (error) { return {ok: false, code: error.code}; }
@@ -302,11 +342,13 @@ if (process.env.WORKSPACE_BROWSER_TEST === '1') {
             tx.oncomplete = () => { const result = read.result; db.close(); resolve(result); };
           };
         });
-        return {records, revision: fresh.revision, untouched};
+        const legacyRecords = await PAD_WORKSPACE_STORE.readLegacy();
+        return {records, revision: fresh.revision, untouched, legacyTitle:legacyRecords[0].value.title};
       });
       assert.deepEqual(afterClear.records, []);
       assert.ok(afterClear.revision > recreated.revision);
       assert.equal(afterClear.untouched, 'unchanged');
+      assert.equal(afterClear.legacyTitle, 'Older app record');
     } finally { await browser.close(); }
   });
 }

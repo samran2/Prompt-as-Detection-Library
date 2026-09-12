@@ -33,3 +33,26 @@ The completed Research tools plan above remains historical context.
 Module owners work only on assigned paths. The integrator owns shared entry points,
 version metadata, build/QA orchestration and publication. Pending acceptance remains
 visible in tasks/todo.md until supported by recorded checks.
+
+## Environment workflows and prompt comparison — 0.4.0.dev4
+
+See SPEC-environment-workflows.md and ADR-0009. The completed plans above remain
+historical context. The approved application target is `0.4.0.dev4` / npm
+`0.4.0-dev.4`; no-profile content retains its dev3 identity and pinned sources.
+
+1. Define strict environment files and profile-aware shared composition/CLI.
+2. Add workspace v2 with independent applied/draft snapshots; explicitly import
+   v1 data into a separate v2 store without touching old records.
+3. Integrate profile management and four guided steps with quick-mode continuity,
+   explicit application, draft preservation, keyboard and mobile access.
+4. Add the fixed 40-case dev3/candidate comparison, offline preparation/reports,
+   blinded review artifacts and explicit budgeted API runner. Verify with test
+   doubles only; this update authorizes no paid model execution.
+5. Run source parity, complete regressions, three-engine browser checks and
+   independent correctness/security review; resolve findings and record limits.
+6. After acceptance, publish the reviewed change to the existing repository and
+   Pages demo, verify exact hosted assets, and deliver ZIP/hash and screenshots.
+
+Implementation is in progress. Module owners keep assigned paths isolated;
+the integrator owns final verification, acceptance and publication. Mark only
+observed outcomes complete and leave unavailable/blocked checks explicit.

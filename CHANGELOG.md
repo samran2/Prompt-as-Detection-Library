@@ -5,6 +5,33 @@ This file records changes actually made. Planned work belongs in
 [verification](docs/verification.md). Dates and results from earlier
 conversations are not independent release evidence.
 
+## [0.4.0.dev4] - Environment profiles and guided creation
+
+### Added
+
+- Added local named environment profiles, explicit application, revision-aware
+  draft snapshots and portable `.pad-environment.json` files. The library CLI
+  accepts `--profile-file` using the same contract and composer as the browser.
+- Added a four-step guided prompt workflow with a compatible quick view. Missing
+  telemetry remains unknown; profile facts and free investigation context stay
+  separate, and supplied information is never labeled independently validated.
+- Added offline preparation/reporting and an explicit budgeted OpenAI comparison
+  runner for 40 fixed public/synthetic cases against the pinned dev3 composer.
+  Mocked verification and blinded human-review files are separate from actual
+  model results. No paid API runs are included in this update.
+
+### Changed
+
+- Workspace v2 retains the 5 MiB limit, original text/hashes and conflict-safe
+  optional autosave. Older imports create a new identity after preview; separate
+  v2 storage leaves original v1 records available for rollback.
+- Application metadata advances to dev4. No-profile prompt text retains the
+  `PAD-v0.4.0-dev3` content identity and all pinned MITRE sources remain unchanged.
+
+Fresh verification, review and hosted acceptance are tracked separately. This
+entry does not claim model-answer improvement, WCAG certification or detection
+validation.
+
 ## [0.4.0.dev3] - Clear, task-specific prompt answers
 
 - Replaced eight/nine required answer sections and repeated quality checklists
