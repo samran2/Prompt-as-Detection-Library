@@ -300,11 +300,36 @@ function summary(run) {
 function observe(item,result) {
   if (!result) return {status:'not-run',note:'No model response was recorded.'};
   const text=result.text;
-  const sectionMarkers=[1,2,3,4].map(number=>new RegExp(`(?:^|\\n)\\s*(?:#{1,6}\\s*)?(?:\\*\\*)?${number}[.)]\\s`).test(text));
-  const codeBlocks=[...text.matchAll(/```([^\n]*)\n([\s\S]*?)```/g)];
-  const prose=text.replace(/```[\s\S]*?```/g,'');
+  // Each line and fence span is visited once. Whole-response backtracking would
+  // make even size-limited provider text disproportionately expensive to report.
+  const sectionMarkers=[false,false,false,false], lines=text.split('\n');
+  for (let i=0;i<lines.length;i++) {
+    const line=lines[i].trimStart()+(i<lines.length-1?'\n':'');
+    const marker=/^(?:#{1,6}\s*)?(?:\*\*)?([1-4])[.)]\s/.exec(line);
+    if(marker) sectionMarkers[Number(marker[1])-1]=true;
+  }
+  const codeBlockLabels=[];
+  let cursor=0;
+  while(cursor<text.length) {
+    const open=text.indexOf('```',cursor); if(open<0) break;
+    const newline=text.indexOf('\n',open+3); if(newline<0) break;
+    const close=text.indexOf('```',newline+1); if(close<0) break;
+    codeBlockLabels.push(text.slice(open+3,newline).trim().slice(0,80));
+    cursor=close+3;
+  }
+  // Prose excludes inline fence pairs too; an unmatched opener stays literal.
+  // Keep this separate from labeled-block counting to preserve report semantics.
+  const proseParts=[];
+  cursor=0;
+  while(cursor<text.length) {
+    const open=text.indexOf('```',cursor); if(open<0) break;
+    const close=text.indexOf('```',open+3); if(close<0) break;
+    proseParts.push(text.slice(cursor,open)); cursor=close+3;
+  }
+  proseParts.push(text.slice(cursor));
+  const prose=proseParts.join('');
   return {status:'observed-not-scored',sectionMarkers,explanationWords:prose.trim().split(/\s+/).filter(Boolean).length,
-    codeBlockCount:codeBlocks.length,codeBlockLabels:codeBlocks.map(value=>value[1].trim().slice(0,80)),
+    codeBlockCount:codeBlockLabels.length,codeBlockLabels,
     canonicalSourceMentioned:item.expected.sourceUrls.some(url=>text.includes(url)),
     providedFieldsMentioned:item.expected.allowedFields.filter(field=>text.includes(field)),
     providedTablesMentioned:item.expected.allowedTables.filter(table=>text.includes(table)),

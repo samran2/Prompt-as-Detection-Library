@@ -27,6 +27,9 @@ conversations are not independent release evidence.
   v2 storage leaves original v1 records available for rollback.
 - Application metadata advances to dev4. No-profile prompt text retains the
   `PAD-v0.4.0-dev3` content identity and all pinned MITRE sources remain unchanged.
+- Comparison reports scan recorded text in forward-only passes. Large whitespace
+  and fence-marker responses no longer trigger repeated whole-text matching;
+  ordinary lexical observations and literal response evidence are preserved.
 
 Fresh verification, review and hosted acceptance are tracked separately. This
 entry does not claim model-answer improvement, WCAG certification or detection

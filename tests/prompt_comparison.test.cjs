@@ -119,6 +119,62 @@ test('offline report keeps lexical observations separate from semantic and human
   assert.doesNotMatch(JSON.stringify(blind),/PAD-v|baseline|candidate|\.old|\.new/);
 });
 
+async function recordedAnswer(t,text) {
+  const dir=directory(t), input=path.join(dir,'prepared'); comparison.writePreparation(input);
+  const options={input,model:pricing().model,pricing:pricing(),maxCostUsd:0.27,maxOutputTokens:100};
+  const result=await comparison.run(options,{key:'unit-test-credential',fetch:async()=>new Response(JSON.stringify(
+    response({output:[{type:'message',role:'assistant',content:[{type:'output_text',text}]}]})))});
+  assert.equal(result.completed,1);
+  return {input,output:path.join(dir,'report')};
+}
+
+test('recorded answers retain literal sections, fenced labels and prose observations',async t=>{
+  const text='1. Summary\n## **2) Draft\n``` kql \n3. Code marker\n```\n4. Missing input\nBefore```inline```after';
+  const report=comparison.report(await recordedAnswer(t,text));
+  const observations=report.items.find(item=>item.response).observations;
+  assert.deepEqual(observations.sectionMarkers,[true,true,true,true]);
+  assert.equal(observations.codeBlockCount,1);
+  assert.deepEqual(observations.codeBlockLabels,['kql']);
+  assert.equal(observations.explanationWords,9);
+  assert.equal(observations.missingInputLanguageObserved,true);
+  assert.equal(observations.status,'observed-not-scored');
+});
+
+test('report preserves newline, inline-fence and unmatched-fence edge cases',async t=>{
+  const examples=[
+    {text:'1.\n2)\n3.\n4)',sections:[true,true,true,false],labels:[],words:4},
+    {text:'alpha```inline```beta gamma',sections:[false,false,false,false],labels:[],words:2},
+    {text:'alpha ```js\nbeta gamma',sections:[false,false,false,false],labels:[],words:4},
+    {text:' ```text\n 1. example\n``` ',sections:[true,false,false,false],labels:['text'],words:0},
+    {text:'```inline``` and ```js\nbody\n```',sections:[false,false,false,false],labels:['inline``` and ```js'],words:1},
+    {text:'prefix\r2. title',sections:[false,false,false,false],labels:[],words:3},
+  ];
+  for(const example of examples) {
+    const report=comparison.report(await recordedAnswer(t,example.text));
+    const observations=report.items.find(item=>item.response).observations;
+    assert.deepEqual(observations.sectionMarkers,example.sections);
+    assert.deepEqual(observations.codeBlockLabels,example.labels);
+    assert.equal(observations.explanationWords,example.words);
+  }
+});
+
+for(const [kind,text] of [['blank-lines','\n'.repeat(150000)+'x'],['fence-markers','```'.repeat(60000)+'x']]) {
+  test(`offline report bounds processing of large ${kind} responses`,async t=>{
+    const paths=await recordedAnswer(t,text);
+    // A subprocess deadline bounds the test even if synchronous parsing regresses.
+    // Only the transport is mocked; the actual journal and report paths are used.
+    const result=spawnSync(process.execPath,['-e',
+      'const c=require(process.argv[1]); const r=c.report(JSON.parse(process.argv[2])); process.stdout.write(JSON.stringify(r.items.find(i=>i.response).observations));',
+      require.resolve('../packages/core/prompt-comparison.cjs'),JSON.stringify(paths)],{encoding:'utf8',timeout:5000,maxBuffer:1024*1024});
+    assert.equal(result.error,undefined,'report must finish inside a generous five-second local deadline');
+    assert.equal(result.status,0,result.stderr);
+    const observations=JSON.parse(result.stdout);
+    assert.deepEqual(observations.sectionMarkers,[false,false,false,false]);
+    assert.equal(observations.codeBlockCount,0);
+    assert.equal(observations.explanationWords,1);
+  });
+}
+
 test('CLI defaults to offline summary and rejects invalid API settings without a request', () => {
   const script=path.resolve(__dirname,'../scripts/compare_prompts.cjs');
   const launch=args=>spawnSync(process.execPath,[script,...args],{encoding:'utf8',env:{PATH:process.env.PATH},timeout:10000});
