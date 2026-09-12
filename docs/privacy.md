@@ -17,8 +17,9 @@ request to that destination.
 ## Optional local workspaces
 
 Workspaces can contain original templates and hashes, edited prompts, per-draft
-context, applied/unapplied context, favorites, collections, hypothetical flow and
-view state. A workspace JSON export deliberately includes this private material.
+context, applied/unapplied context, saved environment profiles and their applied
+and per-draft snapshots, favorites, collections, hypothetical flow and view state.
+A workspace JSON export deliberately includes this private material.
 Files are limited to 5 MiB, validated locally, previewed and opened with a new ID;
 imports do not silently overwrite a workspace or replace old templates with new
 sources. See the [format and integrity boundary](workspace-format.md).
@@ -43,6 +44,9 @@ does not erase existing saved workspaces. **Delete local workspaces** is a
 separate, confirmed action: it clears saved workspace records and invalidates
 old storage handles while retaining current in-memory work for export. It does
 not delete files already downloaded, copies in backups or the theme preference.
+Version 2 deletion leaves the separate version 1 database unchanged. Legacy
+version 1 imports are read-only and require preview/confirmation; consent is not
+carried over to version 2. See the [migration guide](workspace-format.md).
 Keep exported copies only as long as needed and delete them separately.
 
 Concurrent stale writes or storage-clear conflicts stop autosave; newer saved
@@ -95,10 +99,16 @@ not satisfy these operational obligations.
 ## Model evaluation
 
 Evaluation is local by default. Selecting a remote model provider is an explicit
-operator action. The harness must show what content will leave the machine, avoid
-logging request or response bodies, and store only model/settings metadata and
-cryptographic hashes unless the operator deliberately stores a sanitized artifact.
+operator action. The separate dev4 [comparison CLI](prompt-comparison.md) prepares
+only its pinned public/synthetic cases. Offline preparation and reporting do not
+send data anywhere. The explicit, separately authorized `run` command sends those
+prepared prompts to OpenAI and saves response text, usage, timestamps and hashes
+in private local result files. These are deliberate experiment artifacts, not
+application telemetry; command output contains summaries, not provider bodies.
+Files are unencrypted and should not be committed or automatically uploaded.
 API keys remain environment secrets and are never written to result files.
+Requests use `store:false`, which does not guarantee zero provider retention.
+This development release makes no paid model calls.
 
 Remote evaluation of production logs, personal data, or confidential incident
 material is outside scope. Adding it requires user consent, a documented processing

@@ -18,6 +18,10 @@ environment inputs and the limits of these checks.
 
 **[Open the live demo →](https://samran2.github.io/Prompt-as-Detection-Library/)**
 
+The live demo still serves the previously published version. This branch's dev4
+features are available locally while the final security/publication gate remains
+pending; see [candidate status](docs/environment-publication-status.json).
+
 [Open research tools →](https://samran2.github.io/Prompt-as-Detection-Library/research.html)
 Navigator coverage, CAR analytics, Attack Flow authoring, manual observable
 assessments and offline lab evidence exchange. [Guide](docs/research-tools.md).
@@ -33,10 +37,10 @@ the demo does not run a model or execute detection rules.
 
 [Workbench guide](docs/premium-workbench.md) · [Environment profiles](docs/environment-profiles.md) · [Workspace format](docs/workspace-format.md) · [Privacy and local storage](docs/privacy.md)
 
-[![Premium workbench showing the OT technique desk and an editable detection prompt](docs/screenshots/premium-desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
+[![Guided detection workbench with local environment profiles](docs/screenshots/environment-guided-desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
 
-*Development workbench. [Workspaces](docs/screenshots/premium-workspace.png) ·
-[Mobile view](docs/screenshots/premium-mobile.png). Test and hosted outcomes are
+*Development workbench. [Applied synthetic profile](docs/screenshots/environment-applied-desktop.png) ·
+[Mobile profile editor](docs/screenshots/environment-profile-mobile.png). Test and hosted outcomes are
 recorded in the [verification record](docs/verification.md).*
 
 ## What you can do

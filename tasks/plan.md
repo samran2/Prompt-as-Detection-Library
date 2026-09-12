@@ -53,6 +53,9 @@ historical context. The approved application target is `0.4.0.dev4` / npm
 6. After acceptance, publish the reviewed change to the existing repository and
    Pages demo, verify exact hosted assets, and deliver ZIP/hash and screenshots.
 
-Implementation is in progress. Module owners keep assigned paths isolated;
-the integrator owns final verification, acceptance and publication. Mark only
-observed outcomes complete and leave unavailable/blocked checks explicit.
+Local implementation and regression verification are complete. Formal comparison
+security review is blocked by account access and an inventory that omits changed
+`.cjs` files; no hosted dev4 update has been made. See docs/verification.md and
+docs/environment-publication-status.json. The integrator owns final acceptance
+and publication; retain these missing gates instead of treating tests as a clean
+security scan.
