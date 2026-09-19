@@ -1,5 +1,57 @@
 # Verification records
 
+## Security hardening follow-up — 2026-09-20 (Europe/Helsinki)
+
+Feature-branch follow-up based on `f31485c85817a693e923e05d94ee4ae3b8929bf3`.
+This implements the standard audit's Rösti response and browser-QA hardening
+recommendations, not a new vulnerability discovery or security certification.
+
+- The explicit Rösti client rejects its credential in decoded JSON strings and
+  member names before projection, pagination cursor reuse or output. Synthetic
+  literal and JSON-escaped cases exercise nested data, both paginated endpoints
+  and the actual CLI dispatch. Rejected responses create no export file. This
+  is exact credential-reflection protection, not universal secret detection.
+- All three browser QA entry points share plain-loopback directory validation
+  and parsed origin/path routing. The main harness additionally permits its
+  fixed local demo directory for file-mode checks. Invalid base URLs fail before
+  browser setup without echoing the input. Portable reports retain `basePath`
+  and fixed diagnostic categories/counts, not free-text errors or request URLs;
+  detailed local runner errors must be inspected before sharing.
+- **459 Node tests passed**, no failures/skips, on Node 24.13.0; **16 Python tests
+  passed**. The nine new tests were observed failing before their respective
+  implementations and passing afterward. The 21 focused tests cover the client,
+  URL boundary and simulated real-run failure reporting, including cleanup.
+  Initial full-suite listener failures were sandbox restrictions; the complete
+  passing run had local-listener permission. The system Git shim also hit an
+  Xcode license prompt; existing CommandLineTools Git was used without accepting
+  a license or changing global configuration.
+- **98 checks per engine passed** after the final code change: 78 main/research/
+  workbench checks and 20 environment checks on Chrome 153.0.8010.48, Firefox
+  153.0 and WebKit 26.5, with locked Playwright 1.62.1. No console errors/warnings
+  or unexpected external requests were recorded. The standalone premium Chrome
+  runner also passed its 17 checks and emitted `basePath` without a `base` field.
+  Browser launch was initially denied by the host sandbox; permitted retries
+  used isolated profiles and synthetic local data. Desktop/mobile captures were
+  inspected. WebKit screenshots remain omitted for the documented CSP/tool
+  limitation; functional and console checks remained enabled.
+- `npm run check`, the four QA modules' syntax checks, foundation selected-pattern
+  and tracked-file checks, and the final whitespace diff check passed. The
+  selected-pattern check is not a comprehensive secret audit.
+- An independent ordinary code review found one additional report-bound
+  diagnostic leak. A failing synthetic navigation test reproduced it; fixed
+  report categories resolved it. Re-review found no remaining Required/Critical
+  issues in the code patch. This is not a repeat of the formal security scan.
+- The public build passed and its **34 allowlisted files** are byte-identical
+  to the pre-change output. Its filename-sorted SHA-256 manifest digest remains
+  `12c4012246fff0257f96514a6c5af16a52993a33602975c214128eb8353c7ff6`.
+  All 1,115 prompts, pinned MITRE inputs, composer and public UI bytes are unchanged.
+
+The proposed `SECURITY.md` accuracy update is awaiting explicit owner approval
+of its separate preview and has **not** been applied. Existing documentation is
+therefore not yet fully corrected. This record does not assert a merge, GitHub
+setting change, tag, Pages deployment, real provider/model request or historical
+audit-artifact rewrite. No WCAG certification or detection validation is claimed.
+
 ## Source-backed research mappings — 2026-09-19 (Europe/Helsinki)
 
 Local follow-up to `4c98c291ce6ab4f680c067d331ef59397034c669` implements

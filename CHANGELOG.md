@@ -30,6 +30,11 @@ conversations are not independent release evidence.
 
 ### Changed
 
+- Hardened explicit Rösti imports against request-credential reflection in decoded
+  successful responses, including JSON escapes, before pagination or file export.
+- Unified browser QA loopback URL validation and parsed-origin/directory routing;
+  private or ambiguous base URLs fail before browser setup, and reports retain
+  only the base path. These are defense-in-depth changes, not new security claims.
 - Long telemetry identifiers and evidence hashes wrap within narrow screens,
   including T1068 at 320 px; source text is not truncated or altered.
 - Workspace v2 retains the 5 MiB limit, original text/hashes and conflict-safe

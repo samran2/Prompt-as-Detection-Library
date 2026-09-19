@@ -3,15 +3,13 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { createBrowserBoundary, reportDiagnostics } = require('./browser_qa_boundary.cjs');
 
 function settings(environment = process.env) {
-  const base = new URL(environment.DEMO_URL || 'http://127.0.0.1:8798/');
-  assert.ok(base.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname)
-    && !base.username && !base.password && !base.search && !base.hash, 'Environment QA requires a plain loopback HTTP directory URL');
-  assert.ok(base.pathname.endsWith('/'), 'Environment QA URL must end with a directory slash');
+  const boundary = createBrowserBoundary(environment.DEMO_URL || 'http://127.0.0.1:8798/');
   const engine = environment.BROWSER || environment.BROWSER_ENGINE || 'chromium';
   assert.ok(['chromium', 'firefox', 'webkit'].includes(engine), 'Unsupported browser engine');
-  return { base: base.href, engine, executablePath: engine === 'chromium' ? environment.CHROME_PATH : undefined };
+  return { base: boundary.base, engine, executablePath: engine === 'chromium' ? environment.CHROME_PATH : undefined };
 }
 
 async function run(environment = process.env) {
@@ -23,7 +21,7 @@ async function run(environment = process.env) {
   let browser, context, page, failure;
   const report = () => ({ version: require('../package.json').version, engine: config.engine,
     browser: browser?.version() || null, node: process.version, basePath: new URL(config.base).pathname,
-    checks, errors, externalRequests, failure: failure?.message || null,
+    checks, ...reportDiagnostics({ errors, externalRequests, failure }),
     limitations: ['Synthetic local UI checks only, not a screen-reader or independent WCAG audit.',
       'No model requests or measured response-quality improvement is asserted.',
       ...(config.engine === 'webkit' ? ['WebKit screenshots omitted because locked screenshot preparation conflicts with the unchanged app CSP.'] : [])] });
@@ -32,12 +30,12 @@ async function run(environment = process.env) {
     browser = await playwright[config.engine].launch({ headless: true,
       ...(config.executablePath ? { executablePath: config.executablePath } : {}) });
     context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
-    const base = new URL(config.base);
+    const boundary = createBrowserBoundary(config.base);
     await context.route('**/*', route => {
-      const request = route.request(); const url = new URL(request.url());
-      requests.push({ url: url.href, body: request.postData() || '' });
-      if (url.protocol === 'blob:' || url.origin === base.origin && url.pathname.startsWith(base.pathname)) return route.continue();
-      externalRequests.push(url.href); return route.abort();
+      const request = route.request(); const url = request.url();
+      requests.push({ url, body: request.postData() || '' });
+      if (boundary.allowsRequest(url)) return route.continue();
+      externalRequests.push(url); return route.abort();
     });
     context.on('page', child => {
       child.setDefaultTimeout(7000);

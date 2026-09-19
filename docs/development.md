@@ -198,6 +198,21 @@ target. It writes ignored output below `work/browser-demo/`. `CHROME_PATH`,
 `PLAYWRIGHT_MODULE` and `DEMO_URL` may select a reviewed local browser,
 dependency or repository-prefix preview.
 
+All browser QA entry points share `scripts/browser_qa_boundary.cjs`: `DEMO_URL`
+must be a plain loopback HTTP directory URL ending in `/`, without credentials,
+query or fragment. Requests are checked by parsed origin and directory boundary,
+not a raw URL prefix. Only the main smoke harness additionally allows its fixed
+local `demo/` directory for file-mode regressions. Reports retain `basePath`, not
+the full configured URL. Portable reports use fixed diagnostic categories
+instead of arbitrary browser errors, console text or blocked request URLs.
+Detailed failures remain in local runner output; inspect that output locally
+before deciding whether it is safe to share. The helper remains outside the
+public static allowlist.
+
+```sh
+node --test tests/browser_qa_boundary.test.cjs tests/environment_browser_contract.test.cjs
+```
+
 For premium UI acceptance, test Chromium, Firefox and WebKit from 320 through
 1440 CSS pixels; keyboard-only use; zoom/reflow; reduced motion; dark and
 high-contrast modes; persistent URL state; comparison; relationship views; and
@@ -225,8 +240,8 @@ npm run research:check
 ```
 
 The optional `scripts/premium_browser_checks.cjs` exports checks consumed by
-the smoke harness; it is not a standalone test runner. Use isolated browser
-profiles and synthetic workspaces, never the user's saved browser data. Verify
+the smoke harness and also supports explicit standalone execution. Use isolated
+browser profiles and synthetic workspaces, never the user's saved browser data. Verify
 reload with and without consent; import cancellation/new identity; changed or
 unknown sources; hash failure; concurrent edits and clear-epoch conflicts;
 quota/unavailable storage; file recovery; and no unexpected network requests.
