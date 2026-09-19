@@ -59,3 +59,16 @@ security review is blocked by account access and an inventory that omits changed
 docs/environment-publication-status.json. The integrator owns final acceptance
 and publication; retain these missing gates instead of treating tests as a clean
 security scan.
+
+## External research links — bounded follow-up
+
+See SPEC-research-sources.md. The owner chose source cards and research links,
+not mirrored metadata catalogs. Implement a shared literal-DOM module, integrate
+Evidence and Research tools, verify privacy/source preservation and browser
+regressions, then document local results. A separate agent may publish the frozen
+dev4 snapshot as a draft PR only; main/Pages acceptance remains pending.
+
+Implemented and locally verified on 2026-09-19: 439 Node, 16 Python and 95
+checks per browser across three engines. Draft PR #21 contains only frozen
+commit `04e4472`; source cards and narrow test corrections remain local. Hosted
+scanner findings and the incomplete formal scan are recorded, not suppressed.

@@ -1,5 +1,67 @@
 # Verification records
 
+## External research links and draft PR — 2026-09-19 (Europe/Helsinki)
+
+Local follow-up to `04e4472e8a5b7d5c55f598e712e892e7dc0d5092`. Added
+LOLBAS, GTFOBins and LOLDrivers link-only cards; no upstream catalogs, commands,
+rules, driver samples or runtime requests were added. All 1,115 prompt texts,
+MITRE source bundles, catalogs and composition code remain unchanged.
+
+- **439 Node tests passed**, no failures/skips, Node 24.13.0. This includes six
+  new source-card tests. Sandbox-only attempts could not open loopback test
+  listeners; the complete final run had the necessary local-listener permission.
+- **16 Python tests passed**. Foundation text-pattern checks, Ruff lint/format,
+  pre-commit configuration, syntax checks, pinned Actions, all four source
+  verifiers, review/evaluation registry checks and the static build passed.
+- **95 checks per engine passed**: 75 main/research/workbench checks (69 existing
+  plus six source checks) and 20 environment checks, on Chrome 153.0.8010.48,
+  Firefox 153.0 and WebKit 26.5 with locked Playwright 1.62.1. All report zero
+  console errors/warnings and unexpected external requests. New source checks
+  cover 320/768/1440 px, light/dark/high-contrast, keyboard focus, ID-only links,
+  ATLAS general-only behavior and draft preservation across selection changes.
+- New focus assertions were corrected to use actual Tab navigation and the
+  mobile list-to-detail interaction rather than programmatic focus on a hidden
+  pane. Product behavior was not weakened to satisfy the tests.
+- The public build has **32 allowlisted files**. Its SHA-256 manifest digest is
+  `354df382b677a8abba412a5183ea1b4ac19559e20fad8579acad1ef1577b42d8`, calculated
+  over `JSON.stringify` of filename-sorted `{name, sha256}` entries. No new
+  dependency, storage, external script or sensitive-context URL was introduced.
+- A separate agent reviewed the source-card implementation and tests for
+  correctness, privacy, link boundaries, integration and false evidence claims:
+  no required changes found. This ordinary review is **not** the incomplete
+  formal Codex Security scan. Desktop/mobile captures were inspected; no manual
+  screen-reader audit, WCAG certification or detection validation is claimed.
+  WebKit screenshots remain omitted because screenshot preparation conflicts
+  with the unchanged CSP; functional tests and console checks remained enabled.
+- Official project/license pages were inspected. The research fetcher could not
+  retrieve the requested LOLDrivers detections page; its link is retained as
+  requested alongside the official repository. Live external page availability
+  and GitHub search results are not asserted by the local test suite.
+
+### Hosted snapshot, separate from the local additions
+
+The publication agent pushed exact commit `04e4472` and opened
+[draft PR #21](https://github.com/samran2/Prompt-as-Detection-Library/pull/21).
+Main remained `1a5c39ba051ac64583c2855110a10d733e36124d`; no Pages deployment,
+tag, release or security-rule suppression was performed.
+
+Repository CI, all three CodeQL analysis jobs, dependency review, container scan
+and fuzz smoke passed. Acceptance remains blocked by:
+
+- Gitleaks matching the synthetic privacy fixture marker in the PR history.
+- CodeQL alert 9 (`js/bad-tag-filter`) on the test's lowercase-only HTML regex.
+- The additional AI code-scanning run failing because its requested model was
+  unsupported, plus the previously documented incomplete formal security scan.
+
+The two test-only corrections are local: rename the marker variable without
+changing its synthetic value/privacy assertions; check full literal preview
+strings including lower/upper/mixed-case tags. The latter strengthens the test,
+not runtime sanitization. No alert was dismissed. Gitleaks scans the full PR
+range, so a follow-up commit alone may still report the historical fixture.
+No history was rewritten. Source cards and these corrections are **not** part of
+the frozen draft PR; they require a separately accepted candidate and hosted
+checks before main/Pages publication. No paid model requests were made.
+
 ## Environment workflows — local verification 2026-09-13 (Europe/Helsinki)
 
 Development candidate `0.4.0.dev4`, application commit

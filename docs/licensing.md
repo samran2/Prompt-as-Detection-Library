@@ -1,5 +1,13 @@
 # Project licensing record
 
+## Linked external research projects
+
+The LOLBAS, GTFOBins and LOLDrivers directory includes only original short
+descriptions and official links, not copied entries, rules, commands or samples.
+Each card links the upstream license; see [the source directory](research-sources.md).
+The project's MIT license does not replace those third-party terms. Importing
+upstream catalogs would require a separate provenance and licensing review.
+
 ## Owner decision
 
 On 2026-09-08, the owner explicitly approved the MIT License for original project

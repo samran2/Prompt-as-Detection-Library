@@ -524,6 +524,7 @@ function contrastRatio(first, second) {
       assert.equal(await page.locator('#technique-id').textContent(), 'AML.T0051.001');
       assert.match(await page.locator('#prompt').inputValue(), /MITRE ATLAS 2026\.08/);
     });
+    await require('./research_sources_browser_checks.cjs')({ page, base, check, output, screenshot });
     await require('./research_browser_checks.cjs')({ page, base, check, output, screenshot });
     await require('./premium_browser_checks.cjs')({ page, base, check, output });
     await check('no browser console errors or external requests', async () => { assert.deepEqual(failures, []); assert.deepEqual(external, []); });

@@ -9,6 +9,10 @@ conversations are not independent release evidence.
 
 ### Added
 
+- Added shared LOLBAS, GTFOBins and LOLDrivers source cards to Evidence and
+  Research tools. Repository-scoped ATT&CK-ID searches are explicitly unverified;
+  ATLAS shows general links only. No catalog copying, execution or runtime
+  requests were added. These follow-up changes are not in the frozen draft PR.
 - Added local named environment profiles, explicit application, revision-aware
   draft snapshots and portable `.pad-environment.json` files. The library CLI
   accepts `--profile-file` using the same contract and composer as the browser.
@@ -30,6 +34,9 @@ conversations are not independent release evidence.
 - Comparison reports scan recorded text in forward-only passes. Large whitespace
   and fence-marker responses no longer trigger repeated whole-text matching;
   ordinary lexical observations and literal response evidence are preserved.
+- Clarified the synthetic privacy-test marker's variable name without changing
+  the value or assertions. Import-preview tests preserve full mixed-case literal
+  HTML-like text instead of using a lowercase-only regex assertion.
 
 Fresh verification, review and hosted acceptance are tracked separately. This
 entry does not claim model-answer improvement, WCAG certification or detection

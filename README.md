@@ -51,6 +51,11 @@ recorded in the [verification record](docs/verification.md).*
   telemetry references, tuning variables and documented procedure examples.
   ATLAS adds linked case studies, mitigations and source threat maturity, without
   presenting them as tested detections.
+- **Follow external research.** Evidence and Research tools link LOLBAS,
+  GTFOBins and LOLDrivers. Optional ATT&CK-ID searches are research links, not
+  verified mappings. No remote catalogs, commands or samples are imported.
+  [Source-card guide](docs/research-sources.md). Available locally on this branch;
+  the live demo has not yet received this addition.
 - **Stay with one technique.** Prompt, Evidence, Defenses and Flow share the
   selected record. Evidence groups source guidance, the relationship map and CAR;
   comparison opens separately without replacing the editing view.

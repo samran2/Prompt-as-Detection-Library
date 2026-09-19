@@ -51,3 +51,17 @@ The formal comparison security scan remains incomplete: account access stopped
 the worker and the tool rejected the real `.cjs` finding path as out of inventory.
 The local report-parser fix has regression evidence, but does not replace that
 missing scan. No dev4 GitHub or Pages publication is accepted yet.
+
+## External research source cards
+
+- [x] User-approved link-only scope and contract documented
+- [x] Shared LOLBAS, GTFOBins and LOLDrivers cards integrated
+- [x] Exact public-ID searches, safe links and ATLAS limitations tested
+- [x] Regression/source/build/browser checks and screenshots recorded
+- [x] Documentation and focused review completed
+
+Frozen dev4 commit `04e4472` is now draft PR #21, not merged/deployed. Hosted
+CI exposed two test-only scanner findings and an unsupported-model AI scan
+failure. Local test corrections preserve all privacy/literal-rendering checks;
+the full-history secret scan and formal security review remain publication gates.
+See docs/verification.md. Source-card changes remain a separate local follow-up.

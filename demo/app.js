@@ -272,6 +272,7 @@
     $('no-selection').hidden = Boolean(record);
     defensesView?.render(record);
     carView?.show(record);
+    globalThis.PAD_RESEARCH_SOURCES?.render({ document, root: $('desk-external-sources'), techniqueId: record?.id || '', headingLevel: 4 });
     flowView?.setSelected(record);
     workspaceUI?.selectionChanged(record);
     $('desk-flow-support').textContent = unresolvedFlow ? 'This workspace contains unresolved Flow steps. They are retained in workspace exports; clear the flow explicitly to start a new hypothesis.' : isAtlas(record || {}) ? 'ATLAS is not supported by this ATT&CK Flow exporter. Existing ATT&CK steps are retained.' : 'Add this technique without leaving your research.';
