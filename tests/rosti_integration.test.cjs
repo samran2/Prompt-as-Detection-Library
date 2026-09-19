@@ -137,6 +137,57 @@ test('exclusive output is owner-only and never replaces an existing file', t => 
   assert.deepEqual(JSON.parse(fs.readFileSync(output, 'utf8')), { synthetic: true });
 });
 
+test('successful responses reject literal and JSON-escaped credential echoes in all fields', async () => {
+  const credential = ['synthetic', 'reflection', 'only'].join('-');
+  const escaped = [...credential].map(char => '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0')).join('');
+  const payloads = [
+    { ...sampleReport(), title: `Before ${credential} after` },
+    { ...sampleReport(), source: { name: credential } },
+    { unknown: [{ nested: credential }] },
+    { [credential]: 'member names are untrusted too' },
+  ];
+  for (const payload of payloads) {
+    for (const encode of [text => text, text => text.replaceAll(credential, escaped)]) {
+      const client = rosti.createClient({ apiKey: credential,
+        fetchImpl: async () => new Response(encode(JSON.stringify(payload))) });
+      await assert.rejects(client.getReport('Ab12Cd34'), error => {
+        assert.ok(error instanceof rosti.RostiError);
+        assert.match(error.message, /credential/i);
+        assert.equal(`${error.stack}${JSON.stringify(error)}`.includes(credential), false);
+        assert.equal(`${error.stack}${JSON.stringify(error)}`.includes(escaped), false);
+        return true;
+      });
+    }
+  }
+});
+
+test('paginated endpoints reject credential echoes before a cursor can be reused', async () => {
+  const credential = ['synthetic', 'pagination', 'only'].join('-');
+  for (const method of ['getMitreIds', 'getIocs']) {
+    let requests = 0;
+    const client = rosti.createClient({ apiKey: credential, fetchImpl: async () => {
+      requests++;
+      return responseJson({ data: [], meta: { has_more: true, next_cursor: credential } });
+    } });
+    await assert.rejects(client[method]('Ab12Cd34'), /credential/i);
+    assert.equal(requests, 1);
+  }
+});
+
+test('CLI rejects reflected credentials before creating an output file', async t => {
+  const credential = ['synthetic', 'export', 'only'].join('-');
+  const directory = fixture(t);
+  t.mock.method(globalThis, 'fetch', async url => {
+    if (url.endsWith('/Ab12Cd34')) return responseJson({ ...sampleReport(), title: credential });
+    return responseJson({ data: [], meta: { has_more: false } });
+  });
+  for (const flags of [[], ['--include-ioc-values']]) {
+    await assert.rejects(rosti.main(['--report', 'Ab12Cd34', '--output', path.join(directory, 'evidence.json'), ...flags],
+      { ROSTI_API_KEY: credential }), /credential/i);
+    assert.deepEqual(fs.readdirSync(directory), []);
+  }
+});
+
 test('Rösti evidence cannot be written inside the source repository', () => {
   const inside = path.resolve(__dirname, '..', 'integrations', 'rosti', 'must-not-exist.json');
   assert.throws(() => rosti.writeNewFile(inside, {synthetic: true}), /outside the source repository/i);

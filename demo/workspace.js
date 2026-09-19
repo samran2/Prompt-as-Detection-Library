@@ -1,8 +1,8 @@
 (function (root, factory) {
   'use strict';
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('node:crypto').webcrypto, require('./core.js'));
-  else root.PAD_WORKSPACE = factory(root.crypto, root.PAD);
-})(typeof globalThis === 'object' ? globalThis : this, function (crypto, core) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('node:crypto').webcrypto, require('./core.js'), require('./environment.js'));
+  else root.PAD_WORKSPACE = factory(root.crypto, root.PAD, root.PAD_ENVIRONMENT);
+})(typeof globalThis === 'object' ? globalThis : this, function (crypto, core, environment) {
   'use strict';
   const LIMITS = Object.freeze({bytes:5*1024*1024,depth:12,nodes:150000,draftText:200*1024,warnings:200});
   const SOURCE_KEYS = ['attack','atlas','d3fend','car','attackFlow'];
@@ -20,7 +20,7 @@
   const target = enumeration(core?.TARGETS ? [...core.TARGETS] : []);
   const sourcesSchema = obj(Object.fromEntries(SOURCE_KEYS.map(key=>[key,str(128,{minLength:1,allOf:[{pattern:'\\S'}]})])));
   function freeze(value) { if (value && typeof value==='object') { Object.values(value).forEach(freeze); Object.freeze(value); } return value; }
-  const SCHEMA = freeze({$schema:'https://json-schema.org/draft/2020-12/schema',title:'Prompt-as-Detection local workspace v1',
+  const SCHEMA_V1 = freeze({title:'Prompt-as-Detection local workspace v1',
     description:'Private local drafts, never review or validation evidence. Runtime also enforces a 5 MiB UTF-8 document limit and unique draft keys and collection IDs.',
     ...obj({schemaVersion:{const:1},id:identifier,name,sources:sourcesSchema,
       drafts:arr(obj({techniqueId:technique,mode,target,text:str(LIMITS.draftText),template:str(LIMITS.draftText),
@@ -33,6 +33,17 @@
         compare:arr(technique,2,true),theme:enumeration(core?.THEMES ? [...core.THEMES] : []),
         tab:enumeration(['prompt','evidence','defenses','flow']),paneWidth:{type:'integer',minimum:240,maximum:480},
         listScroll:{type:'number',minimum:0,maximum:10000000},mobileView:enumeration(['list','detail'])})})});
+  const nullable = schema => ({anyOf:[{type:'null'},schema]});
+  const profileSchema = environment?.SCHEMA;
+  const SCHEMA_V2 = freeze({title:'Prompt-as-Detection local workspace v2',
+    description:'Private local drafts and profile snapshots. Hashes identify saved input, never review or validation evidence.',
+    ...obj({...SCHEMA_V1.properties,schemaVersion:{const:2},profiles:arr(profileSchema,100),activeEnvironment:nullable(profileSchema),
+      drafts:arr(obj({...SCHEMA_V1.properties.drafts.items.properties,environment:nullable(profileSchema),
+        environmentSha256:nullable(str(64,{pattern:'^[a-f0-9]{64}(?![\\s\\S])'}))}),1000),
+      view:obj({...SCHEMA_V1.properties.view.properties,composer:enumeration(['guided','quick']),guideStep:{type:'integer',minimum:1,maximum:4}})})});
+  const SCHEMA = freeze({$schema:'https://json-schema.org/draft/2020-12/schema',title:'Prompt-as-Detection local workspace',
+    description:'Accepts strict versions 1 and 2. Imports never authorize validation claims. Runtime additionally enforces 5 MiB UTF-8 and unique IDs and draft identities.',
+    oneOf:[SCHEMA_V1,SCHEMA_V2]});
   function check(condition,message) { if (!condition) throw new Error(message); }
   function bytes(text) { return new TextEncoder().encode(text); }
   function boundedText(text) {
@@ -69,6 +80,12 @@
     return output;
   }
   function conform(value,schema,path) {
+    check(schema && typeof schema==='object',`Missing ${path} schema.`);
+    if (schema.anyOf) {
+      let accepted=false;
+      for (const alternative of schema.anyOf) { try { conform(value,alternative,path); accepted=true; break; } catch { /* Try the next explicit shape. */ } }
+      check(accepted,`Invalid ${path} nullable value.`); return;
+    }
     if (Object.hasOwn(schema,'const')) check(value===schema.const,`Invalid ${path}.`);
     if (schema.enum) check(schema.enum.includes(value),`Invalid ${path}.`);
     if (schema.type==='object') {
@@ -82,6 +99,8 @@
     } else if (schema.type==='string') {
       check(typeof value==='string',`Invalid ${path} text.`);
       check(value.length<=(schema.maxLength??LIMITS.bytes) && value.length>=(schema.minLength??0),`Invalid ${path} length.`);
+    } else if (schema.type==='null') {
+      check(value===null,`Invalid ${path} null value.`);
     } else if (schema.type==='number' || schema.type==='integer') {
       check(typeof value==='number' && Number.isFinite(value) && (schema.type!=='integer'||Number.isInteger(value)) && value>=schema.minimum && value<=schema.maximum,`Invalid ${path} range.`);
     }
@@ -90,17 +109,35 @@
   }
   function validate(value) {
     check(mode.enum.length>0 && target.enum.length>0,'Workspace requires the core module.');
-    const result=copy(value,0,{nodes:0,bytes:0}); conform(result,SCHEMA,'workspace');
-    const draftKeys=result.drafts.map(d=>`${d.techniqueId}:${d.mode}:${d.target}`);
+    check(environment && profileSchema,'Workspace requires the environment module.');
+    const result=copy(value,0,{nodes:0,bytes:0});
+    check(result && [1,2].includes(result.schemaVersion),'Unsupported workspace schemaVersion.');
+    conform(result,result.schemaVersion===1?SCHEMA_V1:SCHEMA_V2,'workspace');
+    const draftKeys=result.drafts.map(d=>`${d.techniqueId}:${d.mode}:${d.target}:${d.environmentSha256||'none'}`);
     check(new Set(draftKeys).size===draftKeys.length,'Duplicate workspace draft key.');
     check(new Set(result.collections.map(c=>c.id)).size===result.collections.length,'Duplicate workspace collection ID.');
+    if (result.schemaVersion===2) {
+      check(new Set(result.profiles.map(profile=>profile.id)).size===result.profiles.length,'Duplicate workspace profile ID.');
+      for (const profile of [...result.profiles,result.activeEnvironment,...result.drafts.map(d=>d.environment)].filter(Boolean)) environment.validate(profile);
+      for (const draft of result.drafts) {
+        check((draft.environment===null)===(draft.environmentSha256===null),'Workspace profile snapshot and hash must occur together.');
+        check(draft.environment===null || draft.environment.target===draft.target,'Workspace draft target conflicts with its profile snapshot.');
+      }
+      check(result.activeEnvironment===null || result.activeEnvironment.target===result.view.target,'Workspace target conflicts with its applied profile.');
+    }
     boundedText(JSON.stringify(result)); return result;
   }
   function create(name,sources) {
     check(crypto && typeof crypto.randomUUID==='function','Secure UUID support is required.');
-    return validate({schemaVersion:1,id:crypto.randomUUID(),name,sources,drafts:[],context:'',contextInput:'',collections:[],favorites:[],
+    return validate({schemaVersion:2,id:crypto.randomUUID(),name,sources,drafts:[],profiles:[],activeEnvironment:null,context:'',contextInput:'',collections:[],favorites:[],
       flow:{title:'Research hypothesis',steps:[]},view:{query:'',domain:'',tactic:'',platform:'',mode:'detect',target:core.TARGETS[0],
-        technique:'',compare:[],theme:'system',tab:'prompt',paneWidth:330,listScroll:0,mobileView:'list'}});
+        technique:'',compare:[],theme:'system',tab:'prompt',paneWidth:330,listScroll:0,mobileView:'list',composer:'guided',guideStep:1}});
+  }
+  function migrate(value) {
+    const old=validate(value); check(old.schemaVersion===1,'Migration requires a v1 workspace.');
+    return validate({...old,schemaVersion:2,id:create(old.name,old.sources).id,profiles:[],activeEnvironment:null,
+      drafts:old.drafts.map(draft=>({...draft,environment:null,environmentSha256:null})),
+      view:{...old.view,composer:'quick',guideStep:1}});
   }
   // Native JSON parsing discards duplicate members; reject ambiguity before it can replace a saved value.
   function uniqueMembers(text) {
@@ -149,14 +186,15 @@
     for (let draftIndex=0;draftIndex<saved.drafts.length;draftIndex++) {
       const draft=saved.drafts[draftIndex];
       check(await hash(draft.template)===draft.templateSha256,`Workspace template hash integrity mismatch at draft ${draftIndex+1}.`);
+      if (draft.environment) check(await environment.hash(draft.environment)===draft.environmentSha256,`Workspace profile hash integrity mismatch at draft ${draftIndex+1}.`);
       const record=known.get(draft.techniqueId); if (!record) continue;
       let current;
-      try { current=composer.composePrompt(record,{mode:draft.mode,target:draft.target,context:draft.context}); }
+      try { current=composer.composePrompt(record,{mode:draft.mode,target:draft.target,context:draft.context,environment:draft.environment||null}); }
       catch { warn({code:'template-unavailable',draftIndex,techniqueId:draft.techniqueId,message:'Current template could not be compared. Saved text is preserved.'}); continue; }
       if (current!==draft.template) warn({code:'template-changed',draftIndex,techniqueId:draft.techniqueId,message:'The original template differs from the current composer. Saved template and draft text are preserved.'});
     }
     if (omittedWarnings) warnings.push({code:'additional-warnings',count:omittedWarnings,message:'Additional warning details were bounded. All unresolved IDs and saved workspace data remain available.'});
     return {warnings,unresolved};
   }
-  return Object.freeze({create,validate,parse,serialize,hash,inspect,LIMITS,SCHEMA});
+  return Object.freeze({create,validate,parse,serialize,hash,inspect,migrate,LIMITS,SCHEMA});
 });

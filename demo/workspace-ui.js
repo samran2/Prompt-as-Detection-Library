@@ -6,7 +6,7 @@
   'use strict';
   const LIMIT = 5 * 1024 * 1024;
   const MAX_WORKSPACES = 50;
-  const FLAG = 'pad-workspaces-enabled';
+  const FLAG = 'pad-workspaces-enabled-v2';
   const MEMORY = 'Memory only — export a file before leaving.';
   const CONFLICT = 'Autosave stopped: another tab changed or cleared storage. Your work remains in memory. Export a file or copy as a new workspace.';
   const UNAVAILABLE = 'Autosave unavailable. Your work remains in memory; export a file.';
@@ -17,6 +17,7 @@
     const window = document.defaultView || globalThis;
     const $ = id => { const node = document.getElementById(id); if (!node) throw new Error('Workspace interface is incomplete'); return node; };
     const workspaces = new Map();
+    const legacy = new Map();
     const known = new Map(catalog.map(record => [record.id, record]));
     let currentId, selected = null, collectionId = '', timer = null, queue = Promise.resolve();
     let importGeneration = 0, preview = null, storageGeneration = 0, enabled = false, store = null;
@@ -42,6 +43,8 @@
     function renderNames() {
       $('workspace-select').replaceChildren(...[...workspaces.values()].map(item => {
         const option = element('option', item.value.name); option.value = item.value.id; return option;
+      }), ...[...legacy.values()].map(item => {
+        const option = element('option', 'Older workspace — ' + item.value.name); option.value = 'legacy:' + item.value.id; return option;
       }));
       $('workspace-select').value = currentId;
       $('workspace-name').value = current().value.name;
@@ -142,7 +145,8 @@
     }
     async function copyWorkspace(value, inspection) {
       if (workspaces.size >= MAX_WORKSPACES) throw new Error('Workspace limit reached');
-      const copy = contract.validate({ ...value, id: contract.create(value.name, sources).id });
+      const copy = value.schemaVersion === 1 ? contract.migrate(value)
+        : contract.validate({ ...value, id: contract.create(value.name, sources).id });
       const item = entry(copy, 0, inspection); item.modified = true; item.captured = 0;
       workspaces.set(copy.id, item); await activate(item); await save(item);
       return item;
@@ -166,13 +170,35 @@
         if (bytes.byteLength !== file.size || bytes.byteLength > LIMIT) throw new Error('File size');
         const value = contract.parse(new window.TextDecoder('utf-8', { fatal: true }).decode(bytes));
         const inspection = await contract.inspect(value, catalog, core, sources); if (stale()) return;
-        preview = { value, inspection, generation, id, revision };
-        $('workspace-preview-text').textContent = value.name + '\n' + value.drafts.length + ' drafts; ' +
-          value.favorites.length + ' favorites; ' + value.collections.length + ' collections; ' + value.flow.steps.length +
-          ' flow steps.\nOpening creates a new workspace; existing work is preserved.\n' +
-          inspection.warnings.map(warningText).join('\n');
-        $('workspace-preview').hidden = false; $('workspace-import-confirm').focus();
+        showPreview({ value, inspection, generation, id, revision });
       } catch { if (!stale()) { cancelPreview(); status('Import rejected. Use a valid workspace JSON file up to 5 MiB with intact template hashes. Existing work was preserved.'); } }
+    }
+    function showPreview(accepted) {
+      preview = accepted;
+      const {value, inspection} = accepted;
+      $('workspace-preview-text').textContent = value.name + '\n' + value.drafts.length + ' drafts; ' +
+        value.favorites.length + ' favorites; ' + value.collections.length + ' collections; ' + value.flow.steps.length +
+        ' flow steps; ' + (value.profiles?.length || 0) + ' environment profiles.\n' +
+        (value.schemaVersion === 1 ? 'Version 1 will be copied to version 2 in quick mode. The original file or older local record is not changed.\n' : '') +
+        'Opening creates a new workspace; existing work is preserved.\n' + inspection.warnings.map(warningText).join('\n');
+      $('workspace-preview').hidden = false; $('workspace-import-confirm').focus();
+    }
+    async function discoverLegacy() {
+      try {
+        const records = await persistence.readLegacy();
+        if (!Array.isArray(records) || records.length > MAX_WORKSPACES) throw new Error('Workspace count');
+        const checked = new Map();
+        for (const record of records) {
+          const value = contract.validate(record.value);
+          if (value.schemaVersion !== 1 || record.id !== value.id || !Number.isSafeInteger(record.revision) || record.revision < 1) throw new Error('Stored wrapper');
+          const inspection = await contract.inspect(value, catalog, core, sources);
+          checked.set(value.id, {value, inspection});
+        }
+        legacy.clear(); for (const [id, item] of checked) legacy.set(id, item);
+        renderNames();
+        status(checked.size ? 'Older local workspaces found. Select one to preview a new version 2 copy. Older storage is read-only and unchanged.'
+          : 'No older local workspaces found. Existing work was preserved.');
+      } catch { status('Older local workspaces could not be read safely. Export a workspace file from the older app to import here. Existing work was preserved.'); }
     }
 
     function disableStorage(message = MEMORY) {
@@ -197,6 +223,7 @@
           if (record.id !== value.id || !Number.isSafeInteger(record.revision) || record.revision < 1) throw new Error('Stored wrapper');
           const inspection = await contract.inspect(value, catalog, core, sources);
           if (generation !== storageGeneration) return;
+          if (value.schemaVersion === 1) { legacy.set(value.id, {value, inspection}); continue; }
           if (!workspaces.has(value.id)) {
             if (workspaces.size >= MAX_WORKSPACES) throw new Error('Workspace count');
             workspaces.set(value.id, entry(value, record.revision, inspection));
@@ -222,7 +249,7 @@
         for (const item of workspaces.values()) {
           item.revision = 0; item.saved = -1; item.conflicted = false; item.modified = true;
         }
-        status('Local workspace data deleted. Current work remains in memory; export it before leaving.');
+        status('Version 2 local workspace data deleted. Older version 1 storage is unchanged. Current work remains in memory; export it before leaving.');
       } catch { status('Local deletion could not complete. Autosave is off; memory content was preserved.'); }
       finally { if (opened) opened.close(); }
     }
@@ -238,7 +265,15 @@
     });
     $('workspace-select').addEventListener('change', () => {
       const id = $('workspace-select').value;
-      return enqueue(async () => { if (!workspaces.has(id) || id === currentId) return; await flushCurrent(); await activate(workspaces.get(id)); });
+      return enqueue(async () => {
+        if (id.startsWith('legacy:')) {
+          $('workspace-select').value = currentId;
+          const older = legacy.get(id.slice(7)); if (!older) return;
+          cancelPreview();
+          showPreview({...older,generation:importGeneration,id:currentId,revision:current().changes}); return;
+        }
+        if (!workspaces.has(id) || id === currentId) return; await flushCurrent(); await activate(workspaces.get(id));
+      });
     });
     $('workspace-new').addEventListener('click', () => enqueue(async () => {
       const item = await flushCurrent();
@@ -250,6 +285,7 @@
       if (!enabled) status('Workspace file exported. New edits remain local until saved or exported again.');
     }));
     $('workspace-file').addEventListener('change', previewFile);
+    $('workspace-import-legacy').addEventListener('click', () => enqueue(discoverLegacy));
     $('workspace-import-cancel').addEventListener('click', () => { cancelPreview(); $('workspace-file').focus(); });
     $('workspace-import-confirm').addEventListener('click', () => enqueue(async () => {
       const accepted = preview;
@@ -282,7 +318,7 @@
       });
     });
     $('workspace-delete-local').addEventListener('click', () => {
-      if (!window.confirm('Delete all saved local workspaces in this browser? This cannot be undone. Work currently open in memory will remain available for file export.')) return;
+      if (!window.confirm('Delete all saved version 2 local workspaces in this browser? This cannot be undone. Older version 1 storage is unchanged. Work currently open in memory will remain available for file export.')) return;
       const handle = store; store = null; enabled = false; storageGeneration++;
       $('workspace-autosave').checked = false;
       try { window.localStorage.removeItem(FLAG); } catch { /* No content is stored in localStorage. */ }

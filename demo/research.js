@@ -138,6 +138,7 @@
 
   try {
     renderCoverage(); flow.render(); renderCar();
+    globalThis.PAD_RESEARCH_SOURCES?.render({ document, root: $('research-external-sources') });
     $('research-content').hidden = false;
     report('research-status', 'Ready. All inputs stay in this browser and clear on reload. Exported files are your responsibility.');
   } catch {

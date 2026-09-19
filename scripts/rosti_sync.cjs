@@ -132,7 +132,23 @@ function createClient({ apiKey, fetchImpl = globalThis.fetch, timeoutMs = REQUES
     } catch {
       throw new RostiError('Rösti request failed before a response was received.');
     }
-    return readBoundedJsonResponse(response);
+    const data = await readBoundedJsonResponse(response);
+    // Inspect decoded JSON before projection or cursor reuse; JSON escapes must
+    // not hide the credential. Iteration also avoids recursion on nested input.
+    const pending = [data];
+    while (pending.length) {
+      const value = pending.pop();
+      if (typeof value === 'string' && value.includes(apiKey)) {
+        throw new RostiError('Rösti response contained the request credential.');
+      }
+      if (value && typeof value === 'object') {
+        for (const [name, child] of Object.entries(value)) {
+          if (name.includes(apiKey)) throw new RostiError('Rösti response contained the request credential.');
+          pending.push(child);
+        }
+      }
+    }
+    return data;
   }
 
   function validateReportId(id) {

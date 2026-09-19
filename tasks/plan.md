@@ -33,3 +33,57 @@ The completed Research tools plan above remains historical context.
 Module owners work only on assigned paths. The integrator owns shared entry points,
 version metadata, build/QA orchestration and publication. Pending acceptance remains
 visible in tasks/todo.md until supported by recorded checks.
+
+## Environment workflows and prompt comparison — 0.4.0.dev4
+
+See SPEC-environment-workflows.md and ADR-0009. The completed plans above remain
+historical context. The approved application target is `0.4.0.dev4` / npm
+`0.4.0-dev.4`; no-profile content retains its dev3 identity and pinned sources.
+
+1. Define strict environment files and profile-aware shared composition/CLI.
+2. Add workspace v2 with independent applied/draft snapshots; explicitly import
+   v1 data into a separate v2 store without touching old records.
+3. Integrate profile management and four guided steps with quick-mode continuity,
+   explicit application, draft preservation, keyboard and mobile access.
+4. Add the fixed 40-case dev3/candidate comparison, offline preparation/reports,
+   blinded review artifacts and explicit budgeted API runner. Verify with test
+   doubles only; this update authorizes no paid model execution.
+5. Run source parity, complete regressions, three-engine browser checks and
+   independent correctness/security review; resolve findings and record limits.
+6. After acceptance, publish the reviewed change to the existing repository and
+   Pages demo, verify exact hosted assets, and deliver ZIP/hash and screenshots.
+
+Local implementation and regression verification are complete. Formal comparison
+security review is blocked by account access and an inventory that omits changed
+`.cjs` files; no hosted dev4 update has been made. See docs/verification.md and
+docs/environment-publication-status.json. The integrator owns final acceptance
+and publication; retain these missing gates instead of treating tests as a clean
+security scan.
+
+## External research links — bounded follow-up
+
+See SPEC-research-sources.md. The owner chose source cards and research links,
+not mirrored metadata catalogs. Implement a shared literal-DOM module, integrate
+Evidence and Research tools, verify privacy/source preservation and browser
+regressions, then document local results. A separate agent may publish the frozen
+dev4 snapshot as a draft PR only; main/Pages acceptance remains pending.
+
+Implemented and locally verified on 2026-09-19: 439 Node, 16 Python and 95
+checks per browser across three engines. Draft PR #21 contains only frozen
+commit `04e4472`; source cards and narrow test corrections remain local. Hosted
+scanner findings and the incomplete formal scan are recorded, not suppressed.
+
+## Source-backed research mappings — exact associations
+
+The owner requested correct ATT&CK mappings for the source cards. See
+SPEC-research-mappings.md. Retain only minimal upstream ID/title/URL metadata and
+direct pinned MITRE citations, preserving distinct evidence types and licenses.
+
+1. Inspect official source fields and preserve payload hashes/locators.
+2. Test the exact active-domain join, stale-ID exclusions and unsafe URL rejection.
+3. Build a reproducible allowlisted index and expose collapsed evidence details.
+4. Verify complete regressions, three-engine browser behavior and source fidelity.
+5. Obtain independent ordinary code review; record results and local screenshots.
+
+This follow-up does not remove dev4's separate hosted/formal security gates and
+does not authorize sample ingestion, execution or public deployment.

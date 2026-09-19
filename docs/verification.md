@@ -1,5 +1,263 @@
 # Verification records
 
+## Security hardening follow-up — 2026-09-20 (Europe/Helsinki)
+
+Feature-branch follow-up based on `f31485c85817a693e923e05d94ee4ae3b8929bf3`.
+This implements the standard audit's Rösti response and browser-QA hardening
+recommendations, not a new vulnerability discovery or security certification.
+
+- The explicit Rösti client rejects its credential in decoded JSON strings and
+  member names before projection, pagination cursor reuse or output. Synthetic
+  literal and JSON-escaped cases exercise nested data, both paginated endpoints
+  and the actual CLI dispatch. Rejected responses create no export file. This
+  is exact credential-reflection protection, not universal secret detection.
+- All three browser QA entry points share plain-loopback directory validation
+  and parsed origin/path routing. The main harness additionally permits its
+  fixed local demo directory for file-mode checks. Invalid base URLs fail before
+  browser setup without echoing the input. Portable reports retain `basePath`
+  and fixed diagnostic categories/counts, not free-text errors or request URLs;
+  detailed local runner errors must be inspected before sharing.
+- **459 Node tests passed**, no failures/skips, on Node 24.13.0; **16 Python tests
+  passed**. The nine new tests were observed failing before their respective
+  implementations and passing afterward. The 21 focused tests cover the client,
+  URL boundary and simulated real-run failure reporting, including cleanup.
+  Initial full-suite listener failures were sandbox restrictions; the complete
+  passing run had local-listener permission. The system Git shim also hit an
+  Xcode license prompt; existing CommandLineTools Git was used without accepting
+  a license or changing global configuration.
+- **98 checks per engine passed** after the final code change: 78 main/research/
+  workbench checks and 20 environment checks on Chrome 153.0.8010.48, Firefox
+  153.0 and WebKit 26.5, with locked Playwright 1.62.1. No console errors/warnings
+  or unexpected external requests were recorded. The standalone premium Chrome
+  runner also passed its 17 checks and emitted `basePath` without a `base` field.
+  Browser launch was initially denied by the host sandbox; permitted retries
+  used isolated profiles and synthetic local data. Desktop/mobile captures were
+  inspected. WebKit screenshots remain omitted for the documented CSP/tool
+  limitation; functional and console checks remained enabled.
+- `npm run check`, the four QA modules' syntax checks, foundation selected-pattern
+  and tracked-file checks, and the final whitespace diff check passed. The
+  selected-pattern check is not a comprehensive secret audit.
+- An independent ordinary code review found one additional report-bound
+  diagnostic leak. A failing synthetic navigation test reproduced it; fixed
+  report categories resolved it. Re-review found no remaining Required/Critical
+  issues in the code patch. This is not a repeat of the formal security scan.
+- The public build passed and its **34 allowlisted files** are byte-identical
+  to the pre-change output. Its filename-sorted SHA-256 manifest digest remains
+  `12c4012246fff0257f96514a6c5af16a52993a33602975c214128eb8353c7ff6`.
+  All 1,115 prompts, pinned MITRE inputs, composer and public UI bytes are unchanged.
+
+The proposed `SECURITY.md` accuracy update is awaiting explicit owner approval
+of its separate preview and has **not** been applied. Existing documentation is
+therefore not yet fully corrected. This record does not assert a merge, GitHub
+setting change, tag, Pages deployment, real provider/model request or historical
+audit-artifact rewrite. No WCAG certification or detection validation is claimed.
+
+## Source-backed research mappings — 2026-09-19 (Europe/Helsinki)
+
+Local follow-up to `4c98c291ce6ab4f680c067d331ef59397034c669` implements
+SPEC-research-mappings.md. Exact active ATT&CK 19.2 joins yield 62 LOLBAS records
+(334 source links), five GTFOBins records (five links), and two LOLDrivers records
+(12 rule-tag links). These counts overlap. The two inactive upstream ID rows
+(`T1562`, `T1562.001`) are retained in the exclusion report, not remapped.
+
+- **450 Node tests passed**, no failures/skips, Node 24.13.0. The 17 focused
+  research tests cover source-field projection, unsafe provenance URLs, exact
+  domains, deduplication with retained locators, missing data, reproducibility
+  and literal evidence display. New behavior assertions were observed failing
+  before implementation and passing afterward.
+- **16 Python tests passed**. An initial attempt used the system Git shim and
+  failed six fixture-repository setups due to its Xcode license prompt; rerunning
+  with the existing CommandLineTools Git resolved the environment issue. No
+  license was accepted or global configuration changed.
+- Foundation selected-pattern checks, Ruff lint/format (92 Python files),
+  pre-commit configuration, JavaScript syntax, pinned Actions, source/registry
+  verifiers and the public build passed. No prompt, CLI, composer, MITRE source
+  or catalog bytes changed. All 1,115 prompts remain present and verified.
+- **98 checks per engine passed**: 78 main/research/workbench checks and 20
+  environment checks on Chrome 153.0.8010.48, Firefox 153.0 and WebKit 26.5,
+  using locked Playwright 1.62.1. No console errors/warnings or unexpected external
+  requests were observed. New coverage checks exact Mshta links, genuine GTFOBins
+  ICS citations, six immutable rule references, private-context isolation,
+  draft preservation and populated-card focus/reflow at 320/768/1440 px.
+- A new test initially used inactive `T1218.006`; it was corrected to test the
+  active `T1218.005` and its absent GTFOBins association. A real 6 px overflow
+  in T1068's long telemetry identifier was reproduced and fixed with targeted
+  text wrapping; source bytes stay unchanged. The full three-engine suite then
+  passed with the overflow assertion intact.
+- The public build contains **34 allowlisted files**. Its SHA-256 manifest
+  digest is `12c4012246fff0257f96514a6c5af16a52993a33602975c214128eb8353c7ff6`,
+  over `JSON.stringify` of filename-sorted `{name, sha256}` entries. New assets
+  are the generated mapping index and complete research-source notices. No
+  dependencies, sample handling, commands, rule bodies, storage or runtime
+  external requests were introduced.
+- Official LOLBAS API metadata and pinned LOLDrivers headers were inspected.
+  All six LOLDrivers bodies were fetched again transiently: original payload
+  hashes and extracted name/ID/URL/line metadata matched the retained projection;
+  all six upstream statuses were confirmed `experimental`. No bodies were saved
+  or executed. The mutable LOLBAS API identity remains its retrieval timestamp
+  and payload hash, not a claimed Git commit or an archived original body.
+- A separate ordinary reviewer independently resolved all 30 MITRE citations
+  to exact pinned STIX references, including the genuine ICS T0894 citation.
+  No Critical/Required findings; both optional improvements were implemented
+  and re-reviewed: source-derived rule status and explicit mutable-API timing.
+  This is not formal Codex Security approval. Actual desktop/mobile captures
+  were inspected; WebKit screenshots remain omitted for the documented CSP/tool
+  limitation, while its functional and unfiltered console checks stayed enabled.
+
+The code and screenshots are local. Draft PR #21 remains the separate frozen
+snapshot; this work did not push, merge, tag, deploy Pages or dismiss alerts.
+The hosted/formal security gates below remain unresolved. No manual screen-reader
+audit, WCAG certification, paid model evaluation or detection validation is claimed.
+
+## External research links and draft PR — 2026-09-19 (Europe/Helsinki)
+
+Local follow-up to `04e4472e8a5b7d5c55f598e712e892e7dc0d5092`. Added
+LOLBAS, GTFOBins and LOLDrivers link-only cards; no upstream catalogs, commands,
+rules, driver samples or runtime requests were added. All 1,115 prompt texts,
+MITRE source bundles, catalogs and composition code remain unchanged.
+
+- **439 Node tests passed**, no failures/skips, Node 24.13.0. This includes six
+  new source-card tests. Sandbox-only attempts could not open loopback test
+  listeners; the complete final run had the necessary local-listener permission.
+- **16 Python tests passed**. Foundation text-pattern checks, Ruff lint/format,
+  pre-commit configuration, syntax checks, pinned Actions, all four source
+  verifiers, review/evaluation registry checks and the static build passed.
+- **95 checks per engine passed**: 75 main/research/workbench checks (69 existing
+  plus six source checks) and 20 environment checks, on Chrome 153.0.8010.48,
+  Firefox 153.0 and WebKit 26.5 with locked Playwright 1.62.1. All report zero
+  console errors/warnings and unexpected external requests. New source checks
+  cover 320/768/1440 px, light/dark/high-contrast, keyboard focus, ID-only links,
+  ATLAS general-only behavior and draft preservation across selection changes.
+- New focus assertions were corrected to use actual Tab navigation and the
+  mobile list-to-detail interaction rather than programmatic focus on a hidden
+  pane. Product behavior was not weakened to satisfy the tests.
+- The public build has **32 allowlisted files**. Its SHA-256 manifest digest is
+  `354df382b677a8abba412a5183ea1b4ac19559e20fad8579acad1ef1577b42d8`, calculated
+  over `JSON.stringify` of filename-sorted `{name, sha256}` entries. No new
+  dependency, storage, external script or sensitive-context URL was introduced.
+- A separate agent reviewed the source-card implementation and tests for
+  correctness, privacy, link boundaries, integration and false evidence claims:
+  no required changes found. This ordinary review is **not** the incomplete
+  formal Codex Security scan. Desktop/mobile captures were inspected; no manual
+  screen-reader audit, WCAG certification or detection validation is claimed.
+  WebKit screenshots remain omitted because screenshot preparation conflicts
+  with the unchanged CSP; functional tests and console checks remained enabled.
+- Official project/license pages were inspected. The research fetcher could not
+  retrieve the requested LOLDrivers detections page; its link is retained as
+  requested alongside the official repository. Live external page availability
+  and GitHub search results are not asserted by the local test suite.
+
+### Hosted snapshot, separate from the local additions
+
+The publication agent pushed exact commit `04e4472` and opened
+[draft PR #21](https://github.com/samran2/Prompt-as-Detection-Library/pull/21).
+Main remained `1a5c39ba051ac64583c2855110a10d733e36124d`; no Pages deployment,
+tag, release or security-rule suppression was performed.
+
+Repository CI, all three CodeQL analysis jobs, dependency review, container scan
+and fuzz smoke passed. Acceptance remains blocked by:
+
+- Gitleaks matching the synthetic privacy fixture marker in the PR history.
+- CodeQL alert 9 (`js/bad-tag-filter`) on the test's lowercase-only HTML regex.
+- The additional AI code-scanning run failing because its requested model was
+  unsupported, plus the previously documented incomplete formal security scan.
+
+The two test-only corrections are local: rename the marker variable without
+changing its synthetic value/privacy assertions; check full literal preview
+strings including lower/upper/mixed-case tags. The latter strengthens the test,
+not runtime sanitization. No alert was dismissed. Gitleaks scans the full PR
+range, so a follow-up commit alone may still report the historical fixture.
+No history was rewritten. Source cards and these corrections are **not** part of
+the frozen draft PR; they require a separately accepted candidate and hosted
+checks before main/Pages publication. No paid model requests were made.
+
+## Environment workflows — local verification 2026-09-13 (Europe/Helsinki)
+
+Development candidate `0.4.0.dev4`, application commit
+`9071f06b914085cb1994c4d7b0efdfadeca220e7`, compared with
+`1a5c39ba051ac64583c2855110a10d733e36124d`. These are local results;
+hosted CI and Pages acceptance must be recorded separately.
+
+- **433 Node tests passed**, with no failures or skips, using Node 24.13.0.
+  The complete run had loopback permission for local API listeners. All provider
+  tests used in-memory mocks; no paid model requests were made.
+- **16 Python tests passed** on Python 3.13.7. Ruff 0.16.4 lint/format,
+  pre-commit 4.6.2 configuration, JavaScript syntax, pinned Actions and foundation
+  artifact/credential-pattern checks passed. Signature checks are limited, not
+  proof that all possible secrets are absent.
+- **89 checks per browser passed**: 69 existing and 20 environment-workflow
+  checks on Chrome 152.0.7977.84, Firefox 153.0 and WebKit 26.5, using locked
+  Playwright 1.62.1. Each reported zero console errors/warnings and unexpected
+  external requests. Layouts covered 320, 768, 1024 and 1440 px. The optional
+  storage suite also passed 15 tests, including three native IndexedDB checks
+  across these engines (the other 12 are already in the ordinary Node count).
+- Tests cover profile import/export and cancellation, rejected hostile files,
+  v1-to-v2 import/new identity, separate legacy storage, applied profile snapshots,
+  reopening old edited drafts after profile deletion, context-drift warnings,
+  stale asynchronous application, quota/blocked storage and cross-tab conflicts.
+  WebKit's pointer-click focus difference exposed an actual dialog-return bug;
+  explicit invoker restoration fixed it and all three browsers were rerun.
+- All **26,760** record/target/task combinations generated with synthetic
+  profiles. The same 26,760 no-profile combinations exactly matched the
+  SHA-pinned dev3 composer. The 1,115 readable TXT prompts, source bundles and
+  catalogs did not change. Generated registry diffs only update application
+  content-version labels; no review status or evidence was promoted.
+- The offline comparison prepares 40 public/synthetic cases and 160 requests;
+  eight hypothetical supplied-input cases cover all six targets, while 32 remain
+  unconfirmed examples. Twenty-four mocked comparison tests passed, including
+  deadlines, oversized replies, escaped credential echoes, malformed journals,
+  budget exhaustion and refusing uncertain retries. Human scores and syntax/
+  semantic/effectiveness assessment remain unfilled, not inferred from keywords.
+- Source, ATLAS, D3FEND, CAR, review and static-eval verifiers passed. The fresh
+  public build contains 31 allowlisted files (30 served content files plus
+  `.nojekyll`). No runtime dependency was added. Root and locked QA npm audits
+  reported zero known vulnerabilities at verification time.
+- A separate agent exported the frozen commit with `git archive`, built it
+  without installed runtime packages and compared all 31 files byte-for-byte.
+  Every file matched; all 1,555 archived source files matched their Git blobs.
+  The [build manifest](environment-build-verification.json) records exact hashes.
+  The archive inventory contained no private artifacts, installed QA packages or
+  matches for the six selected credential-pattern families.
+- [Guided desktop](screenshots/environment-guided-desktop.png),
+  [applied synthetic profile](screenshots/environment-applied-desktop.png) and
+  [mobile profile dialog](screenshots/environment-profile-mobile.png) screenshots
+  were visually inspected. WebKit screenshots are intentionally omitted because
+  the screenshot helper's inline stylesheet conflicts with the unchanged CSP;
+  functional console assertions were not weakened.
+
+The final Node count includes comparison-report fix
+`7b4be6054f9497b4042fb29497bc88410e8d70e9` after the frozen application commit
+above. Two large recorded-text cases exceeded a five-second
+subprocess deadline before the fix. Both passed afterward, together with ordinary
+formatting, newline, inline-fence and unmatched-fence controls. Only the provider
+transport was mocked; actual journal validation and report generation ran. The
+fix does not change the 31 public build files or any catalog/prompt bytes.
+The fresh read-only patch reviewer found no required changes, ran all 24 focused
+tests, and matched old/new observations across 100,009 deterministic samples.
+Those observations test compatibility, not response quality or a complete audit.
+
+Independent agent correctness reviews verified the implemented import, snapshot,
+asynchronous state and comparison boundaries and regression fixes. The separate
+immutable Codex Security scan is **incomplete and is not publication acceptance**:
+its comparison worker stopped at an account access limit, and its generated
+changed-file inventory omitted `.cjs` runtime files. Attempting to record the
+comparison finding returned `locations: expected at least one in-scope file`.
+The partial scan and missing coverage were retained; no false location, clean
+report or completed-review claim was substituted. The local performance fix and
+its separate patch review do not complete that formal scan. GitHub push, hosted
+CI acceptance and Pages deployment for dev4 have therefore **not been performed**.
+The previous public build remains unchanged. See the
+[publication status](environment-publication-status.json) for the pending gates.
+
+This is local implementation and regression evidence, not independent human review of every
+prompt, measured model-answer improvement, native-rule validation, a manual
+VoiceOver/NVDA audit, WCAG certification or field Core Web Vitals evidence.
+
+Rollback preserves the original version 1 files and browser database. A reviewed
+revert and deliberate Pages redeployment can restore the previous application;
+dev3 cannot read v2 workspaces, so retain v2 exports separately. No destructive
+database downgrade or live rollback rehearsal was performed.
+
 ## Prompt clarity v3 — hosted verification 2026-09-10 UTC
 
 Development version `0.4.0.dev3` was merged through

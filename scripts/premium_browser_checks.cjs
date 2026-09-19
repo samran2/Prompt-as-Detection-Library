@@ -3,17 +3,18 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { createBrowserBoundary } = require('./browser_qa_boundary.cjs');
 
 async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base, check, output }) {
-  const parsed = new URL(base);
-  assert.ok(parsed.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(parsed.hostname), 'Premium QA requires an isolated loopback target');
+  const boundary = createBrowserBoundary(base);
+  base = boundary.base;
   const browser = suppliedBrowser || callerPage.context().browser();
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
   const failures = [], external = [];
   await context.route('**/*', route => {
-    const url = new URL(route.request().url());
-    if (url.protocol === 'blob:' || url.origin === parsed.origin && url.pathname.startsWith(parsed.pathname)) return route.continue();
-    external.push(url.href); return route.abort();
+    const url = route.request().url();
+    if (boundary.allowsRequest(url)) return route.continue();
+    external.push(url); return route.abort();
   });
   context.on('page', child => {
     child.setDefaultTimeout(7000);
@@ -25,7 +26,11 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
     child.on('console', message => { if (['error', 'warning'].includes(message.type())) failures.push(message.text()); });
   });
   const page = await context.newPage();
-  const goto = async (target = base, child = page) => { await child.goto(target); await child.locator('#app-content').waitFor(); };
+  const goto = async (target = base, child = page) => {
+    await child.goto(target); await child.locator('#app-content').waitFor();
+    // Do not emit a redundant change/autosave when opening an already-quick workspace.
+    if (await child.locator('#composer-mode').inputValue() !== 'quick') await child.locator('#composer-mode').selectOption('quick');
+  };
   const tab = async name => { await page.locator(`#tab-${name}`).click(); };
   const downloadJSON = async (selector, child = page) => {
     const pending = child.waitForEvent('download'); await child.locator(selector).click();
@@ -128,7 +133,7 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
       await tab('flow'); await page.locator('#desk-flow-title').fill('Synthetic portable flow');
       await page.locator('#desk-flow-add').click(); await page.locator('#search').fill('T1053.005'); await page.locator('#desk-flow-add').click();
       exportedWorkspace = await snapshot();
-      assert.equal(exportedWorkspace.schemaVersion, 1);
+      assert.equal(exportedWorkspace.schemaVersion, 2);
       assert.equal(exportedWorkspace.context, appliedContext); assert.equal(exportedWorkspace.contextInput, pendingContext);
       assert.ok(exportedWorkspace.favorites.includes('T1059.001'));
       assert.ok(exportedWorkspace.collections.some(item => item.name === 'Synthetic investigations' && item.techniqueIds.includes('T1059.001')));
@@ -216,7 +221,7 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
       await workspace(); const before = await snapshot();
       page.once('dialog', dialog => dialog.accept()); await page.locator('#workspace-delete-local').click();
       // Consent is cleared synchronously, but deletion runs in the async queue.
-      await page.waitForFunction(() => document.getElementById('workspace-storage-status').textContent.startsWith('Local workspace data deleted.'));
+      await page.waitForFunction(() => document.getElementById('workspace-storage-status').textContent.startsWith('Version 2 local workspace data deleted.'));
       assert.equal(await page.locator('#workspace-autosave').isChecked(), false);
       assert.deepEqual((await snapshot()).drafts, before.drafts, 'Deleting storage must not silently discard current in-memory edits');
       await closeWorkspace(); await page.reload(); await page.locator('#app-content').waitFor(); await workspace();
@@ -251,17 +256,18 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
 module.exports = premiumChecks;
 if (require.main === module) {
   (async () => {
+    const boundary = createBrowserBoundary(process.env.DEMO_URL || 'http://127.0.0.1:8793/');
     const playwright = require(process.env.PLAYWRIGHT_MODULE || '../qa/node_modules/playwright');
     const engine = process.env.PREMIUM_BROWSER || 'chromium';
     assert.ok(['chromium', 'firefox', 'webkit'].includes(engine), 'Unsupported browser engine');
-    const base = process.env.DEMO_URL || 'http://127.0.0.1:8793/';
+    const base = boundary.base;
     const output = path.resolve(__dirname, '../work/premium-browser', engine);
     fs.mkdirSync(output, { recursive: true });
     const browser = await playwright[engine].launch({ headless: true, ...(engine === 'chromium' && process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) });
     const checks = [];
     try {
       await premiumChecks({ browser, base, output, check: async (name, fn) => { await fn(); checks.push(name); console.log(`PASS ${name}`); } });
-      fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ browser: browser.version(), engine, base, checks,
+      fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ browser: browser.version(), engine, basePath: boundary.basePath, checks,
         limitations: ['Synthetic isolated browser checks, not independent WCAG or screen-reader certification.', 'No hosted publication, human prompt reviews or actual laboratory execution is asserted.',
           ...(engine === 'webkit' ? ['WebKit screenshots omitted: locked Playwright injects an inline animation-sync stylesheet blocked by the unchanged app CSP; functional console checks are not filtered.'] : [])] }, null, 2) + '\n');
       console.log(`${checks.length} premium browser checks passed.`);
