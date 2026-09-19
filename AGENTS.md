@@ -82,6 +82,12 @@
   fixture-bound target-environment evidence is required for `lab-validated`;
   and field evidence is required for `field-confirmed`. Never synthesize names,
   dates, scores, lab results, signatures or `not-applicable` rationales.
+- External research cards use exact active ATT&CK IDs only: LOLBAS declared
+  fields, pinned MITRE citations and LOLDrivers rule-level tags are separate
+  evidence types. Preserve snapshot hashes, field locators and third-party terms;
+  never inherit parent mappings, translate domains or treat searches as evidence.
+  No command/rule bodies or samples belong in the metadata projection. Run
+  `research:mappings:verify`; see SPEC-research-mappings.md.
 - Keep the stable boundaries in `apps/`, `packages/`, `content/`, `validation/`
   and `governance/`. Compatibility entry points in `demo/`, `library/` and
   `scripts/library_cli.cjs` remain supported until a documented migration.

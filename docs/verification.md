@@ -1,5 +1,62 @@
 # Verification records
 
+## Source-backed research mappings — 2026-09-19 (Europe/Helsinki)
+
+Local follow-up to `4c98c291ce6ab4f680c067d331ef59397034c669` implements
+SPEC-research-mappings.md. Exact active ATT&CK 19.2 joins yield 62 LOLBAS records
+(334 source links), five GTFOBins records (five links), and two LOLDrivers records
+(12 rule-tag links). These counts overlap. The two inactive upstream ID rows
+(`T1562`, `T1562.001`) are retained in the exclusion report, not remapped.
+
+- **450 Node tests passed**, no failures/skips, Node 24.13.0. The 17 focused
+  research tests cover source-field projection, unsafe provenance URLs, exact
+  domains, deduplication with retained locators, missing data, reproducibility
+  and literal evidence display. New behavior assertions were observed failing
+  before implementation and passing afterward.
+- **16 Python tests passed**. An initial attempt used the system Git shim and
+  failed six fixture-repository setups due to its Xcode license prompt; rerunning
+  with the existing CommandLineTools Git resolved the environment issue. No
+  license was accepted or global configuration changed.
+- Foundation selected-pattern checks, Ruff lint/format (92 Python files),
+  pre-commit configuration, JavaScript syntax, pinned Actions, source/registry
+  verifiers and the public build passed. No prompt, CLI, composer, MITRE source
+  or catalog bytes changed. All 1,115 prompts remain present and verified.
+- **98 checks per engine passed**: 78 main/research/workbench checks and 20
+  environment checks on Chrome 153.0.8010.48, Firefox 153.0 and WebKit 26.5,
+  using locked Playwright 1.62.1. No console errors/warnings or unexpected external
+  requests were observed. New coverage checks exact Mshta links, genuine GTFOBins
+  ICS citations, six immutable rule references, private-context isolation,
+  draft preservation and populated-card focus/reflow at 320/768/1440 px.
+- A new test initially used inactive `T1218.006`; it was corrected to test the
+  active `T1218.005` and its absent GTFOBins association. A real 6 px overflow
+  in T1068's long telemetry identifier was reproduced and fixed with targeted
+  text wrapping; source bytes stay unchanged. The full three-engine suite then
+  passed with the overflow assertion intact.
+- The public build contains **34 allowlisted files**. Its SHA-256 manifest
+  digest is `12c4012246fff0257f96514a6c5af16a52993a33602975c214128eb8353c7ff6`,
+  over `JSON.stringify` of filename-sorted `{name, sha256}` entries. New assets
+  are the generated mapping index and complete research-source notices. No
+  dependencies, sample handling, commands, rule bodies, storage or runtime
+  external requests were introduced.
+- Official LOLBAS API metadata and pinned LOLDrivers headers were inspected.
+  All six LOLDrivers bodies were fetched again transiently: original payload
+  hashes and extracted name/ID/URL/line metadata matched the retained projection;
+  all six upstream statuses were confirmed `experimental`. No bodies were saved
+  or executed. The mutable LOLBAS API identity remains its retrieval timestamp
+  and payload hash, not a claimed Git commit or an archived original body.
+- A separate ordinary reviewer independently resolved all 30 MITRE citations
+  to exact pinned STIX references, including the genuine ICS T0894 citation.
+  No Critical/Required findings; both optional improvements were implemented
+  and re-reviewed: source-derived rule status and explicit mutable-API timing.
+  This is not formal Codex Security approval. Actual desktop/mobile captures
+  were inspected; WebKit screenshots remain omitted for the documented CSP/tool
+  limitation, while its functional and unfiltered console checks stayed enabled.
+
+The code and screenshots are local. Draft PR #21 remains the separate frozen
+snapshot; this work did not push, merge, tag, deploy Pages or dismiss alerts.
+The hosted/formal security gates below remain unresolved. No manual screen-reader
+audit, WCAG certification, paid model evaluation or detection validation is claimed.
+
 ## External research links and draft PR — 2026-09-19 (Europe/Helsinki)
 
 Local follow-up to `04e4472e8a5b7d5c55f598e712e892e7dc0d5092`. Added

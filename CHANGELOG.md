@@ -11,8 +11,12 @@ conversations are not independent release evidence.
 
 - Added shared LOLBAS, GTFOBins and LOLDrivers source cards to Evidence and
   Research tools. Repository-scoped ATT&CK-ID searches are explicitly unverified;
-  ATLAS shows general links only. No catalog copying, execution or runtime
+  ATLAS shows general links only. No full catalog copying, execution or runtime
   requests were added. These follow-up changes are not in the frozen draft PR.
+- Added exact, source-backed associations for 62 LOLBAS, five GTFOBins and two
+  LOLDrivers ATT&CK records, with distinct declared-ID/citation/rule-tag evidence,
+  payload hashes and locators. Minimal mapping metadata and source notices are
+  bundled separately; inactive source IDs are excluded without guessed replacements.
 - Added local named environment profiles, explicit application, revision-aware
   draft snapshots and portable `.pad-environment.json` files. The library CLI
   accepts `--profile-file` using the same contract and composer as the browser.
@@ -26,6 +30,8 @@ conversations are not independent release evidence.
 
 ### Changed
 
+- Long telemetry identifiers and evidence hashes wrap within narrow screens,
+  including T1068 at 320 px; source text is not truncated or altered.
 - Workspace v2 retains the 5 MiB limit, original text/hashes and conflict-safe
   optional autosave. Older imports create a new identity after preview; separate
   v2 storage leaves original v1 records available for rollback.

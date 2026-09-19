@@ -168,6 +168,10 @@ The workbench links to `demo/research.html`. Its six local research capabilities
 are documented in [research tools](research-tools.md). Run `npm run car:verify`
 for pinned CAR parity and `npm run research:check` for the added modules. The
 existing browser smoke harness includes real research exports and lab imports.
+External source cards use a separately pinned, minimal mapping index. Run
+`npm run research:mappings:verify` after changes; the build verifies it too.
+Read [source mapping maintenance](research-sources.md) before refreshing any
+upstream metadata. Do not infer missing mappings or import command/rule bodies.
 `npm run build` verifies these inputs before copying the public allowlist.
 
 Serve only the browser assets, never the repository root:

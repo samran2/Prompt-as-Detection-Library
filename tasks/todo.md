@@ -65,3 +65,14 @@ CI exposed two test-only scanner findings and an unsupported-model AI scan
 failure. Local test corrections preserve all privacy/literal-rendering checks;
 the full-history secret scan and formal security review remain publication gates.
 See docs/verification.md. Source-card changes remain a separate local follow-up.
+
+## Source-backed research mappings
+
+- [x] Official source basis, minimal projections, hashes and notices recorded
+- [x] Exact active ATT&CK joins and honest absent/stale mapping states implemented
+- [x] Offline reproducible index, safe links and provenance details integrated
+- [x] Complete regression and three-engine browser checks recorded
+- [x] Independent ordinary code review addressed and screenshots inspected
+- [x] Documentation, source/artifact inventory and local handoff prepared
+
+Mapping associations do not promote prompt or detection validation status.

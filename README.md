@@ -52,8 +52,10 @@ recorded in the [verification record](docs/verification.md).*
   ATLAS adds linked case studies, mitigations and source threat maturity, without
   presenting them as tested detections.
 - **Follow external research.** Evidence and Research tools link LOLBAS,
-  GTFOBins and LOLDrivers. Optional ATT&CK-ID searches are research links, not
-  verified mappings. No remote catalogs, commands or samples are imported.
+  GTFOBins and LOLDrivers to exact ATT&CK records using declared IDs, direct
+  MITRE citations or upstream rule tags. Inspect each link's evidence and source
+  hash; optional searches remain separate and unverified. No command/rule bodies
+  or samples are bundled, and source associations are not detection validation.
   [Source-card guide](docs/research-sources.md). Available locally on this branch;
   the live demo has not yet received this addition.
 - **Stay with one technique.** Prompt, Evidence, Defenses and Flow share the

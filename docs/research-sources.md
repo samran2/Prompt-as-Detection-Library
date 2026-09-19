@@ -1,54 +1,91 @@
-# External research sources
+# External research sources and ATT&CK associations
 
-Open **Evidence → External research sources** for the selected technique, or
-**Research tools → External sources** for the general directory. This development
-addition links three upstream projects; it does not mirror their catalogs.
+Open **Evidence → External research sources** for the selected technique, then
+**Inspect links** to see the matching entries. **Provenance** explains the exact
+source field, version and SHA-256 behind each link. Research tools also provides
+a general directory. These are research associations, **not validated detections**.
 
-[Desktop preview](screenshots/research-sources-desktop.png) ·
-[Mobile preview](screenshots/research-sources-mobile.png)
+[Desktop example](screenshots/research-mappings-desktop.png) ·
+[Mobile example](screenshots/research-mappings-mobile.png)
 
-| Project | Research purpose | Official links |
-| --- | --- | --- |
-| LOLBAS | Windows binaries, scripts and libraries that can be misused; upstream behavior and detection references | [Website](https://lolbas-project.github.io/) · [Repository](https://github.com/LOLBAS-Project/LOLBAS) · [License](https://github.com/LOLBAS-Project/LOLBAS/blob/master/LICENSE) |
-| GTFOBins | Unix executable behaviors, prerequisites and configuration-dependent security boundaries | [Website](https://gtfobins.org/) · [Repository](https://github.com/GTFOBins/GTFOBins.github.io) · [License](https://github.com/GTFOBins/GTFOBins.github.io/blob/master/LICENSE) |
-| LOLDrivers | Windows vulnerable/malicious driver intelligence and upstream detection references | [Detections](https://www.loldrivers.io/detections/) · [Repository](https://github.com/magicsword-io/LOLDrivers) · [License](https://github.com/magicsword-io/LOLDrivers/blob/main/LICENSE) |
+## What is mapped
 
-## Use the links as research, not proof
+| Source | Included basis | Active ATT&CK 19.2 records | Source links |
+| --- | --- | ---: | ---: |
+| [LOLBAS](https://lolbas-project.github.io/) | Explicit `Commands[].MitreID` fields plus separately labeled direct MITRE citations | 62 | 334 |
+| [GTFOBins](https://gtfobins.org/) | Direct citations in the pinned MITRE technique objects only | 5 | 5 |
+| [LOLDrivers](https://www.loldrivers.io/detections/) | Explicit ATT&CK tags in six pinned upstream Sigma rule headers | 2 | 12 |
 
-An ATT&CK ID creates a quoted, repository-scoped GitHub code search. This is
-**not a verified mapping** or exact semantic match. A result may reference a
-different platform or subtechnique; a search may return nothing or require login.
-Check the original entry, its prerequisites, references and applicability to your
-actual telemetry. No parent-child mappings or OT/Mobile coverage are inferred.
-ATLAS records show the general directory only; no ATLAS mapping is claimed.
+Counts overlap and must not be summed into distinct technique coverage. Multiple
+source fields may describe the same entry; these share one link with all locators.
+A direct citation can name an entire project rather than a specific tool.
 
-No commands, detection rules, binary samples or drivers are imported or executed.
-These sources are not added to prompts, prompt exports or review evidence. Their
-websites and repositories are one project each, not independent corroboration.
-The pinned MITRE catalogs and all 1,115 text prompts remain unchanged.
+- **LOLBAS:** `T1218.005` links to Mshta through its declared ID and MITRE citation.
+  The 2026-09-19 API snapshot contains 245 entries; only mapping metadata is
+  retained. The source's `T1562` and `T1562.001` IDs are absent from the active
+  pinned catalog and are excluded, not guessed into replacement techniques.
+- **GTFOBins:** the five cited records are `T1053.002`, `T1218`, `T1543.005`,
+  `T1548.001` and ICS `T0894`. The ICS link is a real direct MITRE citation, not
+  an Enterprise-to-OT translation. This is **not a mapping of all GTFOBins**.
+  Legacy `gtfobins.github.io` URLs are preserved exactly as cited by MITRE.
+- **LOLDrivers:** each of the six upstream rules explicitly tags `T1068` and
+  `T1543.003`. These are **rule-level tags, not behavior claims for every driver**.
+  The referenced rules are experimental and have not been locally lab-validated.
 
-## Privacy and source terms
+For example, `T1001` and OT `T0800` have no documented links in these snapshots.
+Absence here does not prove no relationship exists. Parent mappings are never
+inherited by children. ATLAS shows general links only; no ATLAS links are inferred.
 
-Rendering cards makes no network requests. Selecting a link opens a third-party
-site in a new tab with no opener/referrer. Searches contain only the selected
-public technique ID, never workspace names, profiles, prompts or investigation
-text. After navigation, the destination's own privacy and authentication terms
-apply; offline use cannot open the remote pages.
+The optional quoted GitHub ID searches are clearly separate: a search result is
+not evidence of an exact mapping and may be unrelated or require authentication.
+Always inspect prerequisites, behavior and your real telemetry before use.
 
-Upstream content is live, not version-pinned or availability-monitored. The
-links and original short descriptions do not grant reuse rights over upstream
-content. Consult the linked source licenses before copying any entry; the MIT
-license for this project's code does not replace them. No affiliation,
-endorsement, independent validation or successful detection is asserted.
+## Provenance, privacy and terms
 
-## Implementation and verification
+The [snapshot manifest](../content/research-sources/manifest.json) pins the retained
+projection. Original payload hashes and precise field pointers/line numbers live
+in [upstream metadata](../content/research-sources/upstream.json). LOLBAS's live API
+is identified by retrieval time and payload hash, **not an asserted Git commit**;
+the complete original API body is not archived here. LOLDrivers rule references
+use commit `67ac4a76a641d94c1c14e169df4ee7ca2754f20a`. MITRE citations derive from the
+existing ATT&CK 19.2 source manifests. Linked websites may change independently.
 
-`demo/research-sources.js` owns the fixed directory, bounded ID handling and
-literal-DOM renderer shared by both pages. It is explicitly allowlisted by the
-static build and adds no runtime dependencies or storage. Its missing-asset
-message stays visible if the optional module is unavailable.
+Only minimal mapping metadata is bundled. No command/rule bodies, binary samples
+or drivers are bundled or executed. Rendering makes no external requests. Links
+open only when selected, without opener/referrer; the destination's own privacy
+and login policies then apply. Searches include only a public technique ID,
+never profiles, drafts, workspace names or investigation context.
 
-See [the bounded specification](../SPEC-research-sources.md),
-[unit tests](../tests/research_sources.test.cjs),
-[browser checks](../scripts/research_sources_browser_checks.cjs) and the
-[verification record](verification.md) for actual outcomes and remaining gates.
+The metadata does not enter prompts or exports, alter the pinned catalogs or
+promote review status. All 1,115 text prompts remain unchanged. Source cards and
+repositories are not independent corroboration of one another. No endorsement,
+affiliation, source correctness certification or successful detection is implied.
+
+LOLBAS GPL-3.0/NOTICE and LOLDrivers Apache-2.0/author attribution accompany the
+modified metadata in the public [research notices](../demo/RESEARCH_SOURCES_LICENSES.txt).
+MITRE citations retain the separate MITRE notice. Project code remains MIT; those
+terms do not relicense source content. See [licensing](licensing.md).
+
+## Maintenance and checks
+
+`scripts/build_research_mappings.cjs` performs an offline exact-ID/domain join and
+validates source identities and allowlisted HTTPS paths. Its pure projection
+helpers discard command and rule bodies. Updates require a separately reviewed
+official-source projection, recorded original payload hashes/locators, refreshed
+manifest hashes and unchanged source notices. Do not fetch mutable sources in CI.
+
+```sh
+npm run research:mappings:build
+npm run research:mappings:verify
+node --test tests/research_mappings.test.cjs tests/research_sources.test.cjs
+```
+
+The verifier rejects source-hash and generated-output drift. The generated index
+also retains an `excluded` report for source IDs outside the active domain.
+`npm run build` verifies the index and includes only its two allowlisted public
+assets. The shared renderer uses literal DOM text and distinguishes a missing
+index from zero documented links. No runtime dependencies or storage are added.
+
+See [the mapping specification](../SPEC-research-mappings.md),
+[browser checks](../scripts/research_sources_browser_checks.cjs) and
+[verification](verification.md) for actual results and publication gates.

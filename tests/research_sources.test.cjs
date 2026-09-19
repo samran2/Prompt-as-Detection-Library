@@ -80,3 +80,34 @@ test('both pages publish the shared module without remote execution or storage',
   const code = fs.readFileSync(path.join(__dirname, '../demo/research-sources.js'), 'utf8');
   assert.doesNotMatch(code, /innerHTML|outerHTML|insertAdjacentHTML|\bfetch\s*\(|XMLHttpRequest|localStorage|sessionStorage|\beval\s*\(/);
 });
+
+test('cards expose documented exact associations separately from speculative searches', () => {
+  const lolbas = sources.cardsFor('T1218.005')[0];
+  assert.ok(lolbas.mappings.some(link => link.name === 'Mshta.exe' && link.basis === 'upstream-id'));
+  assert.equal(sources.cardsFor('T1218')[1].mappings[0].basis, 'mitre-citation');
+  const drivers = sources.cardsFor('T1068')[2];
+  assert.equal(drivers.mappings.length, 6);
+  assert.ok(drivers.mappings.every(link => link.basis === 'rule-tag' && link.evidence.sha256.length === 64));
+  assert.equal(sources.cardsFor('T1543.003')[2].mappings.length, 6);
+  for (const id of ['T1001', 'T0800', 'AML.T0051.001', 'T1218.006']) assert.ok(sources.cardsFor(id).every(card => card.mappings.length === 0));
+  assert.ok(sources.cardsFor('T0894')[1].mappings.some(link => link.basis === 'mitre-citation'));
+});
+
+test('renderer shows source evidence and rule-level limitations without promoting review', () => {
+  const view = dom(); sources.render({ ...view, techniqueId: 'T1068' });
+  const paragraphs = view.root.all('p').map(node => node.textContent).join(' ');
+  assert.match(paragraphs, /rule-level/);
+  assert.match(paragraphs, /not validated/);
+  assert.match(paragraphs, /Upstream rule status: experimental/);
+  assert.ok(view.root.all('a').some(link => link.href.includes('/blob/67ac4a76')));
+  const card = sources.cardsFor('T1068')[2]; card.mappings[0].locators.push('fake');
+  assert.equal(sources.cardsFor('T1068')[2].mappings[0].locators.includes('fake'), false);
+  sources.render({ ...view, techniqueId: 'T1218.005' });
+  assert.match(view.root.all('p').map(node => node.textContent).join(' '), /Retrieved 2026-09-19.*live API may change/);
+});
+
+test('missing browser index is unavailable, not a false zero-mapping claim', () => {
+  const vm = require('node:vm'); const sandbox = {};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../demo/research-sources.js'), 'utf8'), { ...sandbox, globalThis: sandbox, URL });
+  assert.equal(sandbox.PAD_RESEARCH_SOURCES.cardsFor('T1068')[2].mappingStatus, 'unavailable');
+});

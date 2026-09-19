@@ -72,3 +72,18 @@ Implemented and locally verified on 2026-09-19: 439 Node, 16 Python and 95
 checks per browser across three engines. Draft PR #21 contains only frozen
 commit `04e4472`; source cards and narrow test corrections remain local. Hosted
 scanner findings and the incomplete formal scan are recorded, not suppressed.
+
+## Source-backed research mappings — exact associations
+
+The owner requested correct ATT&CK mappings for the source cards. See
+SPEC-research-mappings.md. Retain only minimal upstream ID/title/URL metadata and
+direct pinned MITRE citations, preserving distinct evidence types and licenses.
+
+1. Inspect official source fields and preserve payload hashes/locators.
+2. Test the exact active-domain join, stale-ID exclusions and unsafe URL rejection.
+3. Build a reproducible allowlisted index and expose collapsed evidence details.
+4. Verify complete regressions, three-engine browser behavior and source fidelity.
+5. Obtain independent ordinary code review; record results and local screenshots.
+
+This follow-up does not remove dev4's separate hosted/formal security gates and
+does not authorize sample ingestion, execution or public deployment.
