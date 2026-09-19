@@ -85,10 +85,12 @@ test('copy and cancel are recoverable; deleting a saved profile leaves applied c
 });
 
 test('imports preview literal text and require confirmation that creates a new identity', async () => {
-  const h = harness(); const source = environment.create('<script>Literal name</script>', core.TARGETS[1]);
+  const h = harness(); const source = environment.create('<script>Lower</script> <SCRIPT>Upper</SCRIPT> <ScRiPt>Mixed</ScRiPt>', core.TARGETS[1]);
   source.provenance = 'example'; source.system = '<img src=x onerror=alert(1)>';
   await h.importFile(source); assert.equal(h.ui.snapshot().profiles.length, 0);
-  assert.equal(h.$('environment-preview-dialog').open, true); assert.match(h.$('environment-preview-text').textContent, /<script>/);
+  assert.equal(h.$('environment-preview-dialog').open, true);
+  const previewText = h.$('environment-preview-text').textContent;
+  assert.ok(previewText.includes(source.name)); assert.ok(previewText.includes(source.system));
   await h.$('environment-import-cancel').dispatch('click'); assert.equal(h.ui.snapshot().profiles.length, 0);
   await h.importFile(source); await h.$('environment-import-confirm').dispatch('click');
   const imported = h.ui.snapshot().profiles[0]; assert.notEqual(imported.id, source.id);

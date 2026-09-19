@@ -97,7 +97,7 @@ async function run(environment = process.env) {
       assert.equal(new URL(page.url()).searchParams.get('domain'), 'OT');
     });
 
-    const secretMarker = 'SYNTHETIC_ENVIRONMENT_PRIVATE_8798';
+    const privacyMarker = 'SYNTHETIC_ENVIRONMENT_PRIVATE_8798';
     let firstProfile, exportedProfile;
     await check('creating a named profile preserves the editor until explicit application', async () => {
       await page.locator('#prompt').fill('Synthetic untouched editor before selecting an environment.');
@@ -105,7 +105,7 @@ async function run(environment = process.env) {
       await page.getByRole('button', { name: 'New profile', exact: true }).click();
       await page.getByLabel('Profile name', { exact: true }).fill('Synthetic Sentinel');
       await page.getByLabel('Profile output target', { exact: true }).selectOption('Sentinel KQL');
-      await page.getByLabel('Operating environment', { exact: true }).fill(`Synthetic Windows lab ${secretMarker}`);
+      await page.getByLabel('Operating environment', { exact: true }).fill(`Synthetic Windows lab ${privacyMarker}`);
       await page.getByLabel('Available data sources', { exact: true }).fill('Synthetic process events');
       await page.getByLabel('Tables or log types', { exact: true }).fill('SyntheticProcessEvents');
       await page.getByLabel('Field mappings', { exact: true }).fill('timestamp = TimeGenerated\ncommand_line = CommandLine');
@@ -117,9 +117,9 @@ async function run(environment = process.env) {
       firstProfile = await page.locator('#environment-select').inputValue();
       await applyProfile();
       assert.equal(await page.locator('#target').inputValue(), 'Sentinel KQL');
-      assert.ok((await page.locator('#prompt').inputValue()).includes(secretMarker));
+      assert.ok((await page.locator('#prompt').inputValue()).includes(privacyMarker));
       assert.match(await page.locator('#prompt').inputValue(), /DRAFT/);
-      assert.equal(page.url().includes(secretMarker), false);
+      assert.equal(page.url().includes(privacyMarker), false);
     });
 
     const firstDraft = 'Synthetic profile-specific edited draft: keep me byte for byte.';
@@ -160,7 +160,7 @@ async function run(environment = process.env) {
       const exported = await downloadJSON('#environment-export');
       assert.match(exported.name, /\.pad-environment\.json$/);
       assert.equal(exported.value.schemaVersion, 1);
-      assert.ok(JSON.stringify(exported.value).includes(secretMarker));
+      assert.ok(JSON.stringify(exported.value).includes(privacyMarker));
       assert.equal(Object.hasOwn(exported.value, 'drafts'), false);
       exportedProfile = exported.value;
     });
@@ -231,7 +231,7 @@ async function run(environment = process.env) {
       const after = await snapshot();
       assert.notEqual(after.id, before.id);
       assert.deepEqual(after.drafts, before.drafts);
-      assert.ok(JSON.stringify(after).includes(secretMarker));
+      assert.ok(JSON.stringify(after).includes(privacyMarker));
       assert.deepEqual(await profileOptions(), beforeProfiles);
     });
 
@@ -340,8 +340,8 @@ async function run(environment = process.env) {
       await openWorkspace(); assert.equal(await page.locator('#workspace-autosave').isChecked(), false); await page.locator('#workspace-close').click();
       await page.reload(); await page.locator('#app-content').waitFor();
       assert.equal(await page.locator('#environment-select option').count(), 1);
-      assert.equal(page.url().includes(secretMarker), false);
-      assert.equal(requests.some(request => request.url.includes(secretMarker) || request.body.includes(secretMarker)), false);
+      assert.equal(page.url().includes(privacyMarker), false);
+      assert.equal(requests.some(request => request.url.includes(privacyMarker) || request.body.includes(privacyMarker)), false);
       assert.deepEqual(externalRequests, []); assert.deepEqual(errors, []);
     });
     console.log(`${checks.length} environment browser checks passed.`);
