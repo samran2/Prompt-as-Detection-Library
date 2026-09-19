@@ -5,6 +5,54 @@ This file records changes actually made. Planned work belongs in
 [verification](docs/verification.md). Dates and results from earlier
 conversations are not independent release evidence.
 
+## [0.4.0.dev4] - Environment profiles and guided creation
+
+### Added
+
+- Added shared LOLBAS, GTFOBins and LOLDrivers source cards to Evidence and
+  Research tools. Repository-scoped ATT&CK-ID searches are explicitly unverified;
+  ATLAS shows general links only. No full catalog copying, execution or runtime
+  requests were added. These follow-up changes are not in the frozen draft PR.
+- Added exact, source-backed associations for 62 LOLBAS, five GTFOBins and two
+  LOLDrivers ATT&CK records, with distinct declared-ID/citation/rule-tag evidence,
+  payload hashes and locators. Minimal mapping metadata and source notices are
+  bundled separately; inactive source IDs are excluded without guessed replacements.
+- Added local named environment profiles, explicit application, revision-aware
+  draft snapshots and portable `.pad-environment.json` files. The library CLI
+  accepts `--profile-file` using the same contract and composer as the browser.
+- Added a four-step guided prompt workflow with a compatible quick view. Missing
+  telemetry remains unknown; profile facts and free investigation context stay
+  separate, and supplied information is never labeled independently validated.
+- Added offline preparation/reporting and an explicit budgeted OpenAI comparison
+  runner for 40 fixed public/synthetic cases against the pinned dev3 composer.
+  Mocked verification and blinded human-review files are separate from actual
+  model results. No paid API runs are included in this update.
+
+### Changed
+
+- Hardened explicit Rösti imports against request-credential reflection in decoded
+  successful responses, including JSON escapes, before pagination or file export.
+- Unified browser QA loopback URL validation and parsed-origin/directory routing;
+  private or ambiguous base URLs fail before browser setup, and reports retain
+  only the base path. These are defense-in-depth changes, not new security claims.
+- Long telemetry identifiers and evidence hashes wrap within narrow screens,
+  including T1068 at 320 px; source text is not truncated or altered.
+- Workspace v2 retains the 5 MiB limit, original text/hashes and conflict-safe
+  optional autosave. Older imports create a new identity after preview; separate
+  v2 storage leaves original v1 records available for rollback.
+- Application metadata advances to dev4. No-profile prompt text retains the
+  `PAD-v0.4.0-dev3` content identity and all pinned MITRE sources remain unchanged.
+- Comparison reports scan recorded text in forward-only passes. Large whitespace
+  and fence-marker responses no longer trigger repeated whole-text matching;
+  ordinary lexical observations and literal response evidence are preserved.
+- Clarified the synthetic privacy-test marker's variable name without changing
+  the value or assertions. Import-preview tests preserve full mixed-case literal
+  HTML-like text instead of using a lowercase-only regex assertion.
+
+Fresh verification, review and hosted acceptance are tracked separately. This
+entry does not claim model-answer improvement, WCAG certification or detection
+validation.
+
 ## [0.4.0.dev3] - Clear, task-specific prompt answers
 
 - Replaced eight/nine required answer sections and repeated quality checklists

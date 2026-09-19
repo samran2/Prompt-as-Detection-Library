@@ -2,7 +2,7 @@
 
 ## Independent rebuild
 
-Version `0.4.0.dev1` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
+Version `0.4.0.dev4` builds from official pinned MITRE ATT&CK 19.2 STIX bundles.
 It also includes the separately versioned MITRE ATLAS 2026.08 AI knowledge base.
 The original v0.2.0 application remains unavailable. This architecture describes
 the new Node CLI, static browser workbench and readable prompt library; it does
@@ -20,13 +20,15 @@ not claim Python CLI compatibility or restore the original response evaluator.
 | `content/d3fend/`, `demo/d3fend-catalog.js` | Coverage/exclusion evidence and inferred artifact paths for 369 existing offensive IDs. |
 | `demo/defenses.js`, `demo/defenses-ui.js` | Strict supplementary data boundary, source-linked panel and separate notice-bearing defensive brief/JSON exports. |
 | `demo/core.js` | One composition implementation for browser, CLI and generated texts; filtering, bounded context and JSONL templates. |
+| `demo/environment.js`, `packages/schemas/environment.schema.json` | Strict environment v1 contract, canonical hashes, explicit missing facts and literal rendering shared by browser/CLI/comparison. |
+| `demo/environment-ui.js` | Profile lifecycle, explicit application, four guided steps and compatible quick view; no second composer. |
 | `library/prompts/` | One source-specific detect prompt per active technique/subtechnique. |
 | `library/procedures.jsonl` | All 18,885 qualifying procedure relationships, not only the examples embedded in the browser catalog. |
 | `library/coverage.json` | Source, catalog and text identifier sets, exclusions, linkage counts and hashes. |
 | `scripts/library_cli.cjs` | Local list, prompt, export and defenses commands with validated options and exclusive file writes. |
 | `demo/app.js`, `index.html`, `style.css`, `workbench.css` | Selected-technique desk, shared composition, draft/context capture and explicit exports. |
 | `demo/workbench-ui.js` | Command search, separate comparison dialog, adjustable list width and mobile navigation. |
-| `demo/workspace.js`, `packages/schemas/workspace.schema.json` | Strict portable workspace v1 contract, original-template hashes and non-mutating drift inspection. |
+| `demo/workspace.js`, `packages/schemas/workspace.schema.json` | Strict workspace v2 contract, v1 import, original template/profile hashes and non-mutating drift inspection. |
 | `demo/workspace-store.js` | Optional atomic IndexedDB persistence with expected revisions and clear epochs. |
 | `demo/workspace-ui.js` | Consent, import preview/new identity, workspace lifecycle and snapshot bridge; no second composer. |
 | `demo/research-components.js` | Shared CAR and Flow rendering for the main desk and Research tools page. |
@@ -38,6 +40,7 @@ not claim Python CLI compatibility or restore the original response evaluator.
 | `content/`, `validation/` | Prompt/review registries, native-support truth and machine-readable evidence. |
 | `apps/research-api/`, `packages/core/`, `packages/clients/` | Read-only local reference API, immutable catalog core and explicit client. |
 | `integrations/rosti/`, `scripts/rosti_sync.cjs` | Opt-in external research enrichment with credentials kept outside repository state. |
+| `packages/core/prompt-comparison.cjs`, `scripts/compare_prompts.cjs` | Operator-only fixed-case preparation, explicit budgeted API runs and offline/blinded reports; excluded from the browser build. |
 
 ## Source and generation contract
 
@@ -89,9 +92,12 @@ inserted as literal data, never evaluated or interpolated a second time.
 
 Applying browser context rebuilds the selected prompt and affects future
 compositions/exports. Other remembered editor drafts remain intact; draft keys
-include technique, mode and target. Workspace snapshots retain original template
-text/hash and the context used for that template, plus separate current applied
-and unapplied context. Import checks integrity and reports current-source drift
+include technique, mode, target and environment revision. Workspace snapshots
+retain original template text/hash, per-draft environment snapshot/hash and the
+context used for that template, plus separate current applied/unapplied context.
+Saved profile edits do not change the independently applied snapshot or old
+drafts. Profile application is explicit; target conflicts are never silently
+resolved. Import checks integrity and reports current-source drift
 without replacing saved templates or editor text. Memory-only state clears on
 reload; user-exported files or opt-in local saves provide explicit recovery. Text
 copy/download preserves editor content. Browser JSONL contains freshly composed
@@ -104,12 +110,20 @@ The local CLI validates exact mode and target names and bounds context files to
 symlinked path components. On macOS, use canonical `/private/tmp/` paths for
 temporary exports rather than the `/tmp` symlink.
 
+Environment facts are a separate literal section from analyst context. Blank
+fields remain unknown and imported examples do not establish real collection.
+The shared readiness guidance requests missing or confirmed details before
+executable code; supplied details alone are not validation. `--profile-file`
+adds this same contract to the library CLI. No-profile generated text retains
+the dev3 prompt-content profile despite the dev4 application version.
+
 ## Public and private boundaries
 
-Runtime requires no packages or network service. Browser values enter the DOM
-through text/value APIs, and the page has a restrictive CSP. There is no cloud
-model integration, query execution or telemetry. Analyst persistence is off by
-default; consent enables unencrypted IndexedDB, with a consent preference in
+Browser runtime requires no packages or network service. Values enter the DOM
+through text/value APIs, and the page has a restrictive CSP. The browser and
+library CLI have no cloud model integration, query execution or telemetry.
+Analyst persistence is off by default; consent enables unencrypted IndexedDB,
+with a consent preference in
 localStorage. The preference is not analyst content. Existing appearance settings
 may also use localStorage. Disabling autosave is not deletion.
 Source-link clicks are explicit navigation. Hosting still receives ordinary
@@ -117,6 +131,7 @@ page requests.
 
 Only the explicit `PUBLIC_FILES` allowlist in `scripts/build_demo.cjs` enters
 `dist/`: static workbench/research assets and applicable full source notices.
+The dev4 inventory is 31 files, including `.nojekyll`, with 30 served assets.
 Workspace exports, IndexedDB records, raw sources and QA tooling are not public
 assets. The notices retain ATT&CK, ATLAS, D3FEND and CAR terms and project MIT
 attribution/license; Attack Flow exports carry their extension license. The
@@ -127,6 +142,15 @@ validated bytes, then writes a new output exclusively. It never packages raw
 source bundles, the complete procedure file, tests, QA dependencies or repository
 metadata. It refuses to overwrite an existing output; an I/O failure can leave
 a partial new output, which must not be deployed.
+
+The separate comparison tool is outside this allowlist. It prepares 40 pinned
+public/synthetic cases and reports offline; only explicit `run` may send them to
+OpenAI with an environment credential, exact model, pricing and positive budget.
+Fixed origin, bounded responses, `store:false` and durable request journaling
+limit that boundary. No paid request is part of dev4 verification. Never import
+private workspaces into the case set or execute returned code. Reports distinguish
+automated checks, untested syntax and blinded human judgment without promoting
+review maturity. See [comparison](prompt-comparison.md).
 
 ## Decisions and tradeoffs
 
@@ -144,6 +168,15 @@ Origin-scoped browser storage is not isolated by the repository path: other
 same-origin Pages applications or compromised same-origin code can access it.
 The database name separates application records, not security principals.
 
+Version 2 stores data in `pad-workspaces-v2` with separate consent. Explicit
+legacy discovery reads `pad-workspaces-v1` without upgrading or writing it;
+previewed imports create new identities. Old application tabs continue using
+the old store and cannot accidentally overwrite new-format saves. This is
+compatibility isolation, not protection against hostile same-origin scripts.
+Dev3 rollback uses the preserved v1 original; v2 work needs its own export and
+cannot be losslessly downgraded. See
+[ADR-0009](../governance/decisions/0009-environment-snapshots-and-offline-comparison.md).
+
 Keeping UMD/CommonJS and a single composition implementation supports a plain
 browser and Node without a runtime framework. Committing raw source and readable
 generated texts makes the data traceable and usable offline; reproducible
@@ -151,7 +184,7 @@ verification detects drift. The catalog includes three deterministic procedure
 examples per record to bound browser payload size, while the repository preserves
 all qualifying relationships. Pagination limits DOM work to 50 results at a time.
 
-Dataset upgrades, original-archive recovery, model services, executable response
+Dataset upgrades, original-archive recovery, browser model services, executable response
 validation and remote or encrypted multi-user storage are separate changes requiring their own
 compatibility and trust-boundary decisions. Original project code uses the
 owner-approved [MIT License](../LICENSE), while reproduced ATT&CK source content

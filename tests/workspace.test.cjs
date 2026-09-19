@@ -6,14 +6,72 @@ const vm = require('node:vm');
 const crypto = require('node:crypto');
 const api = require('../demo/workspace.js');
 const core = require('../demo/core.js');
+const environment = require('../demo/environment.js');
 const catalog = require('../demo/catalog.js');
 const sources = {attack:'19.2',atlas:'2026.08',d3fend:'1.6.0',car:'1b922fe1527d956e222a99473472e594f10f610b',attackFlow:'2.0.0'};
 const create = () => api.create('Research workspace', sources);
 async function draft(record = catalog[0]) {
   const mode = 'detect', target = core.TARGETS[0], context = 'Synthetic original context';
   const template = core.composePrompt(record, {mode,target,context});
-  return {techniqueId:record.id,mode,target,context,template,templateSha256:await api.hash(template),text:template+'\nAnalyst edit'};
+  return {techniqueId:record.id,mode,target,context,template,templateSha256:await api.hash(template),text:template+'\nAnalyst edit',environment:null,environmentSha256:null};
 }
+
+function legacy(value) {
+  const result=structuredClone(value); result.schemaVersion=1;
+  delete result.profiles; delete result.activeEnvironment;
+  delete result.view.composer; delete result.view.guideStep;
+  for (const item of result.drafts) { delete item.environment; delete item.environmentSha256; }
+  return result;
+}
+
+test('v2 new workspaces are guided and strict v1 migration makes a detached quick-mode copy', async () => {
+  const current=create(); current.drafts=[await draft()];
+  assert.equal(current.schemaVersion,2); assert.deepEqual(current.profiles,[]);
+  assert.equal(current.activeEnvironment,null); assert.equal(current.view.composer,'guided'); assert.equal(current.view.guideStep,1);
+  const old=legacy(current), original=JSON.stringify(old);
+  assert.deepEqual(api.parse(original),old);
+  const migrated=api.migrate(old);
+  assert.equal(migrated.schemaVersion,2); assert.notEqual(migrated.id,old.id);
+  assert.equal(migrated.view.composer,'quick'); assert.equal(migrated.view.guideStep,1);
+  assert.equal(migrated.drafts[0].environment,null); assert.equal(migrated.drafts[0].environmentSha256,null);
+  assert.equal(migrated.drafts[0].text,old.drafts[0].text); assert.equal(migrated.drafts[0].template,old.drafts[0].template);
+  assert.equal(JSON.stringify(old),original); assert.deepEqual(await api.inspect(old,catalog,core,sources),{warnings:[],unresolved:[]});
+  assert.throws(()=>api.validate({...old,profiles:[]}),/unsupported|field/i);
+  assert.throws(()=>api.migrate(current),/v1|version/i);
+});
+
+test('profile snapshots bind draft identity and integrity without requiring a live saved profile', async () => {
+  const w=create(), first=environment.create('Example private environment',core.TARGETS[0]);
+  first.system='Synthetic workstation'; first.dataSources='Synthetic events';
+  const second={...first,revision:2,tables:'SyntheticTable'};
+  w.profiles=[second]; w.activeEnvironment=first;
+  const make=async profile=>{const item=await draft(); item.environment=profile; item.environmentSha256=await environment.hash(profile);
+    item.template=core.composePrompt(catalog[0],{mode:item.mode,target:item.target,context:item.context,environment:profile});
+    item.templateSha256=await api.hash(item.template); return item;};
+  w.drafts=[await make(first),await make(second),await draft()];
+  const before=api.serialize(w);
+  assert.deepEqual(await api.inspect(w,catalog,core,sources),{warnings:[],unresolved:[]});
+  w.profiles=[]; assert.deepEqual(await api.inspect(w,catalog,core,sources),{warnings:[],unresolved:[]});
+  assert.equal(w.activeEnvironment.revision,1); assert.equal(w.drafts[0].environment.revision,1);
+  const tampered=api.parse(before); tampered.drafts[0].environment.system='Different facts';
+  await assert.rejects(api.inspect(tampered,catalog,core,sources),/profile hash integrity/);
+  const mismatch=api.parse(before); mismatch.drafts=mismatch.drafts.slice(0,1); mismatch.drafts[0].environmentSha256=null;
+  assert.throws(()=>api.validate(mismatch),/snapshot and hash/);
+  const target=api.parse(before); target.drafts[0].environment.target=core.TARGETS[1];
+  assert.throws(()=>api.validate(target),/target conflicts/);
+  const duplicates=api.parse(before); duplicates.profiles.push(first);
+  assert.throws(()=>api.validate(duplicates),/Duplicate.*profile ID/);
+  const claim=api.parse(before); claim.activeEnvironment.validation='lab-validated';
+  assert.throws(()=>api.validate(claim),/nullable|field/);
+});
+
+test('v2 profile arrays and guided view enums are bounded with strict nested shapes', () => {
+  const value=create(); value.profiles=Array.from({length:101},(_,index)=>environment.create('Environment '+index,core.TARGETS[0]));
+  assert.throws(()=>api.validate(value),/array limit/);
+  for (const patch of [{composer:'wizard'},{guideStep:0},{guideStep:5},{guideStep:1.5}]) {
+    assert.throws(()=>api.validate({...create(),view:{...create().view,...patch}}));
+  }
+});
 
 test('workspace defaults and round trips preserve literal text and isolate input objects', async () => {
   const w = create(); w.drafts.push(await draft());
@@ -36,7 +94,7 @@ test('workspace rejects unknown keys and claims at every contract boundary', asy
   }
   const duplicate=structuredClone(w); duplicate.drafts.push({...duplicate.drafts[0]});
   assert.throws(()=>api.validate(duplicate),/duplicate/i);
-  assert.throws(()=>api.parse(api.serialize(w).replace('"schemaVersion":1','"schemaVersion":2')),/schemaVersion/);
+  assert.throws(()=>api.parse(api.serialize(w).replace('"schemaVersion":2','"schemaVersion":3')),/schemaVersion|version/);
 });
 
 test('IDs, allowlists, lengths and collection/flow limits are exact', () => {
@@ -76,7 +134,7 @@ test('duplicate JSON members, including escaped aliases, cannot silently replace
 });
 
 test('aggregate draft bytes and all array caps reject oversized or ambiguous workspaces', () => {
-  const makeDraft=n=>({techniqueId:`T${String(n).padStart(4,'0')}`,mode:'detect',target:core.TARGETS[0],text:'',template:'',templateSha256:'0'.repeat(64),context:''});
+  const makeDraft=n=>({techniqueId:`T${String(n).padStart(4,'0')}`,mode:'detect',target:core.TARGETS[0],text:'',template:'',templateSha256:'0'.repeat(64),context:'',environment:null,environmentSha256:null});
   const w=create(); w.drafts=Array.from({length:1000},(_,n)=>makeDraft(n)); api.validate(w);
   w.drafts.push(makeDraft(1000)); assert.throws(()=>api.validate(w),/array limit/i);
   w.drafts=Array.from({length:14},(_,n)=>({...makeDraft(n),text:'x'.repeat(200*1024),template:'x'.repeat(200*1024)}));
@@ -121,6 +179,7 @@ test('warning text is capped without dropping unresolved references', async () =
 test('hash matches SHA-256 and UMD requires no DOM storage or network', async () => {
   assert.equal(await api.hash('å\n${context}'),crypto.createHash('sha256').update('å\n${context}').digest('hex'));
   const browser=vm.createContext({crypto:crypto.webcrypto,PAD:core,TextEncoder});
+  vm.runInContext(fs.readFileSync(require.resolve('../demo/environment.js'),'utf8'),browser);
   vm.runInContext(fs.readFileSync(require.resolve('../demo/workspace.js'),'utf8'),browser);
   browser.sourceJSON=JSON.stringify(sources);
   const w=vm.runInContext('PAD_WORKSPACE.create("Browser",JSON.parse(sourceJSON))',browser);

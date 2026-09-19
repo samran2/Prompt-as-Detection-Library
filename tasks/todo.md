@@ -27,3 +27,52 @@ evidence is recorded in docs/verification.md; hosted acceptance is separate.
 - [x] Independent correctness/security findings resolved and review recorded
 - [x] Final private-artifact inventory and documentation checked
 - [x] Reviewed candidate publication, CI and hosted Pages verification recorded
+
+## Environment workflows and comparison acceptance — 0.4.0.dev4
+
+Local implementation verified; previous completed checklists remain historical.
+No paid API run is authorized for this release. Candidate checks, review and
+publication must have fresh evidence before the corresponding item is checked.
+
+- [x] Approved dev4 scope, interfaces, privacy boundary and migration documented
+- [x] Profile contract, import/export, revisioned snapshots and CLI parity accepted
+- [x] V1 import/new identity and v2 storage isolation verified; rollback limits documented
+- [x] Guided/quick creation, explicit profile application and draft retention verified
+- [x] Forty pinned comparison cases, offline reports and blinded review verified
+- [x] Mocked API failure, limit, budget and uncertain-resume tests accepted
+- [x] Existing and new Node/Python regression checks recorded
+- [x] Chromium, Firefox and WebKit responsive/keyboard checks recorded
+- [x] Source fidelity, static allowlist and private artifact exclusions verified
+- [ ] Independent correctness/security review findings resolved
+- [ ] Reviewed GitHub update, CI and hosted Pages verification recorded
+- [ ] Updated ZIP/checksum and screenshots delivered
+
+The formal comparison security scan remains incomplete: account access stopped
+the worker and the tool rejected the real `.cjs` finding path as out of inventory.
+The local report-parser fix has regression evidence, but does not replace that
+missing scan. No dev4 GitHub or Pages publication is accepted yet.
+
+## External research source cards
+
+- [x] User-approved link-only scope and contract documented
+- [x] Shared LOLBAS, GTFOBins and LOLDrivers cards integrated
+- [x] Exact public-ID searches, safe links and ATLAS limitations tested
+- [x] Regression/source/build/browser checks and screenshots recorded
+- [x] Documentation and focused review completed
+
+Frozen dev4 commit `04e4472` is now draft PR #21, not merged/deployed. Hosted
+CI exposed two test-only scanner findings and an unsupported-model AI scan
+failure. Local test corrections preserve all privacy/literal-rendering checks;
+the full-history secret scan and formal security review remain publication gates.
+See docs/verification.md. Source-card changes remain a separate local follow-up.
+
+## Source-backed research mappings
+
+- [x] Official source basis, minimal projections, hashes and notices recorded
+- [x] Exact active ATT&CK joins and honest absent/stale mapping states implemented
+- [x] Offline reproducible index, safe links and provenance details integrated
+- [x] Complete regression and three-engine browser checks recorded
+- [x] Independent ordinary code review addressed and screenshots inspected
+- [x] Documentation, source/artifact inventory and local handoff prepared
+
+Mapping associations do not promote prompt or detection validation status.

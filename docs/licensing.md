@@ -1,5 +1,22 @@
 # Project licensing record
 
+## Linked external research projects
+
+The directory now includes a minimal source-attributed mapping projection in
+addition to original short descriptions and links. LOLBAS entry names, URLs and
+declared ATT&CK IDs retain the full upstream GPL-3.0 license and NOTICE. LOLDrivers
+rule titles and explicit tags retain Apache-2.0 and the rule author's attribution.
+No command/rule bodies or samples are bundled. GTFOBins associations reproduce
+direct citations from pinned MITRE ATT&CK, not GTFOBins catalog content.
+
+The [source manifest](../content/research-sources/manifest.json) hashes the retained
+metadata and complete, LF-normalized legal texts. The public
+[research source notices](../demo/RESEARCH_SOURCES_LICENSES.txt) accompany every
+static build and identify the projections as modified metadata. Each card also
+links the upstream license. See [scope and provenance](research-sources.md).
+The project's MIT license does not replace these third-party terms; do not
+relabel imported metadata as MIT. Full catalog imports require separate review.
+
 ## Owner decision
 
 On 2026-09-08, the owner explicitly approved the MIT License for original project

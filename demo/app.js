@@ -8,6 +8,8 @@
   const core = globalThis.PAD;
   $('reload-app').addEventListener('click', () => window.location?.reload());
   const runtimeReady = Array.isArray(catalog) && catalog.length > 0 && core &&
+    typeof globalThis.PAD_ENVIRONMENT?.hash === 'function' &&
+    typeof globalThis.PAD_ENVIRONMENT_UI?.create === 'function' &&
     typeof globalThis.PAD_WORKBENCH_UI?.create === 'function' &&
     ['filterTechniques', 'composePrompt', 'exportJSONL', 'parseUiState', 'serializeUiState'].every(name => typeof core[name] === 'function');
   if (!runtimeReady) {
@@ -29,10 +31,12 @@
   const state = {
     domain: restored.domain, domainSelection: restored.domainSelection || restored.domain,
     selected: recordIndex.get(restored.technique) || null,
-    visible: [], page: 0, drafts: new Map(), templates: new Map(), templateContexts: new Map(), context: '', key: '',
+    visible: [], page: 0, drafts: new Map(), templates: new Map(), templateContexts: new Map(), templateEnvironments: new Map(), context: '', key: '',
+    environment: null, environmentHash: '',
     compare: restored.compare.filter(id => recordIndex.has(id)), theme: initialTheme, unresolvedTechnique: '',
   };
   let workspaceUI = null;
+  let environmentUI = null;
   let deskUI = null;
   let restoringWorkspace = false;
   let unresolvedFlow = null;
@@ -40,8 +44,8 @@
   let carView = null;
   const sources = { attack: '19.2', atlas: '2026.08', d3fend: '1.6.0', car: '1b922fe1527d956e222a99473472e594f10f610b', attackFlow: '2.0.0' };
   const changed = () => { if (!restoringWorkspace) workspaceUI?.changed(); };
-  const options = () => ({ mode: $('mode').value, target: $('target').value, context: state.context });
-  const draftKey = () => `${state.selected.id}|${$('mode').value}|${$('target').value}`;
+  const options = () => ({ mode: $('mode').value, target: $('target').value, context: state.context, environment: state.environment });
+  const draftKey = () => `${state.selected.id}|${$('mode').value}|${$('target').value}|${state.environmentHash || 'none'}`;
   const notify = message => { $('action-status').textContent = message; };
   const resolveDomain = domain => core.normalizeDomain(domain);
   const element = (tag, className, text) => {
@@ -241,10 +245,24 @@
     if (!state.templates.has(state.key)) {
       state.templates.set(state.key, core.composePrompt(state.selected, options()));
       state.templateContexts.set(state.key, state.context);
+      state.templateEnvironments.set(state.key, state.environment ? structuredClone(state.environment) : null);
     }
     $('prompt').value = state.drafts.get(state.key) ?? state.templates.get(state.key);
+    renderDraftVersions();
     updateEditorStatus();
+    environmentUI?.refresh();
     notify('');
+  }
+  function renderDraftVersions() {
+    const drafts = [...state.templates.keys()].filter(key => key.split('|')[0] === state.selected?.id);
+    $('draft-versions').hidden = drafts.length < 2;
+    $('draft-select').replaceChildren(...drafts.map(key => {
+      const [, mode, target] = key.split('|');
+      const profile = state.templateEnvironments.get(key);
+      const option = element('option', '', `${mode} · ${target} · ${profile ? `${profile.name} (revision ${profile.revision})` : 'No profile'}`);
+      option.value = key; return option;
+    }));
+    $('draft-select').value = state.key;
   }
   function selectRecord(record, userInitiated = false) {
     if (userInitiated) state.unresolvedTechnique = '';
@@ -254,11 +272,12 @@
     $('no-selection').hidden = Boolean(record);
     defensesView?.render(record);
     carView?.show(record);
+    globalThis.PAD_RESEARCH_SOURCES?.render({ document, root: $('desk-external-sources'), techniqueId: record?.id || '', headingLevel: 4 });
     flowView?.setSelected(record);
     workspaceUI?.selectionChanged(record);
     $('desk-flow-support').textContent = unresolvedFlow ? 'This workspace contains unresolved Flow steps. They are retained in workspace exports; clear the flow explicitly to start a new hypothesis.' : isAtlas(record || {}) ? 'ATLAS is not supported by this ATT&CK Flow exporter. Existing ATT&CK steps are retained.' : 'Add this technique without leaving your research.';
     if (unresolvedFlow) $('desk-flow-add').disabled = true;
-    if (!record) { state.key = ''; $('prompt').value = ''; updateEditorStatus(); renderComparison(); syncUrl(); return; }
+    if (!record) { state.key = ''; $('prompt').value = ''; updateEditorStatus(); renderComparison(); environmentUI?.refresh(); syncUrl(); return; }
     $('technique-title').textContent = record.name;
     $('technique-id').textContent = record.id;
     $('breadcrumb').textContent = `${record.domain} / ${record.tactics.join(' · ')}`;
@@ -341,7 +360,7 @@
     if (!state.selected) return;
     if ($('draft-state').textContent === 'Edited in this tab' && !window.confirm('Replace the edited prompt with a fresh template? Download it first if you want to keep it.')) return;
     if (applyContext) state.context = $('context').value;
-    state.drafts.delete(draftKey()); state.templates.delete(draftKey()); state.templateContexts.delete(draftKey()); loadPrompt(); changed(); notify('Template updated using the applied context. Other drafts are unchanged.');
+    state.drafts.delete(draftKey()); state.templates.delete(draftKey()); state.templateContexts.delete(draftKey()); state.templateEnvironments.delete(draftKey()); loadPrompt(); changed(); notify('Template updated using the applied context and profile. Other drafts are unchanged.');
   }
   function download(text, filename, mime) {
     const url = URL.createObjectURL(new Blob([text], { type: mime }));
@@ -375,13 +394,31 @@
     $(id).addEventListener('click', () => { state.page = page(); renderPage(); });
   }
   for (const id of ['mode', 'target']) $(id).addEventListener('change', () => {
+    if (id === 'target') environmentUI?.cancelPending();
+    if (id === 'target' && state.environment && state.environment.target !== $('target').value) {
+      if (!window.confirm('Use this output target without the applied environment profile? The saved profile and existing drafts will be kept.')) { $('target').value = state.environment.target; return; }
+      environmentUI?.detach();
+      state.environment = null; state.environmentHash = '';
+    }
     remember();
     if (state.selected) { loadPrompt(); renderRelationshipMap(state.selected); }
     syncUrl();
   });
   $('theme').addEventListener('change', () => applyTheme($('theme').value));
+  $('draft-select').addEventListener('change', () => {
+    const key = $('draft-select').value;
+    if (!state.templates.has(key) || key.split('|')[0] !== state.selected?.id) return;
+    remember();
+    const [, mode, target, hash] = key.split('|');
+    state.environment = structuredClone(state.templateEnvironments.get(key) || null);
+    state.environmentHash = hash === 'none' ? '' : hash;
+    $('mode').value = mode; $('target').value = target;
+    environmentUI.restore({ ...environmentUI.snapshot(), activeEnvironment: state.environment });
+    loadPrompt(); renderRelationshipMap(state.selected); syncUrl();
+    notify('Saved draft opened exactly as kept. Current context settings are unchanged.');
+  });
   $('prompt').addEventListener('input', () => { remember(); updateEditorStatus(); changed(); });
-  $('context').addEventListener('input', changed);
+  $('context').addEventListener('input', () => { changed(); environmentUI?.refresh(); });
   $('apply-context').addEventListener('click', () => regenerate(true));
   $('reset-prompt').addEventListener('click', () => regenerate());
   $('copy').addEventListener('click', async () => {
@@ -464,30 +501,39 @@
     remember();
     const drafts = [...state.templates].map(([key, template]) => {
       const [techniqueId, mode, target] = key.split('|');
-      return { techniqueId, mode, target, text: state.drafts.get(key) ?? template, template, context: state.templateContexts.get(key) || '' };
+      return { techniqueId, mode, target, text: state.drafts.get(key) ?? template, template, context: state.templateContexts.get(key) || '',
+        environment: structuredClone(state.templateEnvironments.get(key) || null), environmentSha256: key.split('|')[3] === 'none' ? null : key.split('|')[3] };
     });
+    const profileState = environmentUI.snapshot();
     const snapshot = {
+      profiles: profileState.profiles, activeEnvironment: profileState.activeEnvironment,
       drafts, context: state.context, contextInput: $('context').value,
       flow: unresolvedFlow ? structuredClone(unresolvedFlow) : flowView?.snapshot() || { title: 'Research hypothesis', steps: [] },
       view: { query: $('search').value, domain: state.domainSelection, tactic: $('tactic').value, platform: $('platform').value,
         mode: $('mode').value, target: $('target').value, technique: state.unresolvedTechnique || state.selected?.id || '', compare: [...state.compare], theme: state.theme,
         tab: Object.keys(tabIds).find(name => $(tabIds[name]).getAttribute('aria-selected') === 'true') || 'prompt',
-        ...deskUI.snapshot() },
+        ...deskUI.snapshot(), composer: profileState.composer, guideStep: profileState.guideStep },
     };
     // Copy every mutable field before awaiting hashes so one snapshot cannot mix edits.
     await Promise.all(drafts.map(async draft => { draft.templateSha256 = await globalThis.PAD_WORKSPACE.hash(draft.template); }));
     return snapshot;
   }
-  function restoreWorkspace(workspace) {
+  async function restoreWorkspace(workspace) {
+    environmentUI?.cancelPending();
+    const activeEnvironment = workspace.activeEnvironment || null;
+    const environmentHash = activeEnvironment ? await globalThis.PAD_ENVIRONMENT.hash(activeEnvironment) : '';
     restoringWorkspace = true;
     try {
-      state.key = ''; state.drafts.clear(); state.templates.clear(); state.templateContexts.clear();
+      state.key = ''; state.drafts.clear(); state.templates.clear(); state.templateContexts.clear(); state.templateEnvironments.clear();
+      state.environment = activeEnvironment ? structuredClone(activeEnvironment) : null; state.environmentHash = environmentHash;
       for (const draft of workspace.drafts) {
-        const key = `${draft.techniqueId}|${draft.mode}|${draft.target}`;
+        const key = `${draft.techniqueId}|${draft.mode}|${draft.target}|${draft.environmentSha256 || 'none'}`;
         state.drafts.set(key, draft.text); state.templates.set(key, draft.template); state.templateContexts.set(key, draft.context);
+        state.templateEnvironments.set(key, structuredClone(draft.environment || null));
       }
       state.context = workspace.context; $('context').value = workspace.contextInput;
       const view = workspace.view;
+      environmentUI.restore({ profiles: workspace.profiles || [], activeEnvironment, composer: view.composer || 'quick', guideStep: view.guideStep || 1 });
       state.domainSelection = view.domain; state.domain = resolveDomain(view.domain);
       $('search').value = view.query; $('mode').value = view.mode; $('target').value = view.target;
       state.selected = recordIndex.get(view.technique) || null;
@@ -508,6 +554,19 @@
   };
   restoreSelect('tactic', restored.tactic);
   restoreSelect('platform', restored.platform);
+  environmentUI = globalThis.PAD_ENVIRONMENT_UI.create({ document, environment: globalThis.PAD_ENVIRONMENT,
+    targets: core.TARGETS, initialComposer: restored.technique ? 'quick' : 'guided', onChange: changed,
+    download: (filename, text, mime) => download(text, filename, mime),
+    getDetails: () => ({ technique: state.selected ? `${state.selected.id} · ${state.selected.name}` : 'No technique selected', mode: $('mode').value, target: $('target').value, context: state.context, contextInput: $('context').value, draftContext: state.templateContexts.get(state.key) ?? state.context }),
+    onApply: (profile, hash) => {
+      const target = profile ? profile.target : $('target').value;
+      if (state.selected) core.composePrompt(state.selected, { ...options(), target, environment: profile });
+      remember(); state.environment = profile ? structuredClone(profile) : null; state.environmentHash = hash || '';
+      $('target').value = target;
+      if (state.selected) { loadPrompt(); renderRelationshipMap(state.selected); }
+      syncUrl(); notify('Profile applied. Earlier drafts are kept in this workspace.');
+    },
+  });
   filter(true);
   applyTheme(initialTheme);
   $('app-status').hidden = true;

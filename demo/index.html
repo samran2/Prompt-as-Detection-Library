@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="./workbench.css">
   <script defer src="./catalog.js"></script>
   <script defer src="./atlas-catalog.js"></script>
+  <script defer src="./environment.js"></script>
   <script defer src="./core.js"></script>
   <script defer src="./d3fend-catalog.js"></script>
   <script defer src="./defenses.js"></script>
@@ -20,10 +21,13 @@
   <script defer src="./car.js"></script>
   <script defer src="./attack-flow.js"></script>
   <script defer src="./research-components.js"></script>
+  <script defer src="./research-mappings.js"></script>
+  <script defer src="./research-sources.js"></script>
   <script defer src="./workspace.js"></script>
   <script defer src="./workspace-store.js"></script>
   <script defer src="./workspace-ui.js"></script>
   <script defer src="./workbench-ui.js"></script>
+  <script defer src="./environment-ui.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body>
@@ -44,7 +48,7 @@
         <span class="eyebrow">REFERENCE SNAPSHOT</span>
         <strong>ATT&amp;CK + ATLAS AI</strong>
         <p>All active techniques.<br>Every prompt is a draft.</p>
-        <span class="version">Workbench 0.4.0-dev.3</span>
+        <span class="version">Workbench 0.4.0-dev.4</span>
       </div>
     </aside>
 
@@ -112,12 +116,31 @@
               <button id="tab-prompt" role="tab" aria-selected="true" aria-controls="panel-prompt">Prompt</button><button id="tab-source" role="tab" aria-selected="false" aria-controls="panel-source" tabindex="-1">Evidence</button><button id="tab-defenses" role="tab" aria-selected="false" aria-controls="panel-defenses" tabindex="-1">Defenses</button><button id="tab-flow" role="tab" aria-selected="false" aria-controls="panel-flow" tabindex="-1">Flow</button>
             </div>
             <section id="panel-prompt" role="tabpanel" aria-labelledby="tab-prompt">
+              <div class="composer-heading"><label for="composer-mode">Prompt creation<select id="composer-mode"><option value="guided">Guided</option><option value="quick">Quick</option></select></label><p>One technique. Your environment. A focused starting point.</p></div>
+              <p id="environment-status" class="action-status" role="status" aria-live="polite"></p>
+              <div id="guide-nav" class="guide-nav"><div><h3 id="guide-step-title" tabindex="-1">1 of 4 · Choose your task</h3><p id="guide-step-description"></p></div><div class="guide-buttons"><button id="guide-previous">Previous step</button><button id="guide-next">Next step</button></div></div>
+              <div id="guide-task">
               <div class="configuration"><label>Mode<select id="mode"><option value="detect">Detect</option><option value="hunt">Hunt</option><option value="triage">Triage</option><option value="validate">Validate</option></select></label><label>Output target<select id="target"></select></label></div>
+              </div>
+              <section id="guide-environment" class="environment-panel" aria-labelledby="environment-heading">
+                <h3 id="environment-heading">Your environment</h3><p>Save the facts you know. Empty fields remain unknown; source suggestions are not proof of collected logs.</p>
+                <label for="environment-select">Saved environment</label><select id="environment-select"><option value="">No profile</option></select>
+                <div class="actions profile-actions"><button id="environment-apply">Use selected profile</button><button id="environment-new">New profile</button><button id="environment-edit" disabled>Edit profile</button><button id="environment-copy" disabled>Duplicate profile</button><button id="environment-delete" disabled>Delete profile</button></div>
+                <details class="profile-transfer"><summary>Import or export a profile</summary><label for="environment-import">Import profile</label><input id="environment-import" type="file" accept=".json,.pad-environment.json,application/json"><button id="environment-export" disabled>Export profile</button><p>Files contain unencrypted environment notes. Never include credentials or sensitive logs.</p></details>
+                <p id="environment-current" role="status"></p>
+              </section>
+              <div id="guide-telemetry">
+              <h3 class="guide-telemetry-title">Check the available information</h3><p id="environment-telemetry-summary" class="environment-summary"></p>
               <details class="context-box"><summary>Adapt to your environment <span>Optional context</span></summary><label for="context">Telemetry and schema notes</label><textarea id="context" rows="3" maxlength="4000" placeholder="Example: Windows process events are available. Confirm field names before proposing logic." aria-describedby="context-help"></textarea><p id="context-help">Describe the actual platform, collected logs and field names here. Platform filters only narrow the technique list. Use synthetic text, never secrets. Apply updates this prompt and future templates/JSONL exports; other drafts are unchanged. Export your workspace to keep your work, or explicitly enable local autosave.</p><button id="apply-context">Apply context to prompt</button></details>
+              </div>
+              <div id="guide-result">
+              <div id="draft-versions" hidden><label for="draft-select">Saved draft versions</label><select id="draft-select"></select></div>
+              <p id="guide-summary" class="environment-summary"></p>
               <div class="prompt-box"><div class="prompt-toolbar"><label for="prompt">EDITABLE TEXT PROMPT</label><span id="draft-state">Draft template</span></div><textarea id="prompt" rows="15" spellcheck="false" aria-describedby="draft-warning"></textarea><div class="prompt-meta"><span id="character-count"></span><button id="reset-prompt" class="text-button">Reset template</button></div></div>
               <p id="draft-warning" class="draft-warning"><span aria-hidden="true">ⓘ</span> Unvalidated draft · no model calls, rule execution, or verified detection coverage.</p>
               <div class="actions"><button id="copy" class="primary">Copy prompt <span aria-hidden="true">⧉</span></button><details class="export-menu"><summary>Export &amp; share</summary><div><button id="download">Download .txt <span aria-hidden="true">↓</span></button><button id="export-research">Export research JSON <span aria-hidden="true">↓</span></button><button id="share-view">Copy view link <span aria-hidden="true">⌁</span></button></div></details></div>
               <p id="action-status" class="action-status" role="status" aria-live="polite"></p>
+              </div>
             </section>
             <section id="panel-map" class="info-panel" aria-labelledby="relationship-title" tabindex="0">
               <p class="eyebrow">EVIDENCE BEFORE LOGIC</p><h3 id="relationship-title">Technique → telemetry → rule readiness</h3>
@@ -153,6 +176,7 @@
               <div id="attack-source-context"><h4>Linked detection strategies and analytics</h4><div id="strategies"></div><h4>Documented procedure examples</h4><p id="procedure-count"></p><div id="procedure-examples"></div></div>
               <div id="atlas-source-context" hidden><h4>ATLAS threat maturity</h4><p id="atlas-source-maturity"></p><h4>Linked case studies</h4><div id="atlas-case-studies"></div><h4>Linked mitigations</h4><div id="atlas-mitigations"></div></div>
               <p class="fine-print">Descriptions and linked reference material come from the selected framework's pinned source. Prompt framing and local baseline guidance are independently written. Source text is displayed literally; linked live pages may have changed. Links open only when selected.</p>
+              <section class="research-source-section" aria-labelledby="desk-external-sources-title"><h3 id="desk-external-sources-title">External research sources</h3><div id="desk-external-sources"><p>External source links are unavailable. Reload a complete local build.</p></div><p class="fine-print"><a href="./RESEARCH_SOURCES_LICENSES.txt" target="_blank" rel="noopener noreferrer">Mapping source licenses and notices</a></p></section>
             </section>
             <section id="panel-review" class="info-panel" tabindex="0">
               <p class="eyebrow">HUMAN REVIEW REQUIRED</p><h3>A starting point, not a verdict.</h3><p>This workbench composes text for the pinned ATT&amp;CK and ATLAS catalogs. Catalog coverage does not establish detection effectiveness. ATLAS source maturity describes known threats, not local rule validation.</p><ol class="review-list"><li><strong>Confirm the data.</strong><span>Check actual log sources, field names, timestamps, and collection gaps.</span></li><li><strong>Challenge the hypothesis.</strong><span>Use synthetic positive and negative cases. Account for normal administration.</span></li><li><strong>Test in isolation.</strong><span>Review generated code before any execution in a controlled environment.</span></li><li><strong>Document the result.</strong><span>Record evidence, limitations, reviewer, and test environment before promotion.</span></li></ol>
@@ -178,6 +202,7 @@
     <p>Keep research together without an account. Files and optional browser storage are unencrypted: do not include secrets or sensitive logs.</p>
     <div class="workspace-fields"><label for="workspace-select">Open workspace</label><select id="workspace-select"></select><label for="workspace-name">Workspace name</label><input id="workspace-name" maxlength="120" value="Untitled workspace"></div>
     <div class="actions"><button id="workspace-new">Copy as new workspace</button><button id="workspace-export">Download workspace</button></div>
+    <button id="workspace-import-legacy">Import older local workspaces</button>
     <label for="workspace-file">Open a workspace file (maximum 5 MiB)</label><input id="workspace-file" type="file" accept=".json,.pad-workspace.json,application/json">
     <section id="workspace-preview" hidden aria-labelledby="workspace-preview-title"><h3 id="workspace-preview-title">Review before opening</h3><div id="workspace-preview-text"></div><div class="actions"><button id="workspace-import-confirm">Open as new workspace</button><button id="workspace-import-cancel">Cancel import</button></div></section>
     <div id="workspace-warnings" role="status"></div>
@@ -185,6 +210,18 @@
     <section><h3>Favorites</h3><ul id="favorites-list"></ul></section>
     <section><h3>Collections</h3><label for="collection-name">New collection name</label><input id="collection-name" maxlength="120"><button id="collection-create">Create collection</button><label for="collection-select">Collection</label><select id="collection-select"></select><button id="collection-add">Add selected technique</button><ul id="collection-items"></ul></section>
   </dialog>
+  <dialog id="environment-dialog" aria-labelledby="environment-dialog-title">
+    <h2 id="environment-dialog-title">Environment profile</h2><p>Enter only information you have confirmed. Leave anything unknown empty. Saving a profile does not replace a prompt.</p>
+    <label for="environment-name">Profile name</label><input id="environment-name" maxlength="120" required autocomplete="off">
+    <label for="environment-target">Profile output target</label><select id="environment-target"></select>
+    <label for="environment-system">Operating environment</label><textarea id="environment-system" maxlength="4000" rows="2" placeholder="For example: Windows endpoints in a synthetic training environment"></textarea>
+    <label for="environment-dataSources">Available data sources</label><textarea id="environment-dataSources" maxlength="4000" rows="2" placeholder="Name the logs that are actually collected"></textarea>
+    <label for="environment-tables">Tables or log types</label><textarea id="environment-tables" maxlength="4000" rows="2" placeholder="Exact table, index, source type or log type names"></textarea>
+    <label for="environment-fieldMappings">Field mappings</label><textarea id="environment-fieldMappings" maxlength="4000" rows="3" placeholder="One mapping per line: meaning = actual field name"></textarea>
+    <label for="environment-limitations">Known gaps and limitations</label><textarea id="environment-limitations" maxlength="4000" rows="2" placeholder="Missing sources, retention limits, product version or schema caveats"></textarea>
+    <p id="environment-error" role="alert" tabindex="-1"></p><div class="actions"><button id="environment-save" class="primary">Save profile</button><button id="environment-cancel">Cancel</button></div>
+  </dialog>
+  <dialog id="environment-preview-dialog" aria-labelledby="environment-preview-title"><h2 id="environment-preview-title">Review environment profile</h2><p>Import creates a separate profile. It does not apply it or overwrite existing work.</p><pre id="environment-preview-text" class="environment-summary"></pre><div class="actions"><button id="environment-import-confirm">Import as new profile</button><button id="environment-import-cancel">Cancel import</button></div></dialog>
   <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering 918 active Enterprise, Mobile, and ICS/OT records in MITRE ATT&amp;CK 19.2, plus 197 AI techniques and subtechniques in MITRE ATLAS 2026.08. ATT&amp;CK excludes revoked and deprecated records; ATLAS includes every technique record present in its pinned release.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft unless its record explicitly displays stronger review evidence; no model is called and no detection is certified or executed. ATLAS source threat maturity is not evidence of prompt validation.</p><p>Search, composition, comparison, edits, and downloads run in your browser. Context and drafts stay in memory by default. Export a workspace file to keep them, or explicitly enable unencrypted local autosave. Browser storage can be cleared from Workspaces; downloaded files remain yours to manage. Search, filters, mode, target, selection, comparison and appearance are represented in or restored from the page URL; appearance is also remembered locally when storage is available. Workspace names, drafts, collections and context are never added to shared links. The app sends no analyst context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Research JSON adds source relationships and explicit validation state. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&amp;CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATT&amp;CK and project licenses</a> · <a href="./ATLAS_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATLAS Apache-2.0 notice and license</a>.</p></dialog>
   <noscript><p class="noscript">Enable JavaScript to search and compose prompts. No account or network API is required.</p></noscript>
 </body>

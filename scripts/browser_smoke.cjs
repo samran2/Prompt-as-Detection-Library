@@ -1,9 +1,9 @@
 // Optional QA dependency is isolated under qa/. No runtime dependency is shipped.
-const playwright = require(process.env.PLAYWRIGHT_MODULE || '../qa/node_modules/playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { createBrowserBoundary, reportDiagnostics } = require('./browser_qa_boundary.cjs');
 const catalog = require('../demo/catalog.js');
 const atlasCatalog = require('../demo/atlas-catalog.js');
 const combinedCatalog = [...catalog, ...atlasCatalog];
@@ -25,9 +25,14 @@ function contrastRatio(first, second) {
 }
 
 (async () => {
-  const base = process.env.DEMO_URL || 'http://127.0.0.1:8766/';
-  const parsed = new URL(base);
-  assert.ok(parsed.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(parsed.hostname), 'QA target must be loopback HTTP');
+  const boundary = createBrowserBoundary(process.env.DEMO_URL || 'http://127.0.0.1:8766/', {
+    fileRoot: path.resolve(__dirname, '../demo'),
+  });
+  const base = boundary.base;
+  // Existing expert-workflow regressions use the supported direct-link quick view.
+  // The separate environment smoke covers the new guided homepage default.
+  const defaultView = new URL(`?technique=${catalog[0].id}`, base).href;
+  const playwright = require(process.env.PLAYWRIGHT_MODULE || '../qa/node_modules/playwright');
   const engine = process.env.BROWSER_ENGINE || 'chromium';
   assert.ok(['chromium', 'firefox', 'webkit'].includes(engine), 'Unsupported browser engine');
   const output = path.resolve(__dirname, `../work/browser-demo${engine === 'chromium' ? '' : '-' + engine}`);
@@ -51,11 +56,11 @@ function contrastRatio(first, second) {
   page.on('console', message => { if (['error', 'warning'].includes(message.type())) failures.push(message.text()); });
   await context.route('**/*', route => {
     const url = route.request().url();
-    if (url.startsWith(base) || url.startsWith('blob:') || url.startsWith('file:')) return route.continue();
+    if (boundary.allowsRequest(url)) return route.continue();
     external.push(url); return route.abort();
   });
   try {
-    await page.goto(base); await page.locator('#prompt').waitFor();
+    await page.goto(defaultView); await page.locator('#prompt').waitFor();
     await check('complete active library loads with bounded first-page rendering', async () => {
       assert.equal(catalog.length, 918);
       assert.equal(atlasCatalog.length, 197);
@@ -160,7 +165,7 @@ function contrastRatio(first, second) {
       await page.locator('#search').fill('');
     });
     await check('ATLAS AI filtering and parent/subtechnique search reach pinned records', async () => {
-      await page.goto(base);
+      await page.goto(defaultView);
       await page.locator('[data-domain="ATLAS"]').click();
       await page.locator('#target').selectOption('Platform-neutral');
       assert.equal(await page.locator('#techniques button').count(), 50);
@@ -303,7 +308,7 @@ function contrastRatio(first, second) {
       await page.keyboard.press('Escape'); await page.locator('#tab-prompt').click();
     });
     await check('D3FEND renders pinned countermeasures, source paths and explicit inferred scope', async () => {
-      await page.goto(base);
+      await page.goto(defaultView);
       await page.locator('#search').fill('T0800');
       const record = catalog.find(item => item.id === 'T0800');
       const expected = defenses.lookup(record.id);
@@ -433,7 +438,7 @@ function contrastRatio(first, second) {
       assert.equal(await page.evaluate(() => document.activeElement.id), 'about-open');
     });
     await check('skip link and primary controls expose visible keyboard focus', async () => {
-      await page.goto(base);
+      await page.goto(defaultView);
       // macOS WebKit's default keyboard preference skips links with Tab;
       // Option+Tab traverses every interactive element without changing the OS.
       await page.keyboard.press(engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab');
@@ -480,7 +485,7 @@ function contrastRatio(first, second) {
       await page.locator('#theme').selectOption('system');
       await page.emulateMedia({ reducedMotion: 'no-preference' });
     });
-    await page.goto(base);
+    await page.goto(defaultView);
     await check('draft context clears on reload', async () => { assert.equal(await page.locator('#context').inputValue(), ''); assert.equal((await page.locator('#prompt').inputValue()).includes('demoInjected'), false); });
     for (const width of [320, 768, 1024, 1440]) await check(`no horizontal overflow at ${width}px`, async () => {
       await page.setViewportSize({ width, height: 1000 });
@@ -521,13 +526,15 @@ function contrastRatio(first, second) {
       assert.equal(await page.locator('#technique-id').textContent(), 'AML.T0051.001');
       assert.match(await page.locator('#prompt').inputValue(), /MITRE ATLAS 2026\.08/);
     });
+    await require('./research_sources_browser_checks.cjs')({ page, base, check, output, screenshot });
     await require('./research_browser_checks.cjs')({ page, base, check, output, screenshot });
     await require('./premium_browser_checks.cjs')({ page, base, check, output });
     await check('no browser console errors or external requests', async () => { assert.deepEqual(failures, []); assert.deepEqual(external, []); });
     const limitations = ['No screen-reader audit or complete WCAG certification.', 'Clipboard denial tested; actual platform clipboard success is not asserted.', 'Hosted GitHub Pages and original application were not tested.'];
     if (engine === 'webkit') limitations.push('WebKit screenshots omitted: locked Playwright screenshot preparation injects an inline style rejected by the application CSP. Functional checks and unfiltered console checks remain enabled; Chromium and Firefox provide visual evidence.');
     if (engine === 'webkit' && process.platform === 'darwin') limitations.push('macOS WebKit skip-link keyboard traversal uses Option+Tab because the default platform Tab preference excludes links.');
-    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:project.version, catalogRecords:combinedCatalog.length, attackRecords:catalog.length, atlasRecords:atlasCatalog.length, engine, browser: browser.version(), node: process.version, basePath:parsed.pathname, checks: results, failures, externalRequests: external, limitations }, null, 2) + '\n');
+    const diagnostics = reportDiagnostics({ errors: failures, externalRequests: external });
+    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ version:project.version, catalogRecords:combinedCatalog.length, attackRecords:catalog.length, atlasRecords:atlasCatalog.length, engine, browser: browser.version(), node: process.version, basePath:boundary.basePath, checks: results, failures: diagnostics.errors, externalRequests: diagnostics.externalRequests, limitations }, null, 2) + '\n');
     console.log(`${results.length} browser checks passed.`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

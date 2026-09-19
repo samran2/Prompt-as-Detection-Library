@@ -30,6 +30,13 @@ overwriting. By default it stores only IOC counts, types, categories, IDS
 suitability and reported false-positive risk—not IOC values. The explicit
 `--include-ioc-values` switch is for local research only.
 
+Before processing a successful response, the client rejects the exact request
+credential if it occurs in any decoded JSON string or member name, including
+JSON-escaped representations. Rejection happens before pagination cursors are
+reused or enrichment files are written; the error includes neither the key nor
+the response body. This is defense in depth, not a detector for every secret or
+arbitrarily transformed credential. Keep the output directory private.
+
 Rösti mappings are labelled `external-corroboration` and `unvalidated`. They do
 not satisfy either human-review slot, lab validation, field confirmation, or the
 stable-release gate. Dynamic enrichment output belongs outside the repository.

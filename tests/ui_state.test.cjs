@@ -70,9 +70,11 @@ class Element {
     this.listeners.get(type).push(handler);
   }
   dispatch(type, details = {}) {
-    for (const handler of this.listeners.get(type) || []) handler({ type, target: this, currentTarget: this, preventDefault() {}, ...details });
+    const results = [];
+    for (const handler of this.listeners.get(type) || []) results.push(handler({ type, target: this, currentTarget: this, preventDefault() {}, ...details }));
+    return Promise.all(results);
   }
-  click() { if (!this.disabled) this.dispatch('click'); }
+  click() { if (!this.disabled) return this.dispatch('click'); }
   focus() { this.ownerDocument.activeElement = this; }
   select() {}
   showModal() { this.open = true; }
@@ -140,17 +142,18 @@ function launch(catalog = records(), atlas = [], supplemental = {}) {
     static revokeObjectURL() {}
   }
   const context = vm.createContext({
-    document, PAD_CATALOG: catalog, PAD_ATLAS_CATALOG: atlas, URL: DownloadURL, Blob,
+    document, PAD_CATALOG: catalog, PAD_ATLAS_CATALOG: atlas, URL: DownloadURL, Blob, TextEncoder, TextDecoder,
+    crypto: require('node:crypto').webcrypto, structuredClone,
     PAD_D3FEND_CATALOG: supplemental.catalog, PAD_DEFENSES: supplemental.helper,
     window: { confirm: () => true }, navigator: { clipboard: { writeText: async () => {} } },
     setTimeout: () => {},
   });
-  document.defaultView = { matchMedia: () => ({ matches: false }) };
-  const scripts = ['core.js', 'workbench-ui.js', ...(supplemental.renderer ? ['defenses-ui.js'] : []), 'app.js'];
+  document.defaultView = { ...context.window, matchMedia: () => ({ matches: false }) };
+  const scripts = ['environment.js', 'core.js', 'workbench-ui.js', 'environment-ui.js', ...(supplemental.renderer ? ['defenses-ui.js'] : []), 'app.js'];
   for (const name of scripts) vm.runInContext(fs.readFileSync(path.join(demo, name), 'utf8'), context, { filename: name });
   const get = id => { const node = document.getElementById(id); assert.ok(node, `Missing #${id} in demo/index.html`); return node; };
   return {
-    catalog, document, get, downloads,
+    catalog, document, get, downloads, context,
     rows: () => get('techniques').querySelectorAll('button'),
     select(id) {
       const button = get('techniques').querySelectorAll('button').find(row => row.dataset.id === id);
@@ -163,6 +166,36 @@ function launch(catalog = records(), atlas = [], supplemental = {}) {
     input(id, value, event = 'input') { const node = get(id); node.value = value; node.dispatch(event); },
   };
 }
+
+test('saved template summary distinguishes its earlier context from newer applied settings', () => {
+  const h = launch();
+  h.select('T1000.001'); h.input('context', 'SYNTHETIC_CONTEXT_X'); h.get('apply-context').click();
+  h.select('T1000');
+  assert.equal(h.get('prompt').value.includes('SYNTHETIC_CONTEXT_X'), false);
+  assert.match(h.get('guide-summary').textContent, /(?:earlier|different|older|differs).*context|context.*(?:earlier|different|older|differs)/i);
+});
+
+test('manual target change cancels a first in-flight profile application', async () => {
+  const h = launch();
+  let releaseHash;
+  // Replace only the explicit application-boundary hash, not browser credentials/storage.
+  const original = h.context.PAD_ENVIRONMENT;
+  // The controller captures its environment object; intercept digest before the click.
+  const subtle = h.context.crypto.subtle;
+  const realDigest = subtle.digest;
+  subtle.digest = async function (...args) { await new Promise(resolve => { releaseHash = resolve; }); return realDigest.apply(this, args); };
+  try {
+    h.get('environment-new').click(); h.input('environment-name', 'Pending profile');
+    h.get('environment-save').click();
+    const applying = h.get('environment-apply').click();
+    assert.equal(typeof releaseHash, 'function');
+    h.input('target', 'Sigma', 'change');
+    releaseHash(); await applying;
+    assert.equal(h.get('target').value, 'Sigma');
+    assert.equal(h.get('prompt').value.includes('Pending profile'), false);
+    assert.equal(h.context.PAD_ENVIRONMENT, original);
+  } finally { subtle.digest = realDigest; }
+});
 
 function defenseContext(id = 'T1000') {
   return {
