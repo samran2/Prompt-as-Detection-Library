@@ -26,6 +26,7 @@
   <script defer src="./workspace.js"></script>
   <script defer src="./workspace-store.js"></script>
   <script defer src="./workspace-ui.js"></script>
+  <script defer src="./preferences.js"></script>
   <script defer src="./workbench-ui.js"></script>
   <script defer src="./environment-ui.js"></script>
   <script defer src="./app.js"></script>
@@ -41,7 +42,8 @@
       <nav aria-label="Library views">
         <a class="nav-item current" href="#workbench" aria-current="page"><span aria-hidden="true">▤</span> Library</a>
         <button class="nav-item" id="workspace-open"><span aria-hidden="true">▱</span> Workspaces</button>
-        <a class="nav-item" href="./research.html"><span aria-hidden="true">◇</span> Research tools</a>
+        <a class="nav-item" id="research-link" href="./research.html"><span aria-hidden="true">◇</span> Research tools</a>
+        <button class="nav-item" id="guide-open" aria-haspopup="dialog"><span aria-hidden="true">?</span> User guide</button>
         <button class="nav-item" id="about-open"><span aria-hidden="true">ⓘ</span> About the library</button>
       </nav>
       <div class="sidebar-note">
@@ -65,7 +67,7 @@
         <div><p class="eyebrow">EXPLORE. ADAPT. DETECT.</p><h1>Detection workbench</h1></div>
         <div class="header-actions">
           <button id="command-open" class="quiet-button" aria-label="Search techniques and commands">Search <kbd>⌘ / Ctrl K</kbd></button>
-          <label class="theme-control" for="theme"><span>Appearance</span><select id="theme" aria-label="Appearance theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option><option value="contrast">High contrast</option></select></label>
+          <button id="settings-open" class="quiet-button" aria-haspopup="dialog"><span aria-hidden="true">⚙</span><span>Settings</span></button>
           <span class="demo-badge"><span aria-hidden="true">◈</span> Full active library</span>
         </div>
       </header>
@@ -75,7 +77,7 @@
         <div class="snapshot-meta"><span class="snapshot-label">Privacy boundary</span><strong>Runs in this browser</strong><span>No account · no telemetry</span></div>
         <p id="coverage-summary"></p>
       </div></details>
-      <div class="desk-toolbar"><button id="mobile-open" class="text-button">Browse techniques</button><button id="compare-open" class="text-button">Compare <span id="compare-count" class="tab-count">0</span></button><details class="layout-settings"><summary>Layout</summary><label for="pane-resize">List width</label><input id="pane-resize" type="range" min="240" max="480" step="10" value="330" aria-controls="technique-catalog"><button id="pane-reset" class="text-button">Reset width</button></details></div>
+      <div class="desk-toolbar"><button id="mobile-open" class="text-button">Browse techniques</button><button id="compare-open" class="text-button">Compare <span id="compare-count" class="tab-count">0</span></button></div>
       <div class="workspace" id="desk" data-mobile-view="list">
         <section class="catalog" id="technique-catalog" aria-labelledby="library-heading">
           <div class="catalog-controls">
@@ -197,6 +199,35 @@
   </div>
   <dialog id="comparison-dialog" aria-labelledby="comparison-title"><div class="dialog-heading"><h2 id="comparison-title">Compare techniques</h2><button id="comparison-close" aria-label="Close comparison">×</button></div></dialog>
   <dialog id="command-dialog" aria-labelledby="command-title"><div class="dialog-heading"><h2 id="command-title">Find a technique or action</h2><button id="command-close" aria-label="Close command search">×</button></div><label for="command-search">Search techniques and commands</label><input id="command-search" type="search" maxlength="200" autocomplete="off"><p class="fine-print">Type a name or ID. Tab through results; Escape returns to your work.</p><ul id="command-results" class="command-results"></ul></dialog>
+  <dialog id="settings-dialog" aria-labelledby="settings-title" aria-describedby="settings-intro">
+    <div class="dialog-heading"><h2 id="settings-title" tabindex="-1">Settings</h2><button id="settings-close" aria-label="Close settings">×</button></div>
+    <p id="settings-intro">Choose what appears in this browser. Hiding a module does not delete drafts, comparisons, Flow steps or saved work.</p>
+    <section class="settings-section" aria-labelledby="appearance-heading"><h3 id="appearance-heading">Appearance</h3><label class="theme-control" for="theme"><span>Color theme</span><select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option><option value="contrast">High contrast</option></select></label></section>
+    <section class="settings-section desktop-layout-settings" aria-labelledby="layout-heading"><h3 id="layout-heading">Desktop layout</h3><label for="pane-resize">Technique list width</label><input id="pane-resize" type="range" min="240" max="480" step="10" value="330" aria-controls="technique-catalog"><button id="pane-reset" class="text-button">Reset list width</button></section>
+    <fieldset class="module-settings"><legend>Optional modules</legend><p>Library, Prompt, Evidence, Workspaces, Settings, User guide and About are always available.</p>
+      <label class="module-choice" for="module-compare"><input id="module-compare" type="checkbox" checked><span><strong>Compare techniques</strong><small>Compare source metadata and evidence readiness for up to two techniques.</small></span></label>
+      <label class="module-choice" for="module-defenses"><input id="module-defenses" type="checkbox" checked><span><strong>Defenses</strong><small>Show source-linked D3FEND defensive context when a mapping exists.</small></span></label>
+      <label class="module-choice" for="module-flow"><input id="module-flow" type="checkbox" checked><span><strong>Flow</strong><small>Arrange ATT&amp;CK techniques into a research hypothesis.</small></span></label>
+      <label class="module-choice" for="module-research"><input id="module-research" type="checkbox" checked><span><strong>Research tools</strong><small>Show the link to coverage, CAR, lab and other local research tools.</small></span></label>
+    </fieldset>
+    <p id="settings-status" class="action-status" role="status" aria-live="polite"></p>
+    <div class="actions settings-actions"><button id="settings-show-all">Show all modules</button><button id="settings-done" class="primary">Done</button></div>
+  </dialog>
+  <dialog id="guide-dialog" aria-labelledby="guide-title" aria-describedby="guide-intro">
+    <div class="dialog-heading"><h2 id="guide-title" tabindex="-1">How to use the workbench</h2><button id="guide-close" aria-label="Close user guide">×</button></div>
+    <p id="guide-intro">Find a technique, review its source and build a draft prompt. The workbench does not run detections or send your text to a model.</p>
+    <nav class="guide-index" aria-label="User guide sections"><a href="#guide-find">Find</a><a href="#guide-create">Create</a><a href="#guide-review">Review</a><a href="#guide-save">Save</a><a href="#guide-shortcuts">Shortcuts</a></nav>
+    <section id="guide-find"><h3>1. Find a technique</h3><p>Search by ATT&amp;CK or ATLAS ID, name or behavior. Domain, tactic and platform filters narrow the pinned catalog; they do not prove that telemetry exists in your environment.</p></section>
+    <section id="guide-create"><h3>2. Create a focused prompt</h3><p>Choose Detect, Hunt, Triage or Validate, then select the intended output target. Add only confirmed environment facts. Unknown fields stay unknown, and every generated prompt remains a draft until people and product-specific tests validate it.</p></section>
+    <section id="guide-review"><h3>3. Review evidence and limitations</h3><p>Evidence is always available. Check source provenance, telemetry suggestions and validation status before using a prompt. Optional Defenses, Flow and Compare views add research context without claiming detection effectiveness.</p></section>
+    <section><h3>4. Copy, test and document</h3><p>Copy or download the text, review any generated logic and test only in an isolated environment with synthetic positive and benign cases. Record the actual fields, gaps and reviewer evidence before promotion.</p></section>
+    <section id="guide-save"><h3>Save work safely</h3><p>Drafts stay in memory by default. Download a workspace file for a portable backup, or explicitly enable unencrypted local autosave in Workspaces. Never paste credentials, confidential logs or private incident data.</p></section>
+    <section><h3>Show or hide modules</h3><p>Open Settings to show or hide Compare, Defenses, Flow and Research tools. Prompt and Evidence always remain available. Hidden modules keep their in-memory work; Show all modules restores the full desk.</p></section>
+    <section><h3>Exports</h3><p>Copy and text download include the current editor. JSONL creates fresh templates for the filtered scope. Research, Flow and workspace exports are separate formats with different contents—inspect every file before sharing.</p></section>
+    <section id="guide-shortcuts"><h3>Keyboard shortcuts</h3><dl class="shortcut-list"><div><dt><kbd>Cmd/Ctrl K</kbd></dt><dd>Open command search</dd></div><div><dt><kbd>/</kbd></dt><dd>Focus technique search</dd></div><div><dt><kbd>← → Home End</kbd></dt><dd>Move between visible detail tabs</dd></div><div><dt><kbd>Esc</kbd></dt><dd>Close the current dialog</dd></div></dl></section>
+    <section><h3>Privacy and limitations</h3><p>Composition is local and the app has no analytics or model API. A hosting provider still receives ordinary page requests, and opening a source link contacts that site. Visibility settings are convenience, not access control. All prompts are unvalidated drafts unless explicit evidence says otherwise.</p></section>
+    <p class="fine-print">Can’t find a module? Open Settings and select it. Hidden modules keep their data. See About the library for source versions, licensing and project boundaries.</p>
+  </dialog>
   <dialog id="workspace-dialog" aria-labelledby="workspace-title">
     <div class="dialog-heading"><h2 id="workspace-title">Your workspaces</h2><button id="workspace-close" aria-label="Close workspaces">×</button></div>
     <p>Keep research together without an account. Files and optional browser storage are unencrypted: do not include secrets or sensitive logs.</p>
@@ -222,7 +253,7 @@
     <p id="environment-error" role="alert" tabindex="-1"></p><div class="actions"><button id="environment-save" class="primary">Save profile</button><button id="environment-cancel">Cancel</button></div>
   </dialog>
   <dialog id="environment-preview-dialog" aria-labelledby="environment-preview-title"><h2 id="environment-preview-title">Review environment profile</h2><p>Import creates a separate profile. It does not apply it or overwrite existing work.</p><pre id="environment-preview-text" class="environment-summary"></pre><div class="actions"><button id="environment-import-confirm">Import as new profile</button><button id="environment-import-cancel">Cancel import</button></div></dialog>
-  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering 918 active Enterprise, Mobile, and ICS/OT records in MITRE ATT&amp;CK 19.2, plus 197 AI techniques and subtechniques in MITRE ATLAS 2026.08. ATT&amp;CK excludes revoked and deprecated records; ATLAS includes every technique record present in its pinned release.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft unless its record explicitly displays stronger review evidence; no model is called and no detection is certified or executed. ATLAS source threat maturity is not evidence of prompt validation.</p><p>Search, composition, comparison, edits, and downloads run in your browser. Context and drafts stay in memory by default. Export a workspace file to keep them, or explicitly enable unencrypted local autosave. Browser storage can be cleared from Workspaces; downloaded files remain yours to manage. Search, filters, mode, target, selection, comparison and appearance are represented in or restored from the page URL; appearance is also remembered locally when storage is available. Workspace names, drafts, collections and context are never added to shared links. The app sends no analyst context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Research JSON adds source relationships and explicit validation state. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&amp;CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATT&amp;CK and project licenses</a> · <a href="./ATLAS_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATLAS Apache-2.0 notice and license</a>.</p></dialog>
+  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-heading"><h2 id="about-title">About the library</h2><button id="about-close" aria-label="Close about dialog">×</button></div><p>An independently rebuilt prompt library covering 918 active Enterprise, Mobile, and ICS/OT records in MITRE ATT&amp;CK 19.2, plus 197 AI techniques and subtechniques in MITRE ATLAS 2026.08. ATT&amp;CK excludes revoked and deprecated records; ATLAS includes every technique record present in its pinned release.</p><p>The original v0.2.0 application source remains unavailable. This workbench is an independent implementation. Every prompt is an unvalidated draft unless its record explicitly displays stronger review evidence; no model is called and no detection is certified or executed. ATLAS source threat maturity is not evidence of prompt validation.</p><p>Search, composition, comparison, edits, and downloads run in your browser. Context and drafts stay in memory by default. Export a workspace file to keep them, or explicitly enable unencrypted local autosave. Delete saved workspaces from Workspaces. Use Settings to change display choices, or clear this site's data in your browser to remove all local preferences; downloaded files remain yours to manage. Search, filters, mode, target, selection, comparison and appearance are represented in or restored from the page URL; appearance is also remembered locally when storage is available. Workspace names, drafts, collections, context and module visibility are never added to shared links. The app sends no analyst context. A hosting provider receives ordinary page requests. Source links open only when selected.</p><p>Filtered JSONL includes all matching records across pages as freshly generated templates. Research JSON adds source relationships and explicit validation state. Use Download .txt to save the current editor text, including your edits.</p><p class="fine-print">MITRE ATT&amp;CK is a trademark of The MITRE Corporation. This independent workbench is not endorsed by MITRE. <a href="./THIRD_PARTY_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATT&amp;CK and project licenses</a> · <a href="./ATLAS_LICENSE.txt" target="_blank" rel="noopener noreferrer">ATLAS Apache-2.0 notice and license</a>.</p></dialog>
   <noscript><p class="noscript">Enable JavaScript to search and compose prompts. No account or network API is required.</p></noscript>
 </body>
 </html>

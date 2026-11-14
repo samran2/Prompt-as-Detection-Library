@@ -1,6 +1,6 @@
 # Premium Workbench
 
-The `0.4.0.dev1` development workbench brings selection, research context and
+The `0.4.0.dev4` development workbench brings selection, research context and
 private drafts into one desk. It is still a local-first research aid: generated
 prompts are not validated detections. This guide describes the candidate behavior;
 actual test and hosted deployment outcomes are recorded in
@@ -34,6 +34,26 @@ The `/` shortcut focuses catalog search. Shortcuts do not intercept typing insid
 inputs, editable content or an open dialog. Dialog close returns focus to its
 opener where appropriate.
 
+## Choose visible modules
+
+Open Settings to show or hide Defenses, Flow, Compare and Research tools. All
+four are visible by default. Prompt, Evidence, search, the technique list,
+Workspaces, Settings, the User guide and About always remain available. Evidence
+cannot be hidden so source provenance and limitations remain reachable. Show all
+modules restores the four optional modules.
+
+Hiding a module removes its controls and command-search actions; it does not
+delete drafts, Flow steps or Compare selections. If you hide Defenses or Flow
+while viewing that tab, the desk returns to Prompt. Showing the module again
+reveals its retained state.
+
+This preference belongs to this site origin in the current browser profile. It
+is not included in workspace files, other exports or shared URLs. If browser
+storage cannot be read or written, the workbench continues with its all-visible
+default or current-page choice and reports a non-fatal status. Visibility is a
+display preference, not an access-control boundary. See the complete
+[User guide](user-guide.md).
+
 ## Choose the right export
 
 - Copy/TXT uses the current prompt editor, including your edits.
@@ -61,9 +81,11 @@ must not silently regenerate your old templates or discard edits when source dat
 or composer behavior changes.
 
 The workspace also retains search/filter state, selection, comparison, theme,
-active tab, list width, scroll position and mobile list/detail state. These values
-are local workspace data, not credentials or review metadata. Shared URLs do not
-include workspace names, draft text or environment context.
+active tab, list width, scroll position and mobile list/detail state. Module
+visibility is a separate browser preference and is not workspace data. If a
+restored workspace selects Defenses or Flow while that module is hidden, the desk
+opens Prompt. Shared URLs do not include workspace names, draft text, environment
+context or module visibility.
 
 ## Import without replacing existing work
 
@@ -107,12 +129,14 @@ delete existing saved workspaces. The explicit deletion action clears saved
 workspace rows and invalidates old storage handles so stale tabs cannot recreate
 them through an old save. Current in-memory work remains available for export.
 Deletion does not erase previously downloaded files, browser/OS backups or other
-origin data, and does not reset the separate appearance preference.
+origin data, and does not reset the separate appearance or module-visibility
+preferences.
 
 Manual robustness assessments and offline lab results in Research tools remain
 separate session-only artifacts with their own explicit exports. They are not
-included in workspace saving. See [privacy.md](privacy.md) and
-[ADR-0008](../governance/decisions/0008-portable-private-workspaces.md).
+included in workspace saving. See [privacy.md](privacy.md),
+[ADR-0008](../governance/decisions/0008-portable-private-workspaces.md) and
+[ADR-0010](../governance/decisions/0010-local-module-visibility-preferences.md).
 
 ## Verification boundaries
 

@@ -2,25 +2,23 @@
 
 ## Project status and reporting
 
-Version `0.4.0.dev0` is the current world-class-foundation development version.
-The earlier owner-approved dev3 library and demo are published at the approved
-public destination following the recorded verification. The current feature
-branch received a fresh standard review, regression fixes and contiguous
-zero-finding diff reviews through immutable revision
-`443421d906b6442ace03e1ef52785b1e35377d11`. The final diff scan was
-`b9655d59-de04-4118-8806-3a866c11250a`; its local scope and limitations are
-recorded in the verification document. The hosted image build and blocking
-Trivy result still must pass on the exact publication head before merge.
+Version `0.4.0.dev4` is the current development candidate. The earlier
+owner-approved library and demo are published at the approved public
+destination following their recorded verification. This candidate adds local
+environment profiles, guided creation, workspaces, module preferences and the
+user guide. Its exact hosted checks and deployment still must pass on the
+accepted publication head before merge and Pages publication.
 Observed checks and deployment status are recorded in
 [verification](docs/verification.md). No supported
 public release is declared. Earlier foundation and 12-record sample reviews
 apply only to their historical artifacts, not to this version or the missing
 original application.
 
-The 0.4 review chain covers the new research API, versioned contracts, Rösti
-client, premium state/compare UI, release workflows, publication fixes and their
-tests. Pinned source data remains unchanged and was verified for exact generated
-parity, but bulk ATT&CK narratives were not individually security-reviewed.
+The 0.4 review chain covers the research API, versioned contracts, Rösti client,
+premium state/compare UI, local workspace and preference boundaries, release
+workflows, publication fixes and their tests. Pinned source data remains
+unchanged and was verified for exact generated parity, but bulk ATT&CK
+narratives were not individually security-reviewed.
 See [verification](docs/verification.md) for exact scan identifiers, scope and
 outcomes, and [release evidence](docs/release-evidence.md) for remaining gates.
 This is not a guarantee that vulnerabilities are absent.
@@ -51,12 +49,19 @@ No guaranteed response, remediation or disclosure timeline is stated.
   in prompts, exports, test fixtures or screenshots.
   Mode 0600 restricts POSIX file permissions; no explicit Windows ACL is set.
   Export into a trusted private directory with appropriate host permissions.
-- Browser context and edited drafts stay in memory. Reload clears them. Downloads
-  intentionally create local files whose handling is the user's responsibility.
+- Browser context and edited drafts stay in memory by default. The user can
+  explicitly enable local autosave; it stores the workspace, including drafts
+  and context, as unencrypted IndexedDB data on that browser profile. The UI
+  discloses this boundary, supports disabling autosave and requires confirmation
+  before deleting all saved version 2 workspaces. Module visibility uses a
+  separate bounded localStorage record containing exactly four booleans and no
+  analyst text. Downloads intentionally create local files whose handling is the
+  user's responsibility.
 - The preview server binds to loopback. Serve `demo/` or reviewed `dist/`, never
   the repository root. The site is not an authenticated internet service.
-- The public builder copies exactly ten allowed files, rejects symlinks and
-  invalid UTF-8/NUL text, and applies limited credential-pattern checks. Catalog
+- The public builder copies only the files in its explicit deny-by-default
+  allowlist, rejects symlinks and invalid UTF-8/NUL text, and applies limited
+  credential-pattern checks. Catalog
   size is limited to 16 MiB per framework and other assets to 2 MiB each. Source archives,
   tests and private work never enter the static output.
 - The builder refuses an existing output. A write failure can leave a partial
@@ -73,8 +78,10 @@ No guaranteed response, remediation or disclosure timeline is stated.
   reviewer or laboratory; signed, independently reviewed evidence is still needed.
 
 Source links open the linked site only when clicked. A hosted site still causes
-ordinary page requests to the hosting provider. No cloud submission, query
-execution, telemetry or persistence of private context is added by this rebuild.
+ordinary page requests to the hosting provider. No automatic cloud submission,
+query execution or telemetry is added by this rebuild. Private context persists
+only when the user explicitly enables the local, unencrypted workspace autosave
+described above or downloads/exports a file.
 
 ## Release checks and limits
 

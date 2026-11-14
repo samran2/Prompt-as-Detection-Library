@@ -14,6 +14,23 @@ outside the application's JavaScript behavior and is governed by the host's poli
 Opening an external source link is an explicit user action and discloses a normal
 request to that destination.
 
+## Local module visibility
+
+Defenses, Flow, Compare and Research tools are optional display modules and are
+visible by default. Prompt, Evidence, search, the technique list, Workspaces,
+Settings, the User guide and About cannot be hidden. Show all modules restores the
+four optional modules without deleting drafts, Flow steps or Compare selections.
+
+The origin-local `pad-module-visibility-v1` localStorage record accepts exactly
+four boolean fields: `compare`, `defenses`, `flow` and `research`. It contains no
+analyst text and is not included in workspaces, exports or shared URLs. Missing,
+malformed or unavailable storage falls back to all-visible or current-page
+operation and produces only a non-fatal status.
+
+Like every localStorage value, the preference is readable and changeable by
+scripts with access to the same origin. Hiding a module is customization, not
+encryption, deletion or access control.
+
 ## Optional local workspaces
 
 Workspaces can contain original templates and hashes, edited prompts, per-draft
@@ -27,9 +44,9 @@ sources. See the [format and integrity boundary](workspace-format.md).
 Local autosave is **off by default**. Enabling it requires confirmation that
 IndexedDB saves are **unencrypted** in this browser profile. A localStorage flag
 remembers that consent and can resume the opted-in mode on later visits. Only
-the consent preference, not workspace contents, belongs in that flag; the
-existing theme preference can also use localStorage. The application does not
-send workspace text to a server or model.
+the consent preference, not workspace contents, belongs in that flag. The
+separate theme and strict four-boolean module-visibility preferences may also use
+localStorage. The application does not send workspace text to a server or model.
 
 Anyone with access to this browser profile, compromised same-origin JavaScript,
 or another application on the same origin may access stored content. In
@@ -43,7 +60,8 @@ Turning autosave off stops new saves and removes its consent preference, but
 does not erase existing saved workspaces. **Delete local workspaces** is a
 separate, confirmed action: it clears saved workspace records and invalidates
 old storage handles while retaining current in-memory work for export. It does
-not delete files already downloaded, copies in backups or the theme preference.
+not delete files already downloaded, copies in backups or the separate theme and
+module-visibility preferences.
 Version 2 deletion leaves the separate version 1 database unchanged. Legacy
 version 1 imports are read-only and require preview/confirmation; consent is not
 carried over to version 2. See the [migration guide](workspace-format.md).

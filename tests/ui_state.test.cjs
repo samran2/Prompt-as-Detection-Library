@@ -78,7 +78,7 @@ class Element {
   focus() { this.ownerDocument.activeElement = this; }
   select() {}
   showModal() { this.open = true; }
-  close() { this.open = false; }
+  close() { this.open = false; return this.dispatch('close'); }
   remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter(child => child !== this); }
 }
 
@@ -133,10 +133,15 @@ function records() {
     }));
 }
 
-function launch(catalog = records(), atlas = [], supplemental = {}) {
+function launch(catalog = records(), atlas = [], supplemental = {}, browserOptions = {}) {
   const demo = path.join(__dirname, '..', 'demo');
   const document = parseDocument(fs.readFileSync(path.join(demo, 'index.html'), 'utf8'));
   const downloads = [];
+  const stored = new Map(Object.entries(browserOptions.stored || {}));
+  const localStorage = browserOptions.localStorage || {
+    getItem: key => stored.has(key) ? stored.get(key) : null,
+    setItem: (key, value) => stored.set(key, value),
+  };
   class DownloadURL extends URL {
     static createObjectURL(blob) { downloads.push(blob); return 'blob:synthetic-download'; }
     static revokeObjectURL() {}
@@ -145,15 +150,15 @@ function launch(catalog = records(), atlas = [], supplemental = {}) {
     document, PAD_CATALOG: catalog, PAD_ATLAS_CATALOG: atlas, URL: DownloadURL, Blob, TextEncoder, TextDecoder,
     crypto: require('node:crypto').webcrypto, structuredClone,
     PAD_D3FEND_CATALOG: supplemental.catalog, PAD_DEFENSES: supplemental.helper,
-    window: { confirm: () => true }, navigator: { clipboard: { writeText: async () => {} } },
+    window: { confirm: () => true, localStorage }, navigator: { clipboard: { writeText: async () => {} } },
     setTimeout: () => {},
   });
   document.defaultView = { ...context.window, matchMedia: () => ({ matches: false }) };
-  const scripts = ['environment.js', 'core.js', 'workbench-ui.js', 'environment-ui.js', ...(supplemental.renderer ? ['defenses-ui.js'] : []), 'app.js'];
+  const scripts = ['environment.js', 'core.js', 'preferences.js', 'workbench-ui.js', 'environment-ui.js', ...(supplemental.renderer ? ['defenses-ui.js'] : []), 'app.js'];
   for (const name of scripts) vm.runInContext(fs.readFileSync(path.join(demo, name), 'utf8'), context, { filename: name });
   const get = id => { const node = document.getElementById(id); assert.ok(node, `Missing #${id} in demo/index.html`); return node; };
   return {
-    catalog, document, get, downloads, context,
+    catalog, document, get, downloads, context, stored,
     rows: () => get('techniques').querySelectorAll('button'),
     select(id) {
       const button = get('techniques').querySelectorAll('button').find(row => row.dataset.id === id);
@@ -166,6 +171,93 @@ function launch(catalog = records(), atlas = [], supplemental = {}) {
     input(id, value, event = 'input') { const node = get(id); node.value = value; node.dispatch(event); },
   };
 }
+
+test('stored module visibility hides only optional controls and filters command actions', async () => {
+  const key = 'pad-module-visibility-v1';
+  const h = launch(records(), [], {}, { stored: { [key]: JSON.stringify({ compare: false, defenses: false, flow: false, research: false }) } });
+  for (const id of ['compare-open', 'compare-add', 'tab-defenses', 'tab-flow', 'research-link']) assert.equal(h.get(id).hidden, true, id);
+  for (const id of ['tab-prompt', 'tab-source', 'workspace-open', 'settings-open', 'guide-open', 'about-open']) assert.equal(h.get(id).hidden, false, id);
+  h.get('command-open').click();
+  h.input('command-search', 'Explore');
+  assert.match(h.get('command-results').textContent, /Explore evidence/);
+  assert.doesNotMatch(h.get('command-results').textContent, /Explore defenses/);
+  h.input('command-search', 'Flow');
+  assert.doesNotMatch(h.get('command-results').textContent, /Attack Flow/);
+});
+
+test('Escape closes populated command search and restores its opener', async () => {
+  const h = launch();
+  h.get('command-open').focus();
+  h.get('command-open').click();
+  h.input('command-search', 'Flow');
+  await h.get('command-search').dispatch('keydown', { key: 'Escape' });
+  assert.equal(h.get('command-dialog').open, false);
+  assert.equal(h.document.activeElement.getAttribute('id'), 'command-open');
+});
+
+test('hiding the active optional tab returns selection to Prompt and keeps modal focus context', async () => {
+  const h = launch();
+  await h.get('tab-defenses').click();
+  assert.equal(h.get('tab-defenses').getAttribute('aria-selected'), 'true');
+  await h.get('settings-open').click();
+  assert.equal(h.document.activeElement, h.get('settings-title'));
+  h.get('module-defenses').checked = false;
+  await h.get('module-defenses').dispatch('change');
+  assert.equal(h.get('tab-prompt').getAttribute('aria-selected'), 'true');
+  assert.equal(h.get('panel-prompt').hidden, false);
+  assert.equal(h.get('tab-defenses').hidden, true);
+  assert.equal(h.document.activeElement, h.get('settings-title'));
+  assert.match(h.get('settings-status').textContent, /Defenses hidden.*work.*kept/i);
+  assert.match(h.get('settings-status').textContent, /3 of 4 optional modules shown/i);
+});
+
+test('tab keyboard navigation visits only currently visible detail tabs', async () => {
+  const h = launch();
+  for (const key of ['defenses', 'flow']) {
+    h.get(`module-${key}`).checked = false;
+    await h.get(`module-${key}`).dispatch('change');
+  }
+  await h.get('tab-prompt').dispatch('keydown', { key: 'ArrowRight' });
+  assert.equal(h.document.activeElement, h.get('tab-source'));
+  await h.get('tab-source').dispatch('keydown', { key: 'ArrowRight' });
+  assert.equal(h.document.activeElement, h.get('tab-prompt'));
+  await h.get('tab-prompt').dispatch('keydown', { key: 'End' });
+  assert.equal(h.document.activeElement, h.get('tab-source'));
+});
+
+test('storage failure keeps the current-page choice and reports non-persistence', async () => {
+  const unavailable = { getItem: () => null, setItem() { throw new Error('private storage path'); } };
+  const h = launch(records(), [], {}, { localStorage: unavailable });
+  h.get('module-flow').checked = false;
+  await h.get('module-flow').dispatch('change');
+  assert.equal(h.get('tab-flow').hidden, true);
+  assert.match(h.get('settings-status').textContent, /may not be remembered/i);
+  assert.doesNotMatch(h.get('settings-status').textContent, /private storage path/i);
+});
+
+test('show all restores optional controls without clearing comparison selection', async () => {
+  const h = launch();
+  await h.get('compare-add').click();
+  assert.equal(h.get('compare-count').textContent, '1');
+  h.get('module-compare').checked = false;
+  await h.get('module-compare').dispatch('change');
+  assert.equal(h.get('compare-open').hidden, true);
+  await h.get('settings-show-all').click();
+  assert.equal(h.get('compare-open').hidden, false);
+  assert.equal(h.get('compare-count').textContent, '1');
+  assert.match(h.get('settings-status').textContent, /All optional modules are shown/i);
+});
+
+test('a module change reconciles unrelated choices saved by another tab', async () => {
+  const key = 'pad-module-visibility-v1';
+  const h = launch();
+  h.stored.set(key, JSON.stringify({ compare: false, defenses: true, flow: true, research: true }));
+  h.get('module-flow').checked = false;
+  await h.get('module-flow').dispatch('change');
+  assert.equal(h.get('compare-open').hidden, true);
+  assert.equal(h.get('tab-flow').hidden, true);
+  assert.deepEqual(JSON.parse(h.stored.get(key)), { compare: false, defenses: true, flow: false, research: true });
+});
 
 test('saved template summary distinguishes its earlier context from newer applied settings', () => {
   const h = launch();

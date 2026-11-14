@@ -37,3 +37,11 @@ test('new shared modules are explicitly published and loaded locally', () => {
     assert.match(html, new RegExp(`src="\\./${file.replace('.', '\\.')}"`));
   }
 });
+
+test('module preferences are an explicit local public asset', () => {
+  const html = read('demo/index.html');
+  assert.ok(PUBLIC_FILES.includes('preferences.js'));
+  assert.match(html, /src="\.\/preferences\.js"/);
+  assert.match(html, /id="settings-dialog"[^>]*aria-labelledby="settings-title"/);
+  assert.match(html, /id="guide-dialog"[^>]*aria-labelledby="guide-title"/);
+});

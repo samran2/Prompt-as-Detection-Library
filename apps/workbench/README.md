@@ -8,7 +8,7 @@ downstream tests continue to work without a breaking path change.
 This directory is the stable application boundary for new architecture and
 package metadata. Moving the executable assets here requires a separately
 reviewed migration that preserves the `demo/` compatibility entry point and the
-eight-file publication allowlist.
+explicit, deny-by-default publication allowlist.
 
 The workbench never uploads analyst context, runs a model, executes a rule, or
 claims that a generated draft is a validated detection.

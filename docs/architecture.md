@@ -27,7 +27,8 @@ not claim Python CLI compatibility or restore the original response evaluator.
 | `library/coverage.json` | Source, catalog and text identifier sets, exclusions, linkage counts and hashes. |
 | `scripts/library_cli.cjs` | Local list, prompt, export and defenses commands with validated options and exclusive file writes. |
 | `demo/app.js`, `index.html`, `style.css`, `workbench.css` | Selected-technique desk, shared composition, draft/context capture and explicit exports. |
-| `demo/workbench-ui.js` | Command search, separate comparison dialog, adjustable list width and mobile navigation. |
+| `demo/preferences.js` | Strict four-boolean module-visibility contract and bounded local preference storage; fails open without exposing storage errors. |
+| `demo/workbench-ui.js` | Settings and user-guide dialogs, optional-module visibility, command search, separate comparison dialog, adjustable list width and mobile navigation. |
 | `demo/workspace.js`, `packages/schemas/workspace.schema.json` | Strict workspace v2 contract, v1 import, original template/profile hashes and non-mutating drift inspection. |
 | `demo/workspace-store.js` | Optional atomic IndexedDB persistence with expected revisions and clear epochs. |
 | `demo/workspace-ui.js` | Consent, import preview/new identity, workspace lifecycle and snapshot bridge; no second composer. |
@@ -125,13 +126,15 @@ library CLI have no cloud model integration, query execution or telemetry.
 Analyst persistence is off by default; consent enables unencrypted IndexedDB,
 with a consent preference in
 localStorage. The preference is not analyst content. Existing appearance settings
-may also use localStorage. Disabling autosave is not deletion.
+and the strict four-boolean `pad-module-visibility-v1` display record may also use
+localStorage. Module visibility never enters workspace schemas, exports or URLs;
+it is customization, not access control. Disabling autosave is not deletion.
 Source-link clicks are explicit navigation. Hosting still receives ordinary
 page requests.
 
 Only the explicit `PUBLIC_FILES` allowlist in `scripts/build_demo.cjs` enters
 `dist/`: static workbench/research assets and applicable full source notices.
-The dev4 inventory is 31 files, including `.nojekyll`, with 30 served assets.
+The dev4 inventory is 35 files, including `.nojekyll`, with 34 served assets.
 Workspace exports, IndexedDB records, raw sources and QA tooling are not public
 assets. The notices retain ATT&CK, ATLAS, D3FEND and CAR terms and project MIT
 attribution/license; Attack Flow exports carry their extension license. The
