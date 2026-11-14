@@ -165,7 +165,7 @@ test('the only OCI build boundary is digest-pinned and has a blocking image scan
   assert.match(dockerfile, /^FROM\s+[^\s@]+@sha256:[0-9a-f]{64}$/m);
   assert.match(
     dockerfile,
-    /^FROM gcr\.io\/distroless\/nodejs24-debian13:nonroot@sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79$/m,
+    /^FROM gcr\.io\/distroless\/nodejs24-debian13:nonroot@sha256:6abfcb367ebc291572c774c1592a986be2ab26a2486f73093401327495a5962a$/m,
   );
   assert.doesNotMatch(dockerfile, /^RUN\b/m, 'runtime construction must not depend on mutable package repositories');
   assert.doesNotMatch(dockerfile, /\b(?:apk|apt(?:-get)?|npm|npx|corepack|yarn)\b/);

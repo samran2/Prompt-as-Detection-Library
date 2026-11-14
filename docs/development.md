@@ -220,6 +220,37 @@ all export paths. Record console and unexpected-network results. Automated
 checks do not establish WCAG 2.2 AA: complete independent manual VoiceOver and
 NVDA reviews before v1.0.
 
+### Module visibility settings
+
+`demo/preferences.js` owns the fixed preference key, strict four-boolean contract
+and generic storage outcomes. `demo/workbench-ui.js` owns Settings presentation,
+command/control visibility and current-page retention. `demo/app.js` reconciles a
+hidden active Defenses or Flow tab by displaying Prompt and computes tab keyboard
+navigation from only the visible tabs.
+
+`pad-module-visibility-v1` accepts exactly `compare`, `defenses`, `flow` and
+`research` booleans. Missing or malformed values and localStorage read failures
+use the all-visible default. Write failures retain the current-page selection and
+report a non-fatal status. Prompt, Evidence, search, the technique list,
+Workspaces, Settings, the User guide and About are not configurable.
+
+Verify hide/show and Show all behavior, command filtering, active/restored-tab
+fallback, keyboard/focus behavior and preservation of drafts, Flow and Compare
+state. The preference must not enter workspace snapshots, IndexedDB workspace
+records, portable files, other exports or serialized URL state.
+
+Focused checks:
+
+```sh
+node --test tests/module_settings.test.cjs tests/ui_state.test.cjs \
+  tests/premium_contract.test.cjs tests/build_demo.test.cjs
+```
+
+Use the isolated three-engine browser workflow below for persistence, reflow,
+focus return and unexpected-network checks. Automated results do not replace a
+manual screen-reader assessment. See
+[ADR-0010](../governance/decisions/0010-local-module-visibility-preferences.md).
+
 ### Workspace development and failure paths
 
 `demo/workspace.js` owns the portable contract and integrity/drift inspection;

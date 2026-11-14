@@ -5,11 +5,12 @@ prompts. Browse **1,115 techniques and subtechniques**: 918 from ATT&CK 19.2 and
 197 from ATLAS 2026.08. Inspect their source guidance and export drafts from a
 browser workbench or local CLI.
 
-The current `0.4.0.dev4` development snapshot adds saved environment profiles,
-guided prompt creation and a separate, offline-first prompt comparison tool.
-Its concise answer format remains: summary, selected deliverable, checks and next
-step. It is not stable v1.0. Pinned sources remain unchanged; no-profile text
-prompts retain their dev3 content identity. Application and content versions are separate.
+The current `0.4.0.dev4` development snapshot adds a focused Settings surface,
+optional research-module visibility and an in-app/GitHub user guide on top of the
+dev4 environment profiles, guided prompt creation and offline-first comparison
+tool. Its concise answer format remains unchanged. It is not stable v1.0. Pinned
+sources remain unchanged; no-profile text prompts retain their dev3 content
+identity. Application and content versions are separate.
 No draft is described as operationally validated without evidence.
 See [how to get a useful answer](docs/prompt-clarity.md) for target selection,
 environment inputs and the limits of these checks.
@@ -18,9 +19,9 @@ environment inputs and the limits of these checks.
 
 **[Open the live demo →](https://samran2.github.io/Prompt-as-Detection-Library/)**
 
-The live demo still serves the previously published version. This branch's dev4
-features are available locally while the final security/publication gate remains
-pending; see [candidate status](docs/environment-publication-status.json).
+The live demo follows the latest deliberately approved `main` deployment. Check
+the [candidate status](docs/environment-publication-status.json) for the exact
+review, CI and Pages state of newer work before treating it as hosted.
 
 [Open research tools →](https://samran2.github.io/Prompt-as-Detection-Library/research.html)
 Navigator coverage, CAR analytics, Attack Flow authoring, manual observable
@@ -33,13 +34,15 @@ the demo does not run a model or execute detection rules.
 [![Repository CI](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml/badge.svg)](https://github.com/samran2/Prompt-as-Detection-Library/actions/workflows/codeql.yml)
 
-[Quick start](#run-it-locally) · [ATT&CK provenance](docs/source-provenance.md) · [ATLAS AI](docs/atlas.md) · [D3FEND defenses](docs/d3fend.md) · [Validation program](docs/validation-program.md) · [Roadmap](ROADMAP.md)
+[Quick start](#run-it-locally) · [User guide](docs/user-guide.md) · [ATT&CK provenance](docs/source-provenance.md) · [ATLAS AI](docs/atlas.md) · [D3FEND defenses](docs/d3fend.md) · [Validation program](docs/validation-program.md) · [Roadmap](ROADMAP.md)
 
-[Workbench guide](docs/premium-workbench.md) · [Environment profiles](docs/environment-profiles.md) · [Workspace format](docs/workspace-format.md) · [Privacy and local storage](docs/privacy.md)
+[Workbench and module settings](docs/premium-workbench.md) · [Environment profiles](docs/environment-profiles.md) · [Workspace format](docs/workspace-format.md) · [Privacy and local storage](docs/privacy.md)
 
-[![Guided detection workbench with local environment profiles](docs/screenshots/environment-guided-desktop.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
+[![Prompt-as-Detection premium workbench](docs/screenshots/premium-workbench-0.4.0-dev4.png)](https://samran2.github.io/Prompt-as-Detection-Library/)
 
-*Development workbench. [Applied synthetic profile](docs/screenshots/environment-applied-desktop.png) ·
+*Development workbench. [Module settings](docs/screenshots/module-settings-desktop.png) ·
+[Guided environment workflow](docs/screenshots/environment-guided-desktop.png) ·
+[Applied synthetic profile](docs/screenshots/environment-applied-desktop.png) ·
 [Mobile profile editor](docs/screenshots/environment-profile-mobile.png). Test and hosted outcomes are
 recorded in the [verification record](docs/verification.md).*
 
@@ -56,8 +59,8 @@ recorded in the [verification record](docs/verification.md).*
   MITRE citations or upstream rule tags. Inspect each link's evidence and source
   hash; optional searches remain separate and unverified. No command/rule bodies
   or samples are bundled, and source associations are not detection validation.
-  [Source-card guide](docs/research-sources.md). Available locally on this branch;
-  the live demo has not yet received this addition.
+  [Source-card guide](docs/research-sources.md). Hosted availability follows the
+  separately recorded Pages deployment status.
 - **Stay with one technique.** Prompt, Evidence, Defenses and Flow share the
   selected record. Evidence groups source guidance, the relationship map and CAR;
   comparison opens separately without replacing the editing view.
@@ -75,8 +78,12 @@ recorded in the [verification record](docs/verification.md).*
   filtered templates as JSONL or current-record research JSON. The CLI adds prompt
   and export checksums.
 - **Choose your display.** Use the system, light, dark or high-contrast theme with
-  keyboard-visible focus and reduced-motion support. Adjust the list width, use
-  mobile list/detail navigation, or open command search for techniques and actions.
+  keyboard-visible focus and reduced-motion support. Open Settings to show or hide
+  Defenses, Flow, Compare and Research tools; all four start visible, while Prompt,
+  Evidence and core navigation remain available. Hiding retains work, and Show all
+  modules restores the full desk. Adjust the list width, use mobile list/detail
+  navigation, or open command search for techniques and actions. Visibility stays
+  local to the browser and is not included in workspaces, exports or shared URLs.
 - **Carry your research.** Name workspaces, favorite techniques and build named
   collections. Export drafts with their original templates and context to a
   portable JSON file; preview an import before opening it as a new workspace.

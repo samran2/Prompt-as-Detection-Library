@@ -87,3 +87,15 @@ direct pinned MITRE citations, preserving distinct evidence types and licenses.
 
 This follow-up does not remove dev4's separate hosted/formal security gates and
 does not authorize sample ingestion, execution or public deployment.
+
+## Premium module settings and user guide — 0.4.0.dev4 follow-up
+
+See SPEC-premium-module-settings.md. This presentation-only follow-up keeps the
+current catalogs, prompt content, CLI and workspace data contract unchanged.
+
+1. Define and test the strict four-boolean local preference contract.
+2. Add accessible Settings and User guide dialogs with reliable focus return.
+3. Hide optional tabs, commands and controls without deleting in-memory work.
+4. Publish the canonical user guide and update privacy/development documentation.
+5. Run complete regressions, clean build, responsive three-engine browser checks
+   and independent code/security review before any separately approved deployment.

@@ -1,5 +1,56 @@
 # Verification records
 
+## Premium module settings and user guide — 2026-11-14 (Europe/Helsinki)
+
+This local follow-up implements `SPEC-premium-module-settings.md` without changing
+the pinned ATT&CK, ATLAS, D3FEND or CAR content, prompt bytes, CLI contract,
+workspace schema or export formats. Module visibility is presentation state, not
+an authorization boundary or a validation claim.
+
+- **475 Node tests passed**, with no failures, skips or cancellations, on Node
+  24.13.0. Focused tests cover the strict four-boolean preference, malformed and
+  inaccessible storage, another-tab reconciliation, visible-only tab navigation,
+  retained Compare/Flow work, workspace active-tab refresh and populated command
+  search Escape/focus behavior.
+- **16 Python tests passed**. Foundation selected-pattern checks, Ruff lint and
+  Ruff formatting over 96 Python files passed. The selected-pattern scan is not a
+  comprehensive credential or history audit.
+- `npm run check` and a fresh `npm run build` passed. The builder verified all
+  918 ATT&CK prompts, 197 ATLAS prompts, 18,885 documented procedure relations,
+  D3FEND relationships, 102 CAR analytics, research mappings, 918 review records
+  and 3,672 unassessed native-rule cells. The deny-by-default output contains 35
+  files including `.nojekyll` (34 served assets); its filename-sorted manifest
+  digest is `461d4e6766bb8307552f2a4b17f3360089970577c9ebe1a20f6d2f56a5df83a2`.
+- **80 integrated browser checks per engine passed** on Chromium 151.0.7922.34,
+  Firefox 153.0 and WebKit 26.5. **20 environment-profile checks per engine also
+  passed**, for 100 checks per engine in total. Coverage includes 320, 768, 1024
+  and 1440 px layouts, keyboard/focus behavior, localStorage denial, module
+  persistence/reset, mobile guide layout, workspace conflicts/imports, source
+  cards and local-file operation. Reports contain zero console failures and zero
+  external requests for the integrated 80-check suite.
+- After the final Settings spacing and accessible-name corrections, all **19
+  focused Premium checks passed again** on Chromium, Firefox and WebKit. This
+  rerun covered module persistence, blocked storage, keyboard resizing, workspace
+  import/export/conflicts, 320–1440 px reflow and the visible `Color theme`
+  accessible name, with zero console failures or external requests.
+- The versioned [premium workbench](screenshots/premium-workbench-0.4.0-dev4.png)
+  and [module settings](screenshots/module-settings-desktop.png) images were
+  generated from the actual local build and visually inspected. The older
+  [guided-workflow image](screenshots/environment-guided-desktop.png) remains
+  unchanged as evidence for its commit-specific historical section below.
+  Chromium and Firefox also captured the 320 px guide. WebKit screenshots remain
+  omitted because the locked tool's screenshot preparation conflicts with the
+  unchanged CSP; functional, network and console checks remained enabled.
+- No model request, account, telemetry, prompt upload or detection execution was
+  added. No paid API run occurred. Browser preferences contain only four booleans
+  and remain outside URLs, workspace files and exports.
+
+Independent final code, security and UX reviews found no remaining Critical or
+Required issue after the documented corrections. Hosted GitHub/Pages verification
+remains a separate gate. This evidence does not claim screen-reader testing, WCAG
+certification, absence of vulnerabilities, prompt effectiveness or detection
+validation.
+
 ## Security hardening follow-up — 2026-09-20 (Europe/Helsinki)
 
 Feature-branch follow-up based on `f31485c85817a693e923e05d94ee4ae3b8929bf3`.

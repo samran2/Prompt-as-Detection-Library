@@ -76,3 +76,14 @@ See docs/verification.md. Source-card changes remain a separate local follow-up.
 - [x] Documentation, source/artifact inventory and local handoff prepared
 
 Mapping associations do not promote prompt or detection validation status.
+
+## Premium module settings and user guide — 0.4.0.dev4 follow-up
+
+- [x] User contract, privacy boundary and implementation ownership documented
+- [x] Preference contract and adversarial storage tests pass
+- [x] Settings, guide and optional-module navigation pass focused tests
+- [x] Canonical user guide, privacy notes and developer guidance are complete
+- [x] Full Node/Python/source/build regression evidence is recorded
+- [x] Chromium, Firefox and WebKit responsive/focus/network checks are recorded
+- [x] Independent correctness, security and UX review findings are resolved
+- [ ] Reviewed GitHub update and hosted Pages verification are separately approved

@@ -9,6 +9,15 @@ conversations are not independent release evidence.
 
 ### Added
 
+- Added a local Settings dialog for appearance, list width and optional Compare,
+  Defenses, Flow and Research tools visibility. All optional modules remain shown
+  by default; Prompt, Evidence and recovery/navigation surfaces cannot be hidden.
+- Added an in-app, keyboard-accessible guide and a canonical GitHub user guide for
+  the first workflow, evidence review, safe saving, exports, shortcuts, privacy and
+  validation limits.
+- Added a strict origin-local four-boolean visibility contract. It stays outside
+  workspaces, exports and URLs, fails open on invalid input and treats storage
+  failure as non-fatal.
 - Added shared LOLBAS, GTFOBins and LOLDrivers source cards to Evidence and
   Research tools. Repository-scoped ATT&CK-ID searches are explicitly unverified;
   ATLAS shows general links only. No full catalog copying, execution or runtime
@@ -30,6 +39,13 @@ conversations are not independent release evidence.
 
 ### Changed
 
+- Moved Appearance and technique-list width into Settings to reduce header and
+  toolbar clutter, including on narrow screens.
+- Refreshed the SHA-pinned official Distroless Node 24 runtime after the hosted
+  container gate identified three fixed HIGH-severity Debian package findings;
+  the blocking Trivy policy remains unchanged.
+- Hidden tabs and command actions now use visible-only keyboard navigation and
+  return to Prompt without deleting comparison selections, Flow steps or drafts.
 - Hardened explicit Rösti imports against request-credential reflection in decoded
   successful responses, including JSON escapes, before pagination or file export.
 - Unified browser QA loopback URL validation and parsed-origin/directory routing;

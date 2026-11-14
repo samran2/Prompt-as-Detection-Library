@@ -62,6 +62,9 @@ view: {
 `sources` values are nonblank version/commit strings, not authenticated source
 claims. No keys for credentials, reviewers, signatures, validation status or
 store revisions exist. Storage revisions belong to an external storage wrapper.
+Module visibility is a separate origin-local presentation preference and is not
+a workspace field. Importing or exporting a workspace never changes which modules
+are shown.
 
 Each draft's `template` is the exact original composer output, and
 `templateSha256` hashes that string. `context` inside the draft is the context

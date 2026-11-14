@@ -52,6 +52,11 @@ function contrastRatio(first, second) {
   const openExports = async () => {
     if (!await page.locator('.export-menu').evaluate(node => node.open)) await page.locator('.export-menu > summary').click();
   };
+  const setTheme = async theme => {
+    await page.locator('#settings-open').click();
+    await page.locator('#theme').selectOption(theme);
+    await page.locator('#settings-done').click();
+  };
   page.on('pageerror', error => failures.push(error.message));
   page.on('console', message => { if (['error', 'warning'].includes(message.type())) failures.push(message.text()); });
   await context.route('**/*', route => {
@@ -464,7 +469,7 @@ function contrastRatio(first, second) {
     await check('light, dark and high-contrast themes preserve readable primary actions', async () => {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       for (const theme of ['light', 'dark', 'contrast']) {
-        await page.locator('#theme').selectOption(theme);
+        await setTheme(theme);
         assert.equal(await page.locator('html').getAttribute('data-theme'), theme);
         const colors = await page.locator('#copy').evaluate(node => {
           const style = getComputedStyle(node);
@@ -482,7 +487,7 @@ function contrastRatio(first, second) {
         }));
         assert.ok(contrastRatio(statusColors.foreground, statusColors.background) >= 4.5, `${theme} status contrast must be at least 4.5:1`);
       }
-      await page.locator('#theme').selectOption('system');
+      await setTheme('system');
       await page.emulateMedia({ reducedMotion: 'no-preference' });
     });
     await page.goto(defaultView);
@@ -497,13 +502,19 @@ function contrastRatio(first, second) {
     await check('compact layouts keep key touch targets at least 44px square', async () => {
       await page.setViewportSize({ width: 320, height: 1000 });
       await page.locator('#mobile-back').click();
-      for (const selector of ['#theme', '.domains button', '.page-controls button']) {
+      for (const selector of ['#settings-open', '.domains button', '.page-controls button']) {
         for (const box of await page.locator(selector).evaluateAll(nodes => nodes.filter(node => !node.disabled).map(node => {
           const rect = node.getBoundingClientRect(); return { width: rect.width, height: rect.height };
         }))) {
           assert.ok(box.width >= 44 && box.height >= 44, `${selector} touch target is ${box.width}×${box.height}`);
         }
       }
+      await page.locator('#settings-open').click();
+      const themeBox = await page.locator('#theme').boundingBox();
+      assert.ok(themeBox && themeBox.width >= 44 && themeBox.height >= 44, `#theme touch target is ${themeBox?.width}×${themeBox?.height}`);
+      assert.equal(await page.locator('#pane-resize').isVisible(), false, 'Desktop list width must not be offered in the mobile layout');
+      assert.equal(await page.locator('#settings-dialog').evaluate(node => node.scrollWidth <= node.clientWidth), true);
+      await page.locator('#settings-done').click();
       await page.locator('#techniques button').first().click();
       for (const selector of ['#compare-add', '.actions button:visible']) for (const box of await page.locator(selector).evaluateAll(nodes => nodes.filter(node => !node.disabled).map(node => {
         const rect = node.getBoundingClientRect(); return { width: rect.width, height: rect.height };

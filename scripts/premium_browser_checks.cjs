@@ -93,8 +93,82 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
       assert.deepEqual(exported.objects.filter(item => item.type === 'attack-action').map(item => item.technique_id), ['T1059.001', 'T1053.005']);
       assert.match(exported.objects.find(item => item.type === 'attack-flow').description, /hypothesis/);
     });
+    await check('premium module settings persist, retain work and keep core evidence reachable', async () => {
+      await tab('prompt'); await page.locator('#compare-add').click();
+      assert.equal(await page.locator('#compare-count').textContent(), '1');
+      await tab('flow'); assert.equal(await page.locator('#desk-flow-steps .flow-step').count(), 2);
+      await page.locator('#settings-open').click();
+      assert.equal(await page.locator('#settings-title').evaluate(node => node === document.activeElement), true);
+      const theme = page.locator('#theme');
+      assert.equal(await theme.getAttribute('aria-label'), null);
+      assert.equal(await theme.evaluate(node => node.labels?.[0]?.querySelector('span')?.innerText.trim()), 'Color theme');
+      assert.equal(await page.getByRole('combobox', { name: 'Color theme', exact: true }).count(), 1);
+      for (const key of ['compare', 'defenses', 'flow', 'research']) await page.locator(`#module-${key}`).uncheck();
+      assert.equal(await page.locator('#tab-prompt').getAttribute('aria-selected'), 'true');
+      assert.match(await page.locator('#settings-status').textContent(), /Only the core workbench/);
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('#settings-dialog').isVisible(), false);
+      assert.equal(await page.locator('#settings-open').evaluate(node => node === document.activeElement), true);
+      assert.equal(await page.locator('#tab-source').isVisible(), true);
+      for (const selector of ['#compare-open', '#compare-add', '#tab-defenses', '#tab-flow', '#research-link']) assert.equal(await page.locator(selector).isVisible(), false, selector);
+      assert.equal(page.url().includes('module'), false);
+      const fallbackWorkspace = await snapshot();
+      assert.equal(fallbackWorkspace.view.tab, 'prompt');
+      await closeWorkspace();
+      await page.locator('#command-open').click(); await page.locator('#command-search').fill('Flow');
+      assert.equal(await page.locator('#command-results').getByText('Build Attack Flow', { exact: true }).count(), 0);
+      await page.keyboard.press('Escape');
+      await page.locator('#settings-open').click(); await page.locator('#settings-show-all').click(); await page.locator('#settings-done').click();
+      assert.equal(await page.locator('#compare-count').textContent(), '1');
+      assert.equal(await page.locator('#desk-flow-steps .flow-step').count(), 2);
+      await page.locator('#settings-open').click(); await page.locator('#module-compare').uncheck(); await page.locator('#settings-done').click();
+      await page.reload(); await page.locator('#app-content').waitFor();
+      assert.equal(await page.locator('#compare-open').isVisible(), false);
+      await page.locator('#settings-open').click(); await page.locator('#settings-show-all').click(); await page.locator('#settings-done').click();
+      await page.reload(); await page.locator('#app-content').waitFor();
+      assert.equal(await page.locator('#compare-open').isVisible(), true);
+      await page.locator('#guide-open').click();
+      assert.equal(await page.locator('#guide-title').evaluate(node => node === document.activeElement), true);
+      assert.match(await page.locator('#guide-dialog').textContent(), /Evidence is always available/);
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('#guide-open').evaluate(node => node === document.activeElement), true);
+      await page.locator('#command-open').click(); await page.locator('#command-search').fill('Open settings');
+      await page.locator('#command-results').getByText('Open settings', { exact: true }).click();
+      assert.equal(await page.locator('#settings-title').evaluate(node => node === document.activeElement), true);
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('#command-open').evaluate(node => node === document.activeElement), true);
+    });
+    await check('premium module settings remain usable when browser storage is blocked', async () => {
+      const denied = await browser.newContext({ viewport: { width: 900, height: 800 } });
+      const deniedFailures = [];
+      try {
+        await denied.addInitScript(() => {
+          for (const method of ['getItem', 'setItem']) {
+            Object.defineProperty(Storage.prototype, method, {
+              configurable: true,
+              value() { throw new DOMException('Synthetic storage denial', 'SecurityError'); },
+            });
+          }
+        });
+        await denied.route('**/*', route => {
+          const url = route.request().url();
+          if (boundary.allowsRequest(url)) return route.continue();
+          external.push(url); return route.abort();
+        });
+        const deniedPage = await denied.newPage();
+        deniedPage.on('pageerror', error => deniedFailures.push(error.message));
+        deniedPage.on('console', message => { if (['error', 'warning'].includes(message.type())) deniedFailures.push(message.text()); });
+        await goto(base, deniedPage);
+        assert.equal(await deniedPage.locator('#tab-flow').isVisible(), true);
+        await deniedPage.locator('#settings-open').click();
+        await deniedPage.locator('#module-flow').uncheck();
+        assert.equal(await deniedPage.locator('#tab-flow').isVisible(), false);
+        assert.match(await deniedPage.locator('#settings-status').textContent(), /may not be remembered/i);
+        assert.deepEqual(deniedFailures, []);
+      } finally { await denied.close(); }
+    });
     await check('premium separator supports keyboard resizing and reset', async () => {
-      await page.locator('.layout-settings > summary').click();
+      await page.locator('#settings-open').click();
       const separator = page.locator('#pane-resize');
       const before = Number(await separator.inputValue());
       await separator.focus(); await page.keyboard.press('ArrowRight');
@@ -102,6 +176,7 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
       await page.keyboard.press('Home'); assert.equal(await separator.inputValue(), '240');
       await page.keyboard.press('End'); assert.equal(await separator.inputValue(), '480');
       await page.locator('#pane-reset').click(); assert.equal(Number(await separator.inputValue()), before);
+      await page.locator('#settings-done').click();
     });
 
     // Workspace round-trip and persistence checks below are exercised only through
@@ -138,6 +213,8 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
       assert.ok(exportedWorkspace.favorites.includes('T1059.001'));
       assert.ok(exportedWorkspace.collections.some(item => item.name === 'Synthetic investigations' && item.techniqueIds.includes('T1059.001')));
       assert.deepEqual(exportedWorkspace.flow.steps, ['T1059.001', 'T1053.005']);
+      assert.equal(JSON.stringify(exportedWorkspace).includes('module-visibility'), false);
+      assert.equal(JSON.stringify(exportedWorkspace).includes('pad-module'), false);
       const draft = exportedWorkspace.drafts.find(item => item.techniqueId === 'T1059.001' && item.target === 'Platform-neutral' && item.mode === 'detect');
       assert.equal(draft.text, editedDraft); assert.equal(draft.context, appliedContext);
       const hash = require('node:crypto').createHash('sha256').update(draft.template).digest('hex');
@@ -239,12 +316,34 @@ async function premiumChecks({ page: callerPage, browser: suppliedBrowser, base,
         await page.locator('#techniques button').first().click();
         assert.equal(await page.locator('#prompt').isVisible(), true);
       }
+      if (width === 320) {
+        await page.locator('#guide-open').click();
+        assert.equal(await page.locator('#guide-dialog').evaluate(node => node.scrollWidth <= node.clientWidth), true);
+        for (const metrics of await page.locator('.shortcut-list dt').evaluateAll(nodes => nodes.map(node => ({
+          height: node.getBoundingClientRect().height,
+          position: getComputedStyle(node.querySelector('kbd')).position,
+        })))) {
+          assert.ok(metrics.height > 0, 'Shortcut term must retain readable height');
+          assert.equal(metrics.position, 'static');
+        }
+        if (browser.browserType().name() !== 'webkit') {
+          await page.screenshot({ path: path.join(output, 'premium-guide-320.png') });
+        }
+        await page.locator('#guide-close').click();
+      }
       // Locked Playwright injects an inline animation-sync stylesheet in WebKit
       // screenshots, correctly rejected by our CSP. Do not weaken CSP or filter
       // console output; visual captures are made in Chromium and Firefox only.
       if (browser.browserType().name() !== 'webkit') {
         await page.locator('h1').click(); await page.locator('h1').scrollIntoViewIfNeeded();
         await page.screenshot({ path: path.join(output, `premium-${width}.png`) });
+        if (width === 1440) {
+          await page.setViewportSize({ width: 1440, height: 1302 });
+          await page.evaluate(() => scrollTo(0, 0));
+          await page.locator('#settings-open').click();
+          await page.screenshot({ path: path.join(output, 'premium-settings-1440.png') });
+          await page.locator('#settings-close').click();
+        }
       }
     });
     await check('premium isolated browser has no console errors or external requests', async () => {

@@ -10,6 +10,8 @@
   const runtimeReady = Array.isArray(catalog) && catalog.length > 0 && core &&
     typeof globalThis.PAD_ENVIRONMENT?.hash === 'function' &&
     typeof globalThis.PAD_ENVIRONMENT_UI?.create === 'function' &&
+    typeof globalThis.PAD_PREFERENCES?.load === 'function' &&
+    typeof globalThis.PAD_PREFERENCES?.save === 'function' &&
     typeof globalThis.PAD_WORKBENCH_UI?.create === 'function' &&
     ['filterTechniques', 'composePrompt', 'exportJSONL', 'parseUiState', 'serializeUiState'].every(name => typeof core[name] === 'function');
   if (!runtimeReady) {
@@ -442,11 +444,17 @@
     download(core.exportJSONL(state.visible, options()), `${state.domain.toLowerCase() || 'all-domains'}-drafts.jsonl`, 'application/x-ndjson;charset=utf-8'); notify(`${state.visible.length} generated draft templates exported across all matching pages; editor changes are not included.`);
   });
   const tabs = [...document.querySelectorAll('[role="tab"]')];
-  function activateTab(tab, focus = false) {
+  const visibleTabs = () => tabs.filter(tab => !tab.hidden);
+  function activateTab(tab, focus = false, recordChange = true) {
     if (!tab) return;
+    if (tab.hidden) {
+      const hiddenName = tab.textContent.trim();
+      tab = $('tab-prompt');
+      notify(`${hiddenName} is hidden in Settings. Prompt opened instead.`);
+    }
     tabs.forEach(button => { const selected = button === tab; button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1; $(button.getAttribute('aria-controls')).hidden = !selected; });
     if (focus) tab.focus();
-    changed();
+    if (recordChange) changed();
   }
   $('show-source').addEventListener('click', () => activateTab($('tab-source'), true));
   $('compare-add').addEventListener('click', () => {
@@ -457,15 +465,18 @@
     if (state.compare.length === 2) deskUI?.openCompare();
     else notify(state.compare.length ? 'One technique saved. Select another technique to compare.' : 'Technique removed from comparison.');
   });
-  tabs.forEach((tab, index) => {
+  tabs.forEach(tab => {
     tab.addEventListener('click', () => activateTab(tab));
     tab.addEventListener('keydown', event => {
+      const available = visibleTabs();
+      const index = available.indexOf(tab);
+      if (index < 0) return;
       let next;
-      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
-      if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+      if (event.key === 'ArrowRight') next = (index + 1) % available.length;
+      if (event.key === 'ArrowLeft') next = (index + available.length - 1) % available.length;
       if (event.key === 'Home') next = 0;
-      if (event.key === 'End') next = tabs.length - 1;
-      if (next !== undefined) { event.preventDefault(); activateTab(tabs[next], true); }
+      if (event.key === 'End') next = available.length - 1;
+      if (next !== undefined) { event.preventDefault(); activateTab(available[next], true); }
     });
   });
   $('about-open').addEventListener('click', () => $('about-dialog').showModal());
@@ -480,7 +491,9 @@
     document.querySelectorAll('[data-domain]').forEach(b => b.setAttribute('aria-pressed', String(!b.dataset.domain)));
     state.selected = record; populateFilters(); filter(true); selectRecord(record, true);
   };
-  deskUI = globalThis.PAD_WORKBENCH_UI.create({ document, catalog, navigate, onChange: changed, actions: { tab: name => activateTab($(tabIds[name]), true) } });
+  deskUI = globalThis.PAD_WORKBENCH_UI.create({ document, catalog, navigate, onChange: changed,
+    preferences: globalThis.PAD_PREFERENCES,
+    actions: { tab: (name, focus = true, recordChange = true) => activateTab($(tabIds[name]), focus, recordChange), announce: notify } });
   try {
     carView = globalThis.PAD_RESEARCH_UI.createCar({ document, root: $('desk-car-results'), library: globalThis.PAD_CAR.createLibrary(globalThis.PAD_CAR_CATALOG) });
     flowView = globalThis.PAD_RESEARCH_UI.createFlow({ document, catalog: attackCatalog,

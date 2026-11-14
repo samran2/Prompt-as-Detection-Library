@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:6abfcb367ebc291572c774c1592a986be2ab26a2486f73093401327495a5962a
 
 LABEL org.opencontainers.image.title="Prompt-as-Detection Research API" \
       org.opencontainers.image.description="Read-only reference API for pinned public research data" \

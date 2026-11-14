@@ -43,6 +43,11 @@ module.exports = async function sourceChecks({ page, base, check, output, screen
     await page.locator('#tab-source').click();
   };
   const sourceCard = name => cards.locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
+  const setTheme = async theme => {
+    await page.locator('#settings-open').click();
+    await page.locator('#theme').selectOption(theme);
+    await page.locator('#settings-done').click();
+  };
   await check('LOLBAS uses exact source fields without inheriting GTFOBins parent mappings', async () => {
     await select('T1218.005');
     const card = sourceCard('LOLBAS');
@@ -88,21 +93,29 @@ module.exports = async function sourceChecks({ page, base, check, output, screen
       }
       await sourceCard('LOLDrivers').locator('.research-mapping-details').evaluate(node => { node.open = true; });
       await sourceCard('LOLDrivers').locator('.research-mapping-proof').first().evaluate(node => { node.open = true; });
-      await page.locator('#theme').selectOption(theme);
-      const first = cards.locator('a').first(); await first.focus();
-      const key = process.env.BROWSER_ENGINE === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab';
-      await page.keyboard.press(key);
-      assert.equal(await page.evaluate(() => {
-        const focused = document.activeElement;
-        return Boolean(focused?.closest('#desk-external-sources')) && focused.tagName === 'A'
-          && getComputedStyle(focused).outlineStyle !== 'none';
-      }), true);
+      await setTheme(theme);
+      const first = cards.locator('a:visible').first();
+      // Establish a real keyboard focus transition after using a programmatic
+      // anchor only to choose the deterministic starting point. Chromium's
+      // :focus-visible heuristic differs by host platform for direct focus().
+      await first.focus();
+      await page.keyboard.press('Shift+Tab');
+      await page.keyboard.press('Tab');
+      const focus = await first.evaluate(node => ({
+        active: node === document.activeElement,
+        withinCards: Boolean(node.closest('#desk-external-sources')),
+        visibleFocus: node.matches(':focus-visible'),
+        outline: getComputedStyle(node).outlineStyle,
+      }));
+      assert.equal(focus.active, true);
+      assert.equal(focus.withinCards, true);
+      assert.equal(focus.visibleFocus, true);
+      assert.notEqual(focus.outline, 'none');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       const boxes = await cards.locator('article').evaluateAll(nodes => nodes.map(node => ({ left: node.getBoundingClientRect().left, right: node.getBoundingClientRect().right })));
       assert.ok(boxes.every(box => box.left >= 0 && box.right <= width));
       const summary = sourceCard('LOLDrivers').locator('.research-mapping-proof > summary').first();
-      await summary.focus();
-      await page.keyboard.press('Enter');
+      await summary.press('Enter');
       assert.equal(await summary.evaluate(node => node.parentElement.open), false);
       await screenshot({ path: path.join(output, `external-mappings-${width}.png`), fullPage: true });
     });
