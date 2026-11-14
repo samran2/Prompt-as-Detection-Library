@@ -41,6 +41,9 @@ conversations are not independent release evidence.
 
 - Moved Appearance and technique-list width into Settings to reduce header and
   toolbar clutter, including on narrow screens.
+- Refreshed the SHA-pinned official Distroless Node 24 runtime after the hosted
+  container gate identified three fixed HIGH-severity Debian package findings;
+  the blocking Trivy policy remains unchanged.
 - Hidden tabs and command actions now use visible-only keyboard navigation and
   return to Prompt without deleting comparison selections, Flow steps or drafts.
 - Hardened explicit Rösti imports against request-credential reflection in decoded
